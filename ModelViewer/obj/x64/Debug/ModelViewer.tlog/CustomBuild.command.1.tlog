@@ -1,0 +1,2 @@
+^D:\PROJECTS\DX12\MODELVIEWER\SHADERS.HLSL
+copy shaders.hlsl "bin\x64\Debug\" > NUL

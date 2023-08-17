@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ProjectOutputs>
+    <ProjectOutput>
+      <FullPath>D:\Projects\DX12\ModelViewer\bin\x64\Debug\ModelViewer.exe</FullPath>
+    </ProjectOutput>
+  </ProjectOutputs>
+  <ContentFiles>
+    <ContentFile>
+      <FullPath>D:\Projects\DX12\ModelViewer\shaders.hlsl</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Projects\DX12\ModelViewer\bin\x64\Debug\shaders.hlsl</FullPath>
+    </ContentFile>
+  </ContentFiles>
+  <SatelliteDlls />
+  <NonRecipeFileRefs />
+</Project>
