@@ -1,3 +1,0 @@
-﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(513,5): warning MSB8028: The intermediate directory (obj\x64\Debug\) contains files shared from another project (D3D12HelloTriangle.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  ModelViewer.cpp
-  ModelViewer.vcxproj -> D:\Projects\DX12\ModelViewer\bin\x64\Debug\ModelViewer.exe

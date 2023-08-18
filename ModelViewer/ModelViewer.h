@@ -13,6 +13,8 @@
 
 #include "DXSample.h"
 #include "Camera.h"
+#include "Mesh.h"
+#include "Texture.h"
 
 using namespace DirectX;
 
@@ -40,17 +42,17 @@ public:
 private:
     static const UINT FrameCount = 2;
 
-    struct Vertex
-    {
-        XMFLOAT3 position;
-        XMFLOAT4 color;
-    };
-
     struct Constant
     {
         XMFLOAT4X4 ObjectToWorldMatrix;
         XMFLOAT4 a;
     };
+
+    // Windows Imaging Component objects.
+    static ComPtr<IWICImagingFactory> wicFactory;
+    unique_ptr<IWICBitmapDecoder> wicDecoder;
+    unique_ptr<IWICBitmapFrameDecode> wicFrame;
+    unique_ptr<IWICFormatConverter> wicConverter;
 
     // Pipeline objects.
     CD3DX12_VIEWPORT m_viewport;
@@ -63,6 +65,7 @@ private:
     ComPtr<ID3D12RootSignature> m_rootSignature;
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
     ComPtr<ID3D12DescriptorHeap> m_cbvHeap;
+    ComPtr<ID3D12DescriptorHeap> m_srvHeap;
     ComPtr<ID3D12PipelineState> m_pipelineState;
     ComPtr<ID3D12GraphicsCommandList> m_commandList;
     UINT m_rtvDescriptorSize;
@@ -71,6 +74,8 @@ private:
     ComPtr<ID3D12Resource> m_vertexBuffer;
     ComPtr<ID3D12Resource> m_indexBuffer;
     ComPtr<ID3D12Resource> m_constantBuffer;
+    ComPtr<ID3D12Resource> m_textureUploadBuffer;
+    ComPtr<ID3D12Resource> m_textureBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
     D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
 
@@ -83,6 +88,8 @@ private:
     // Scene objects
     shared_ptr<Constant> m_constant;
     shared_ptr<Camera> m_camera;
+    shared_ptr<Mesh> m_mesh;
+    shared_ptr<Texture> m_texture;
     FLOAT* m_constantDataBegin = nullptr;
 
     void LoadPipeline();

@@ -20,7 +20,10 @@
 #endif
 
 #include <windows.h>
+#include <wincodec.h>
 
+// dxguid.lib
+// #include <initguid.h> 
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <D3Dcompiler.h>
@@ -30,3 +33,6 @@
 #include <string>
 #include <wrl.h>
 #include <shellapi.h>
+#include <fstream>
+
+#include "DXSampleHelper.h"

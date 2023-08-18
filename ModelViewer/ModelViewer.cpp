@@ -123,6 +123,14 @@ void ModelViewer::LoadPipeline()
         cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&m_cbvHeap)));
+
+        // Describe and create a shader resource view (SRV) descriptor heap.
+
+        D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
+        srvHeapDesc.NumDescriptors = 1;
+        srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        ThrowIfFailed(m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
     }
 
     // Create frame resources.
@@ -148,28 +156,65 @@ void ModelViewer::LoadAssets()
     {
         m_camera = std::make_shared<Camera>();
         m_constant = std::make_shared<Constant>();
+        m_mesh = std::make_shared<Mesh>();
+        m_texture = std::make_shared<Texture>();
     }
 
     // Create an empty root signature.
     {
-        D3D12_DESCRIPTOR_RANGE descriptorTableRanges[1];
-        descriptorTableRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-        descriptorTableRanges[0].NumDescriptors = 1;
-        descriptorTableRanges[0].BaseShaderRegister = 0;
-        descriptorTableRanges[0].RegisterSpace = 0;
-        descriptorTableRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+        D3D12_DESCRIPTOR_RANGE cbvDescriptorTableRanges[1];
+        cbvDescriptorTableRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+        cbvDescriptorTableRanges[0].NumDescriptors = 1;
+        cbvDescriptorTableRanges[0].BaseShaderRegister = 0;
+        cbvDescriptorTableRanges[0].RegisterSpace = 0;
+        cbvDescriptorTableRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-        D3D12_ROOT_DESCRIPTOR_TABLE descriptorTable;
-        descriptorTable.NumDescriptorRanges = _countof(descriptorTableRanges);
-        descriptorTable.pDescriptorRanges = &descriptorTableRanges[0];
+        D3D12_DESCRIPTOR_RANGE srvDescriptorTableRanges[1];
+        srvDescriptorTableRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+        srvDescriptorTableRanges[0].NumDescriptors = 1;
+        srvDescriptorTableRanges[0].BaseShaderRegister = 0;
+        srvDescriptorTableRanges[0].RegisterSpace = 0;
+        srvDescriptorTableRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-        CD3DX12_ROOT_PARAMETER rootParameters[1];
+        D3D12_ROOT_DESCRIPTOR_TABLE cbvDescriptorTable;
+        cbvDescriptorTable.NumDescriptorRanges = _countof(cbvDescriptorTableRanges);
+        cbvDescriptorTable.pDescriptorRanges = &cbvDescriptorTableRanges[0];
+
+        D3D12_ROOT_DESCRIPTOR_TABLE srvDescriptorTable;
+        srvDescriptorTable.NumDescriptorRanges = _countof(srvDescriptorTableRanges);
+        srvDescriptorTable.pDescriptorRanges = &srvDescriptorTableRanges[0];
+
+        CD3DX12_ROOT_PARAMETER rootParameters[2];
         rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-        rootParameters[0].DescriptorTable = descriptorTable;
+        rootParameters[0].DescriptorTable = cbvDescriptorTable;
         rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
+        rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        rootParameters[1].DescriptorTable = srvDescriptorTable;
+        rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+        // create a static sampler
+        D3D12_STATIC_SAMPLER_DESC sampler = {};
+        sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+        sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+        sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+        sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+        sampler.MipLODBias = 0;
+        sampler.MaxAnisotropy = 0;
+        sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+        sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+        sampler.MinLOD = 0.0f;
+        sampler.MaxLOD = D3D12_FLOAT32_MAX;
+        sampler.ShaderRegister = 0;
+        sampler.RegisterSpace = 0;
+        sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
         CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init(1, &rootParameters[0], 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+        rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 1, &sampler,
+            D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
@@ -196,6 +241,7 @@ void ModelViewer::LoadAssets()
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
         {
             { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
             { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
         };
 
@@ -219,10 +265,6 @@ void ModelViewer::LoadAssets()
 
     // Create the command list.
     ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)));
-
-    // Command lists are created in the recording state, but there is nothing
-    // to record yet. The main loop expects it to be closed, so close it now.
-    ThrowIfFailed(m_commandList->Close());
 
     // Create the constant buffer.
     {
@@ -250,31 +292,8 @@ void ModelViewer::LoadAssets()
 
     // Create the vertex and index buffer.
     {
-        // Define the geometry for a triangle.
-        Vertex triangleVertices[] =
-        {
-            { { -1.0f, -1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-            { { -1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-            { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } },
-            { { 1.0f, -1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f, 1.0f } },
-            { { -1.0f, -1.0f, -1.0f }, { 1.0f, 1.0f, 0.0f, 1.0f } },
-            { { -1.0f, 1.0f, -1.0f }, { 0.0f, 1.0f, 1.0f, 1.0f } },
-            { { 1.0f, 1.0f, -1.0f }, { 1.0f, 0.0f, 1.0f, 1.0f } },
-            { { 1.0f, -1.0f, -1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
-        };
-
-        UINT16 triangleIndices[] =
-        {
-            0, 1, 2, 0, 2, 3,
-            1, 5, 6, 1, 6, 2,
-            4, 6, 5, 4, 7, 6,
-            4, 5, 1, 4, 1, 0,
-            3, 2, 6, 3, 6, 7,
-            4, 0, 3, 4, 3, 7
-        };
-
-        const UINT vertexBufferSize = sizeof(triangleVertices);
-        const UINT indexBufferSize = sizeof(triangleIndices);
+        const UINT vertexBufferSize = m_mesh->GetVerticesSize();
+        const UINT indexBufferSize = m_mesh->GetIndicesSize();
 
         // Note: using upload heaps to transfer static data like vert buffers is not 
         // recommended. Every time the GPU needs it, the upload heap will be marshalled 
@@ -292,7 +311,7 @@ void ModelViewer::LoadAssets()
         UINT8* pVertexDataBegin;
         CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
         ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
-        memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
+        m_mesh->CopyVertices(pVertexDataBegin);
         m_vertexBuffer->Unmap(0, nullptr);
 
         // Initialize the vertex buffer view.
@@ -311,13 +330,66 @@ void ModelViewer::LoadAssets()
         // Copy the triangle data to the index buffer.
         UINT8* pIndexDataBegin;
         ThrowIfFailed(m_indexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin)));
-        memcpy(pIndexDataBegin, triangleIndices, sizeof(triangleIndices));
+        m_mesh->CopyIndices(pIndexDataBegin);
         m_indexBuffer->Unmap(0, nullptr);
 
         // Initialize the index buffer view.
         m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
         m_indexBufferView.Format = DXGI_FORMAT_R16_UINT;
         m_indexBufferView.SizeInBytes = indexBufferSize;
+    }
+
+    // Load textures.
+    {
+        m_texture->LoadTexture(L"test.png");
+
+        D3D12_RESOURCE_DESC textureDesc = {};
+        textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+        textureDesc.Alignment = 0;
+        textureDesc.Width = m_texture->GetTextureWidth();
+        textureDesc.Height = m_texture->GetTextureHeight();
+        textureDesc.DepthOrArraySize = 1;
+        textureDesc.MipLevels = 1;
+        textureDesc.Format = m_texture->GetTextureDXGIFormat();
+        textureDesc.SampleDesc.Count = 1;
+        textureDesc.SampleDesc.Quality = 0;
+        textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+        textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+        ThrowIfFailed(m_device.Get()->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+            D3D12_HEAP_FLAG_NONE,
+            &textureDesc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(m_textureBuffer.GetAddressOf())));
+
+        UINT64 textureBufferSize;
+        m_device.Get()->GetCopyableFootprints(&textureDesc, 0, 1, 0, nullptr, nullptr, nullptr, &textureBufferSize);
+
+        ThrowIfFailed(m_device.Get()->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(textureBufferSize),
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(m_textureUploadBuffer.GetAddressOf())));
+
+        // Init texture data.
+        D3D12_SUBRESOURCE_DATA textureData = {};
+        textureData.pData = m_texture->GetTextureData();
+        textureData.RowPitch = m_texture->GetTextureBytesPerRow();
+        textureData.SlicePitch = textureData.RowPitch * textureDesc.Height;
+
+        // Update texture data from upload buffer to gpu buffer.
+        UpdateSubresources(m_commandList.Get(), m_textureBuffer.Get(), m_textureUploadBuffer.Get(), 0, 0, 1, &textureData);
+
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = textureDesc.Format;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = 1;
+        m_device->CreateShaderResourceView(m_textureBuffer.Get(), &srvDesc, m_srvHeap->GetCPUDescriptorHandleForHeapStart());
     }
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
@@ -336,6 +408,18 @@ void ModelViewer::LoadAssets()
         // list in our main loop but for now, we just want to wait for setup to 
         // complete before continuing.
         WaitForPreviousFrame();
+
+        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_textureBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+        ThrowIfFailed(m_commandList->Close());
+
+        ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
+        m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+        const UINT64 fence = m_fenceValue;
+        ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), fence));
+        m_fenceValue++;
+
+        m_texture->ReleaseTexture();
     }
 }
 
@@ -438,6 +522,10 @@ void ModelViewer::PopulateCommandList()
     ID3D12DescriptorHeap* descriptorHeaps[] = { m_cbvHeap.Get() };
     m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
     m_commandList->SetGraphicsRootDescriptorTable(0, m_cbvHeap->GetGPUDescriptorHandleForHeapStart());
+
+    descriptorHeaps[0] = m_srvHeap.Get();
+    m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+    m_commandList->SetGraphicsRootDescriptorTable(1, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
 
     // Set necessary state.
     m_commandList->RSSetViewports(1, &m_viewport);

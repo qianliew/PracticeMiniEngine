@@ -15,24 +15,36 @@ cbuffer Constant : register(b0)
     float4 a;
 };
 
+Texture2D t1 : register(t0);
+SamplerState s1 : register(s0);
+
+struct VSInput
+{
+    float4 position : POSITION;
+    float2 texCoord : TEXCOORD;
+    float4 color    : COLOR;
+};
+
 struct PSInput
 {
     float4 position : SV_POSITION;
-    float4 color : COLOR;
+    float2 texCoord : TEXCOORD;
+    float4 color    : COLOR;
 };
 
-PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
+PSInput VSMain(VSInput input)
 {
     PSInput result;
 
-    position.w = 1;
-    result.position = mul(ObjectToWorldMatrix, position);
-    result.color = color;
+    input.position.w = 1;
+    result.position = mul(ObjectToWorldMatrix, input.position);
+    result.texCoord = input.texCoord;
+    result.color = input.color;
 
     return result;
 }
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    return input.color;
+    return t1.Sample(s1, input.texCoord);
 }
