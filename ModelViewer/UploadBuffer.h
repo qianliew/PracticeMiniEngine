@@ -9,12 +9,9 @@ public:
 	~UploadBuffer();
 
 	ComPtr<ID3D12Resource> GetBuffer();
-
 	void* GetStartLocation();
-
 	UINT GetDataSize();
 
-	void CreateBuffer(ID3D12Device* device, UINT size) override;
-
+	void CreateBuffer(ID3D12Device* device, UINT size);
 	void CopyData(void const* source);
 };

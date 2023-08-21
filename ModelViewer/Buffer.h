@@ -12,6 +12,4 @@ public:
 	ComPtr<ID3D12Resource> GetBuffer();
 	void* GetStartLocation();
 	UINT GetDataSize();
-
-	virtual void CreateBuffer(ID3D12Device* device, UINT size) = 0;
 };

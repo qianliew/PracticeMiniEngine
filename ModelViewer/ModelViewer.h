@@ -13,6 +13,7 @@
 
 #include "DXSample.h"
 #include "UploadBuffer.h"
+#include "DefaultBuffer.h"
 #include "Camera.h"
 #include "Mesh.h"
 #include "Texture.h"
@@ -74,12 +75,12 @@ private:
     // App resources.
     ComPtr<ID3D12Resource> m_vertexBuffer;
     ComPtr<ID3D12Resource> m_indexBuffer;
-    ComPtr<ID3D12Resource> m_textureBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
     D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
 
     unique_ptr<UploadBuffer> m_constantBuffer;
-    unique_ptr<UploadBuffer> m_textureUploadBuffer; 
+    unique_ptr<UploadBuffer> m_textureBuffer; 
+    unique_ptr<DefaultBuffer> m_textureStaticBuffer;
 
     // Synchronization objects.
     UINT m_frameIndex;

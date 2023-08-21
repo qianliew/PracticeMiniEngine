@@ -32,7 +32,7 @@ void UploadBuffer::CreateBuffer(ID3D12Device* device, UINT size)
 		&CD3DX12_RESOURCE_DESC::Buffer(m_bufferSize),
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(&m_buffer)));
+		IID_PPV_ARGS(m_buffer.GetAddressOf())));
 
 	CD3DX12_RANGE readRange(0, 0);
 	ThrowIfFailed(m_buffer->Map(0, &readRange, reinterpret_cast<void**>(&m_startLocation)));

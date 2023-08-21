@@ -330,7 +330,8 @@ void ModelViewer::LoadAssets()
     // Load textures.
     {
         m_texture->LoadTexture(L"test.png");
-        m_textureUploadBuffer = std::make_unique<UploadBuffer>();
+        m_textureBuffer = std::make_unique<UploadBuffer>();
+        m_textureStaticBuffer = std::make_unique<DefaultBuffer>();
 
         D3D12_RESOURCE_DESC textureDesc = {};
         textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -345,17 +346,10 @@ void ModelViewer::LoadAssets()
         textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
         textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-        ThrowIfFailed(m_device.Get()->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-            D3D12_HEAP_FLAG_NONE,
-            &textureDesc,
-            D3D12_RESOURCE_STATE_COPY_DEST,
-            nullptr,
-            IID_PPV_ARGS(m_textureBuffer.GetAddressOf())));
-
         UINT64 textureBufferSize;
         m_device.Get()->GetCopyableFootprints(&textureDesc, 0, 1, 0, nullptr, nullptr, nullptr, &textureBufferSize);
-        m_textureUploadBuffer->CreateBuffer(m_device.Get(), textureBufferSize);
+        m_textureBuffer->CreateBuffer(m_device.Get(), textureBufferSize);
+        m_textureStaticBuffer->CreateBuffer(m_device.Get(), &textureDesc);
 
         // Init texture data.
         D3D12_SUBRESOURCE_DATA textureData = {};
@@ -364,14 +358,14 @@ void ModelViewer::LoadAssets()
         textureData.SlicePitch = textureData.RowPitch * textureDesc.Height;
 
         // Update texture data from upload buffer to gpu buffer.
-        UpdateSubresources(m_commandList.Get(), m_textureBuffer.Get(), m_textureUploadBuffer->GetBuffer().Get(), 0, 0, 1, &textureData);
+        UpdateSubresources(m_commandList.Get(), m_textureStaticBuffer->GetBuffer().Get(), m_textureBuffer->GetBuffer().Get(), 0, 0, 1, &textureData);
 
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
         srvDesc.Format = textureDesc.Format;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = 1;
-        m_device->CreateShaderResourceView(m_textureBuffer.Get(), &srvDesc, m_srvHeap->GetCPUDescriptorHandleForHeapStart());
+        m_device->CreateShaderResourceView(m_textureStaticBuffer->GetBuffer().Get(), &srvDesc, m_srvHeap->GetCPUDescriptorHandleForHeapStart());
     }
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
@@ -391,7 +385,7 @@ void ModelViewer::LoadAssets()
         // complete before continuing.
         WaitForPreviousFrame();
 
-        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_textureBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_textureStaticBuffer->GetBuffer().Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
         ThrowIfFailed(m_commandList->Close());
 
         ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
