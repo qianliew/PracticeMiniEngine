@@ -268,26 +268,14 @@ void ModelViewer::LoadAssets()
 
     // Create the constant buffer.
     {
-        const UINT unit = 1024 * 64 - 1;
-        const UINT constantBufferSize = (sizeof(Constant) + unit) & ~unit;
-
-        ThrowIfFailed(m_device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-            D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC::Buffer(constantBufferSize),
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&m_constantBuffer)));
+        m_constantBuffer = std::make_unique<UploadBuffer>();
+        m_constantBuffer->CreateBuffer(m_device.Get(), sizeof(Constant));
 
         D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-        cbvDesc.BufferLocation = m_constantBuffer->GetGPUVirtualAddress();
-        cbvDesc.SizeInBytes = CalculateConstantBufferByteSize((sizeof(Constant) + 255) & ~255);
+        cbvDesc.BufferLocation = m_constantBuffer->GetBuffer()->GetGPUVirtualAddress();
+        cbvDesc.SizeInBytes = CalculateConstantBufferByteSize(m_constantBuffer->GetDataSize());
 
         m_device->CreateConstantBufferView(&cbvDesc, m_cbvHeap->GetCPUDescriptorHandleForHeapStart());
-
-        CD3DX12_RANGE readRange(0, 0);
-        ThrowIfFailed(m_constantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_constantDataBegin)));
-        memcpy(m_constantDataBegin, m_constant.get(), sizeof(*m_constant));
     }
 
     // Create the vertex and index buffer.
@@ -342,6 +330,7 @@ void ModelViewer::LoadAssets()
     // Load textures.
     {
         m_texture->LoadTexture(L"test.png");
+        m_textureUploadBuffer = std::make_unique<UploadBuffer>();
 
         D3D12_RESOURCE_DESC textureDesc = {};
         textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -366,14 +355,7 @@ void ModelViewer::LoadAssets()
 
         UINT64 textureBufferSize;
         m_device.Get()->GetCopyableFootprints(&textureDesc, 0, 1, 0, nullptr, nullptr, nullptr, &textureBufferSize);
-
-        ThrowIfFailed(m_device.Get()->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-            D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC::Buffer(textureBufferSize),
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(m_textureUploadBuffer.GetAddressOf())));
+        m_textureUploadBuffer->CreateBuffer(m_device.Get(), textureBufferSize);
 
         // Init texture data.
         D3D12_SUBRESOURCE_DATA textureData = {};
@@ -382,7 +364,7 @@ void ModelViewer::LoadAssets()
         textureData.SlicePitch = textureData.RowPitch * textureDesc.Height;
 
         // Update texture data from upload buffer to gpu buffer.
-        UpdateSubresources(m_commandList.Get(), m_textureBuffer.Get(), m_textureUploadBuffer.Get(), 0, 0, 1, &textureData);
+        UpdateSubresources(m_commandList.Get(), m_textureBuffer.Get(), m_textureUploadBuffer->GetBuffer().Get(), 0, 0, 1, &textureData);
 
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -475,8 +457,7 @@ void ModelViewer::OnUpdate()
     m_constant->a.z = 1;
     m_constant->a.w = 1;
 
-    ThrowIfFailed(m_constantBuffer->Map(0, nullptr, reinterpret_cast<void**>(&m_constantDataBegin)));
-    memcpy(m_constantDataBegin, m_constant.get(), sizeof(*m_constant));
+    m_constantBuffer->CopyData(m_constant.get());
 }
 
 // Render the scene.
@@ -500,8 +481,6 @@ void ModelViewer::OnDestroy()
     // Ensure that the GPU is no longer referencing resources that are about to be
     // cleaned up by the destructor.
     WaitForPreviousFrame();
-
-    m_constantBuffer->Unmap(0, nullptr);
 
     CloseHandle(m_fenceEvent);
 }

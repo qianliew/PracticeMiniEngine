@@ -12,6 +12,7 @@
 #pragma once
 
 #include "DXSample.h"
+#include "UploadBuffer.h"
 #include "Camera.h"
 #include "Mesh.h"
 #include "Texture.h"
@@ -73,11 +74,12 @@ private:
     // App resources.
     ComPtr<ID3D12Resource> m_vertexBuffer;
     ComPtr<ID3D12Resource> m_indexBuffer;
-    ComPtr<ID3D12Resource> m_constantBuffer;
-    ComPtr<ID3D12Resource> m_textureUploadBuffer;
     ComPtr<ID3D12Resource> m_textureBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
     D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
+
+    unique_ptr<UploadBuffer> m_constantBuffer;
+    unique_ptr<UploadBuffer> m_textureUploadBuffer; 
 
     // Synchronization objects.
     UINT m_frameIndex;
@@ -90,7 +92,6 @@ private:
     shared_ptr<Camera> m_camera;
     shared_ptr<Mesh> m_mesh;
     shared_ptr<Texture> m_texture;
-    FLOAT* m_constantDataBegin = nullptr;
 
     void LoadPipeline();
     void LoadAssets();
