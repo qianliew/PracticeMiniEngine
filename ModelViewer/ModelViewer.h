@@ -43,6 +43,8 @@ public:
 
 private:
     static const UINT FrameCount = 2;
+    UINT m_width;
+    UINT m_height;
 
     struct Constant
     {
@@ -50,27 +52,24 @@ private:
         XMFLOAT4 a;
     };
 
-    // Windows Imaging Component objects.
-    static ComPtr<IWICImagingFactory> wicFactory;
-    unique_ptr<IWICBitmapDecoder> wicDecoder;
-    unique_ptr<IWICBitmapFrameDecode> wicFrame;
-    unique_ptr<IWICFormatConverter> wicConverter;
-
     // Pipeline objects.
     CD3DX12_VIEWPORT m_viewport;
     CD3DX12_RECT m_scissorRect;
     ComPtr<IDXGISwapChain3> m_swapChain;
     ComPtr<ID3D12Device> m_device;
     ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
+    ComPtr<ID3D12Resource> m_depthStencils[FrameCount];
     ComPtr<ID3D12CommandAllocator> m_commandAllocator;
     ComPtr<ID3D12CommandQueue> m_commandQueue;
     ComPtr<ID3D12RootSignature> m_rootSignature;
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
+    ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
     ComPtr<ID3D12DescriptorHeap> m_cbvHeap;
     ComPtr<ID3D12DescriptorHeap> m_srvHeap;
     ComPtr<ID3D12PipelineState> m_pipelineState;
     ComPtr<ID3D12GraphicsCommandList> m_commandList;
     UINT m_rtvDescriptorSize;
+    UINT m_dsvDescriptorSize;
 
     // App resources.
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
