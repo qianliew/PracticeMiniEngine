@@ -269,7 +269,7 @@ void ModelViewer::LoadAssets()
     // Create the constant buffer.
     {
         m_constantBuffer = std::make_unique<UploadBuffer>();
-        m_constantBuffer->CreateBuffer(m_device.Get(), sizeof(Constant));
+        m_constantBuffer->CreateConstantBuffer(m_device.Get(), sizeof(Constant));
 
         D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
         cbvDesc.BufferLocation = m_constantBuffer->GetBuffer()->GetGPUVirtualAddress();
@@ -280,49 +280,56 @@ void ModelViewer::LoadAssets()
 
     // Create the vertex and index buffer.
     {
+        m_vertexBuffer = std::make_unique<UploadBuffer>();
+        m_vertexStaticBuffer = std::make_unique<DefaultBuffer>();
+        m_indexBuffer = std::make_unique<UploadBuffer>();
+        m_indexStaticBuffer = std::make_unique<DefaultBuffer>();
         const UINT vertexBufferSize = m_mesh->GetVerticesSize();
         const UINT indexBufferSize = m_mesh->GetIndicesSize();
 
-        // Note: using upload heaps to transfer static data like vert buffers is not 
-        // recommended. Every time the GPU needs it, the upload heap will be marshalled 
-        // over. Please read up on Default Heap usage. An upload heap is used here for 
-        // code simplicity and because there are very few verts to actually transfer.
-        ThrowIfFailed(m_device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-            D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&m_vertexBuffer)));
+        D3D12_RESOURCE_DESC vertexDesc = {};
+        vertexDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        vertexDesc.Alignment = 0;
+        vertexDesc.Width = vertexBufferSize;
+        vertexDesc.Height = 1;
+        vertexDesc.DepthOrArraySize = 1;
+        vertexDesc.MipLevels = 1;
+        vertexDesc.Format = DXGI_FORMAT_UNKNOWN;
+        vertexDesc.SampleDesc.Count = 1;
+        vertexDesc.SampleDesc.Quality = 0;
+        vertexDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        vertexDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-        // Copy the triangle data to the vertex buffer.
-        UINT8* pVertexDataBegin;
-        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-        ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
-        m_mesh->CopyVertices(pVertexDataBegin);
-        m_vertexBuffer->Unmap(0, nullptr);
+        // Initialize the vertex buffer.
+        m_vertexBuffer->CreateBuffer(m_device.Get(), vertexBufferSize);
+        m_vertexBuffer->CopyData(m_mesh->GetVerticesData());
+        m_vertexStaticBuffer->CreateBuffer(m_device.Get(), &vertexDesc);
 
         // Initialize the vertex buffer view.
-        m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+        m_vertexBufferView.BufferLocation = m_vertexStaticBuffer->GetBuffer()->GetGPUVirtualAddress();
         m_vertexBufferView.StrideInBytes = sizeof(Vertex);
         m_vertexBufferView.SizeInBytes = vertexBufferSize;
 
-        ThrowIfFailed(m_device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-            D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize),
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&m_indexBuffer)));
+        D3D12_RESOURCE_DESC indexDesc = {};
+        indexDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        indexDesc.Alignment = 0;
+        indexDesc.Width = indexBufferSize;
+        indexDesc.Height = 1;
+        indexDesc.DepthOrArraySize = 1;
+        indexDesc.MipLevels = 1;
+        indexDesc.Format = DXGI_FORMAT_UNKNOWN;
+        indexDesc.SampleDesc.Count = 1;
+        indexDesc.SampleDesc.Quality = 0;
+        indexDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        indexDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-        // Copy the triangle data to the index buffer.
-        UINT8* pIndexDataBegin;
-        ThrowIfFailed(m_indexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin)));
-        m_mesh->CopyIndices(pIndexDataBegin);
-        m_indexBuffer->Unmap(0, nullptr);
+        // Initialize the index buffer.
+        m_indexBuffer->CreateBuffer(m_device.Get(), indexBufferSize);
+        m_indexBuffer->CopyData(m_mesh->GetIndicesData());
+        m_indexStaticBuffer->CreateBuffer(m_device.Get(), &indexDesc);
 
         // Initialize the index buffer view.
-        m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
+        m_indexBufferView.BufferLocation = m_indexStaticBuffer->GetBuffer()->GetGPUVirtualAddress();
         m_indexBufferView.Format = DXGI_FORMAT_R16_UINT;
         m_indexBufferView.SizeInBytes = indexBufferSize;
     }
@@ -385,7 +392,14 @@ void ModelViewer::LoadAssets()
         // complete before continuing.
         WaitForPreviousFrame();
 
-        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_textureStaticBuffer->GetBuffer().Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_textureStaticBuffer->GetBuffer().Get(),
+            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+        m_commandList->CopyResource(m_vertexStaticBuffer->GetBuffer().Get(), m_vertexBuffer->GetBuffer().Get());
+        m_commandList->CopyResource(m_indexStaticBuffer->GetBuffer().Get(), m_indexBuffer->GetBuffer().Get());
+        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_vertexStaticBuffer->GetBuffer().Get(),
+            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_indexStaticBuffer->GetBuffer().Get(),
+            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
         ThrowIfFailed(m_commandList->Close());
 
         ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
@@ -396,6 +410,8 @@ void ModelViewer::LoadAssets()
         m_fenceValue++;
 
         m_texture->ReleaseTexture();
+        m_vertexBuffer.release();
+        m_indexBuffer.release();
     }
 }
 

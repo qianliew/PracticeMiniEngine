@@ -48,6 +48,16 @@ UINT Mesh::GetIndicesSize()
     return m_indicesSize;
 }
 
+void const* Mesh::GetVerticesData()
+{
+    return m_vertices.get();
+}
+
+void const* Mesh::GetIndicesData()
+{
+    return m_indices.get();
+}
+
 void Mesh::CopyVertices(void* destination)
 {
     memcpy(destination, m_vertices.get(), m_verticesSize);

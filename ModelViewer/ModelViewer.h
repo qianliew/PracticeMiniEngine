@@ -73,13 +73,15 @@ private:
     UINT m_rtvDescriptorSize;
 
     // App resources.
-    ComPtr<ID3D12Resource> m_vertexBuffer;
-    ComPtr<ID3D12Resource> m_indexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
     D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
 
+    unique_ptr<UploadBuffer> m_vertexBuffer;
+    unique_ptr<UploadBuffer> m_indexBuffer;
     unique_ptr<UploadBuffer> m_constantBuffer;
     unique_ptr<UploadBuffer> m_textureBuffer; 
+    unique_ptr<DefaultBuffer> m_vertexStaticBuffer;
+    unique_ptr<DefaultBuffer> m_indexStaticBuffer;
     unique_ptr<DefaultBuffer> m_textureStaticBuffer;
 
     // Synchronization objects.

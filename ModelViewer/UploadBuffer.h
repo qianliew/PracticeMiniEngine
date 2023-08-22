@@ -13,5 +13,6 @@ public:
 	UINT GetDataSize();
 
 	void CreateBuffer(ID3D12Device* device, UINT size);
+	void CreateConstantBuffer(ID3D12Device* device, UINT size);
 	void CopyData(void const* source);
 };

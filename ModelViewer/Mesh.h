@@ -25,6 +25,8 @@ public:
 
     UINT GetVerticesSize();
     UINT GetIndicesSize();
+    void const* GetVerticesData();
+    void const* GetIndicesData();
     void CopyVertices(void* destination);
     void CopyIndices(void* destination);
 };
