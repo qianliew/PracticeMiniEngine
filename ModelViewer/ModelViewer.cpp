@@ -197,6 +197,8 @@ void ModelViewer::LoadAssets()
         m_constant = std::make_shared<Constant>();
         m_mesh = std::make_shared<Mesh>();
         m_texture = std::make_shared<Texture>();
+        m_fbxImporter = std::make_unique<FBXImporter>();
+        m_fbxImporter->InitializeSdkObjects();
     }
 
     // Create an empty root signature.

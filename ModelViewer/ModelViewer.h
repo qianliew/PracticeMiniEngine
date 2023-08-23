@@ -14,6 +14,7 @@
 #include "DXSample.h"
 #include "UploadBuffer.h"
 #include "DefaultBuffer.h"
+#include "FBXImporter.h"
 #include "Camera.h"
 #include "Mesh.h"
 #include "Texture.h"
@@ -94,6 +95,7 @@ private:
     shared_ptr<Camera> m_camera;
     shared_ptr<Mesh> m_mesh;
     shared_ptr<Texture> m_texture;
+    unique_ptr<FBXImporter> m_fbxImporter;
 
     void LoadPipeline();
     void LoadAssets();
