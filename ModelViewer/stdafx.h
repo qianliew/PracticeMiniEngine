@@ -34,5 +34,6 @@
 #include <wrl.h>
 #include <shellapi.h>
 #include <fstream>
+#include <iostream>
 
 #include "DXSampleHelper.h"

@@ -199,6 +199,10 @@ void ModelViewer::LoadAssets()
         m_texture = std::make_shared<Texture>();
         m_fbxImporter = std::make_unique<FBXImporter>();
         m_fbxImporter->InitializeSdkObjects();
+        if (m_fbxImporter->ImportFBX("cube.fbx"))
+        {
+            m_fbxImporter->LoadFBX(m_mesh);
+        }
     }
 
     // Create an empty root signature.
@@ -236,7 +240,7 @@ void ModelViewer::LoadAssets()
 
         // create a static sampler
         D3D12_STATIC_SAMPLER_DESC sampler = {};
-        sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+        sampler.Filter = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR;
         sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
         sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
         sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
@@ -578,7 +582,7 @@ void ModelViewer::PopulateCommandList()
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     m_commandList->IASetIndexBuffer(&m_indexBufferView);
 
-    m_commandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
+    m_commandList->DrawIndexedInstanced(m_mesh->GetIndicesNum(), 1, 0, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
     m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));

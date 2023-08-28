@@ -47,9 +47,9 @@ void FBXImporter::InitializeSdkObjects()
     }
 }
 
-bool FBXImporter::ImportFBX()
+bool FBXImporter::ImportFBX(char* path)
 {
-    FbxString lfilePath;
+    FbxString lfilePath(path);
 	if (lfilePath.IsEmpty())
 	{
         return false;
@@ -196,4 +196,156 @@ bool FBXImporter::ImportFBX()
     lImporter->Destroy();
 
     return lStatus;
+}
+
+void FBXImporter::LoadFBX(const std::shared_ptr<Mesh>& mesh)
+{
+    FbxGeometryConverter converter(m_fbxManager);
+    converter.Triangulate(m_fbxScene, true);
+    LoadContent(m_fbxScene, mesh);
+}
+
+void FBXImporter::LoadContent(FbxScene* pScene, const std::shared_ptr<Mesh>& mesh)
+{
+    int i;
+    FbxNode* lNode = pScene->GetRootNode();
+
+    if (lNode)
+    {
+        for (i = 0; i < lNode->GetChildCount(); i++)
+        {
+            LoadContent(lNode->GetChild(i), mesh);
+        }
+    }
+}
+
+void FBXImporter::LoadContent(FbxNode* pNode, const std::shared_ptr<Mesh>& mesh)
+{
+    FbxNodeAttribute::EType lAttributeType;
+    int i;
+
+    if (pNode->GetNodeAttribute() == NULL)
+    {
+        FBXSDK_printf("NULL Node Attribute\n\n");
+    }
+    else
+    {
+        lAttributeType = (pNode->GetNodeAttribute()->GetAttributeType());
+
+        switch (lAttributeType)
+        {
+        default:
+            break;
+
+        case FbxNodeAttribute::eMesh:
+            LoadMesh(pNode, mesh);
+            break;
+        }
+    }
+
+    for (i = 0; i < pNode->GetChildCount(); i++)
+    {
+        LoadContent(pNode->GetChild(i), mesh);
+    }
+}
+
+void FBXImporter::LoadMesh(FbxNode* pNode, const std::shared_ptr<Mesh>& mesh)
+{
+    FbxMesh* lMesh = (FbxMesh*)pNode->GetNodeAttribute();
+    UINT polygonSize = lMesh->GetPolygonCount();
+
+    UINT indicesSize = polygonSize * 3 * sizeof(UINT16);
+    UINT16* pIndex = (UINT16*)malloc(indicesSize);
+    UINT16* iIndex = pIndex;
+
+    int lControlPointsCount = lMesh->GetControlPointsCount();
+    UINT verticesSize = polygonSize * 3 * sizeof(Vertex);
+    fbxsdk::FbxVector4* lControlPoints = lMesh->GetControlPoints();
+
+    Vertex* pVertex = (Vertex*)malloc(verticesSize);
+    Vertex* iVertex = pVertex;
+
+    if (pIndex && pVertex)
+    {
+        for (int i = 0; i < polygonSize; i++)
+        {
+            for (int j = 0; j < lMesh->GetPolygonSize(i); j++)
+            {
+                *(iIndex++) = i * 3 + j;
+                int cpIndex = lMesh->GetPolygonVertex(i, j);
+                iVertex->position = XMFLOAT3
+                {
+                    static_cast<float>(lControlPoints[cpIndex].mData[0]),
+                    static_cast<float>(lControlPoints[cpIndex].mData[1]),
+                    static_cast<float>(lControlPoints[cpIndex].mData[2]),
+                };
+
+                FbxGeometryElementUV* leUV = lMesh->GetElementUV(0);
+
+                switch (leUV->GetMappingMode())
+                {
+                default:
+                    break;
+                case FbxGeometryElement::eByControlPoint:
+                    switch (leUV->GetReferenceMode())
+                    {
+                    case FbxGeometryElement::eDirect:
+                        iVertex->texCoord = XMFLOAT2
+                        {
+                            static_cast<float>(leUV->GetDirectArray().GetAt(cpIndex).mData[0]),
+                            static_cast<float>(leUV->GetDirectArray().GetAt(cpIndex).mData[1]),
+                        };
+                        break;
+                    case FbxGeometryElement::eIndexToDirect:
+                    {
+                        int id = leUV->GetIndexArray().GetAt(cpIndex);
+                        iVertex->texCoord = XMFLOAT2
+                        {
+                            static_cast<float>(leUV->GetDirectArray().GetAt(id).mData[0]),
+                            static_cast<float>(leUV->GetDirectArray().GetAt(id).mData[1]),
+                        };
+                    }
+                    break;
+                    default:
+                        break; // other reference modes not shown here!
+                    }
+                    break;
+
+                case FbxGeometryElement::eByPolygonVertex:
+                {
+                    int lTextureUVIndex = lMesh->GetTextureUVIndex(i, j);
+                    switch (leUV->GetReferenceMode())
+                    {
+                    case FbxGeometryElement::eDirect:
+                    case FbxGeometryElement::eIndexToDirect:
+                    {
+                        iVertex->texCoord = XMFLOAT2
+                        {
+                            static_cast<float>(leUV->GetDirectArray().GetAt(lTextureUVIndex).mData[0]),
+                            static_cast<float>(leUV->GetDirectArray().GetAt(lTextureUVIndex).mData[1]),
+                        };
+                    }
+                    break;
+                    default:
+                        break; // other reference modes not shown here!
+                    }
+                }
+                break;
+
+                case FbxGeometryElement::eByPolygon: // doesn't make much sense for UVs
+                case FbxGeometryElement::eAllSame:   // doesn't make much sense for UVs
+                case FbxGeometryElement::eNone:       // doesn't make much sense for UVs
+                    break;
+                }
+
+                (iVertex++)->color = XMFLOAT4
+                {
+                    1, 1, 1, 1
+                };
+            }
+        }
+
+        mesh->SetIndices(pIndex, indicesSize);
+        mesh->SetVertices(pVertex, verticesSize);
+    }
 }

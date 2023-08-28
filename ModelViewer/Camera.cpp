@@ -29,13 +29,13 @@ XMMATRIX Camera::GetMVPMatrix()
 
 void Camera::ResetCamera()
 {
-    *m_cameraPosition = XMVectorSet(0, 0, -10, 1);
+    *m_cameraPosition = XMVectorSet(0, 0, -50, 1);
     *m_fowardDirction = XMVectorSet(0, 0, 1, 0);
     *m_upDirction = XMVectorSet(0, 1, 0, 0);
     fov = XM_PI / 3.0f;
     ratio = 16.0f / 9.0f;
     nearZ = 0.03f;
-    farZ = 100.0f;
+    farZ = 1000.0f;
 }
 
 void Camera::MoveCameraAlongZ(FLOAT direction)
