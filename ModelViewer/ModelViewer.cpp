@@ -166,7 +166,7 @@ void ModelViewer::LoadPipeline()
         depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
         depthOptimizedClearValue.DepthStencil.Stencil = 0;
 
-        CD3DX12_CPU_DESCRIPTOR_HANDLE sdvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+        CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
 
         // Create a SDV for each frame.
         for (UINT n = 0; n < FrameCount; n++)
@@ -180,8 +180,8 @@ void ModelViewer::LoadPipeline()
                 IID_PPV_ARGS(&m_depthStencils[n])
             );
 
-            m_device->CreateDepthStencilView(m_depthStencils[n].Get(), &depthStencilDesc, sdvHandle);
-            sdvHandle.Offset(1, m_dsvDescriptorSize);
+            m_device->CreateDepthStencilView(m_depthStencils[n].Get(), &depthStencilDesc, dsvHandle);
+            dsvHandle.Offset(1, m_dsvDescriptorSize);
         }
     }
 
@@ -293,14 +293,15 @@ void ModelViewer::LoadAssets()
         // Describe and create the graphics pipeline state object (PSO).
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
         psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+        psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
         psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
         psoDesc.pRootSignature = m_rootSignature.Get();
         psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
         psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+        psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+        psoDesc.RasterizerState.FrontCounterClockwise = TRUE;
         psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-        psoDesc.DepthStencilState.DepthEnable = FALSE;
-        psoDesc.DepthStencilState.StencilEnable = FALSE;
         psoDesc.SampleMask = UINT_MAX;
         psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
         psoDesc.NumRenderTargets = 1;
