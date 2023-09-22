@@ -193,6 +193,7 @@ void ModelViewer::LoadAssets()
 {
     // Create scene objects.
     {
+        m_allocator = std::make_unique<Allocator>(m_device);
         m_camera = std::make_shared<Camera>();
         m_constant = std::make_shared<Constant>();
         m_mesh = std::make_shared<Mesh>();
@@ -384,42 +385,29 @@ void ModelViewer::LoadAssets()
     // Load textures.
     {
         m_texture->LoadTexture(L"test.png");
-        m_textureBuffer = std::make_unique<UploadBuffer>();
-        m_textureStaticBuffer = std::make_unique<DefaultBuffer>();
+        UploadBuffer* tempBuffer = new UploadBuffer();
 
-        D3D12_RESOURCE_DESC textureDesc = {};
-        textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-        textureDesc.Alignment = 0;
-        textureDesc.Width = m_texture->GetTextureWidth();
-        textureDesc.Height = m_texture->GetTextureHeight();
-        textureDesc.DepthOrArraySize = 1;
-        textureDesc.MipLevels = 1;
-        textureDesc.Format = m_texture->GetTextureDXGIFormat();
-        textureDesc.SampleDesc.Count = 1;
-        textureDesc.SampleDesc.Quality = 0;
-        textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-        textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-        UINT64 textureBufferSize;
-        m_device.Get()->GetCopyableFootprints(&textureDesc, 0, 1, 0, nullptr, nullptr, nullptr, &textureBufferSize);
-        m_textureBuffer->CreateBuffer(m_device.Get(), textureBufferSize);
-        m_textureStaticBuffer->CreateBuffer(m_device.Get(), &textureDesc);
+        m_allocator->AllocateUploadBuffer(tempBuffer);
+        m_allocator->AllocateTextureBuffer(m_texture.get());
 
         // Init texture data.
+        UINT numRows;
+        UINT64 rowSizeInBytes;
+        m_device.Get()->GetCopyableFootprints(m_texture->GetTextureDesc(), 0, 1, 0, nullptr, &numRows, &rowSizeInBytes, nullptr);
         D3D12_SUBRESOURCE_DATA textureData = {};
         textureData.pData = m_texture->GetTextureData();
-        textureData.RowPitch = m_texture->GetTextureBytesPerRow();
-        textureData.SlicePitch = textureData.RowPitch * textureDesc.Height;
+        textureData.RowPitch = rowSizeInBytes;
+        textureData.SlicePitch = rowSizeInBytes * numRows;
 
         // Update texture data from upload buffer to gpu buffer.
-        UpdateSubresources(m_commandList.Get(), m_textureStaticBuffer->GetBuffer().Get(), m_textureBuffer->GetBuffer().Get(), 0, 0, 1, &textureData);
+        UpdateSubresources(m_commandList.Get(), m_texture->Buffer->GetBuffer().Get(), tempBuffer->GetBuffer().Get(), 0, 0, 1, &textureData);
 
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        srvDesc.Format = textureDesc.Format;
+        srvDesc.Format = m_texture->GetTextureDesc()->Format;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = 1;
-        m_device->CreateShaderResourceView(m_textureStaticBuffer->GetBuffer().Get(), &srvDesc, m_srvHeap->GetCPUDescriptorHandleForHeapStart());
+        m_device->CreateShaderResourceView(m_texture->Buffer->GetBuffer().Get(), &srvDesc, m_srvHeap->GetCPUDescriptorHandleForHeapStart());
     }
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
@@ -439,7 +427,7 @@ void ModelViewer::LoadAssets()
         // complete before continuing.
         WaitForPreviousFrame();
 
-        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_textureStaticBuffer->GetBuffer().Get(),
+        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_texture->Buffer->GetBuffer().Get(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
         m_commandList->CopyResource(m_vertexStaticBuffer->GetBuffer().Get(), m_vertexBuffer->GetBuffer().Get());
         m_commandList->CopyResource(m_indexStaticBuffer->GetBuffer().Get(), m_indexBuffer->GetBuffer().Get());

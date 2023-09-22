@@ -2,6 +2,7 @@
 #include "Buffer.h"
 
 #define UPLOAD_BUFFER_ALIGNMENT D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT
+#define BIG_BLOCK_SIZE 16777216
 
 class UploadBuffer : public Buffer
 {

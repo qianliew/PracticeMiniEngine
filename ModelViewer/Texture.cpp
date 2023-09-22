@@ -26,14 +26,14 @@ UINT Texture::GetTextureBytesPerRow()
     return m_bytesPerRow;
 }
 
-DXGI_FORMAT Texture::GetTextureDXGIFormat()
-{
-    return m_dxgiFormat;
-}
-
 BYTE* Texture::GetTextureData()
 {
     return *m_data.get();
+}
+
+D3D12_RESOURCE_DESC* Texture::GetTextureDesc()
+{
+    return m_desc;
 }
 
 void Texture::LoadTexture(LPCWSTR texturePath)
@@ -72,9 +72,26 @@ void Texture::LoadTexture(LPCWSTR texturePath)
     m_dxgiFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 
     ThrowIfFailed(pConverter->CopyPixels(0, m_bytesPerRow, m_size, *m_data.get()));
+
+    // Create texture desc.
+    m_desc = new D3D12_RESOURCE_DESC();
+
+    m_desc->Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    m_desc->Alignment = 0;
+    m_desc->Width = m_width;
+    m_desc->Height = m_height;
+    m_desc->DepthOrArraySize = 1;
+    m_desc->MipLevels = 1;
+    m_desc->Format = m_dxgiFormat;
+    m_desc->SampleDesc.Count = 1;
+    m_desc->SampleDesc.Quality = 0;
+    m_desc->Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    m_desc->Flags = D3D12_RESOURCE_FLAG_NONE;
 }
 
 void Texture::ReleaseTexture()
 {
     m_data.release();
+    delete m_desc;
+    m_desc = nullptr;
 }

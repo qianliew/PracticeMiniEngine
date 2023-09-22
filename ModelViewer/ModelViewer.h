@@ -17,6 +17,7 @@
 #include "FBXImporter.h"
 #include "Camera.h"
 #include "Mesh.h"
+#include "Allocator.h"
 #include "Texture.h"
 
 using namespace DirectX;
@@ -72,6 +73,8 @@ private:
     UINT m_rtvDescriptorSize;
     UINT m_dsvDescriptorSize;
 
+    unique_ptr<Allocator> m_allocator;
+
     // App resources.
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
     D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
@@ -79,10 +82,8 @@ private:
     unique_ptr<UploadBuffer> m_vertexBuffer;
     unique_ptr<UploadBuffer> m_indexBuffer;
     unique_ptr<UploadBuffer> m_constantBuffer;
-    unique_ptr<UploadBuffer> m_textureBuffer; 
     unique_ptr<DefaultBuffer> m_vertexStaticBuffer;
     unique_ptr<DefaultBuffer> m_indexStaticBuffer;
-    unique_ptr<DefaultBuffer> m_textureStaticBuffer;
 
     // Synchronization objects.
     UINT m_frameIndex;
@@ -101,4 +102,6 @@ private:
     void LoadAssets();
     void PopulateCommandList();
     void WaitForPreviousFrame();
+
+    void CreateTexture();
 };

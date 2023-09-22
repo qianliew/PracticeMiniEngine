@@ -37,3 +37,7 @@
 #include <iostream>
 
 #include "DXSampleHelper.h"
+#include "Buffer.h"
+#include "UploadBuffer.h"
+#include "DefaultBuffer.h"
+#include "Texture.h"
