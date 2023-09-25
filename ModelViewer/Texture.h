@@ -14,6 +14,7 @@ private:
 
 public:
 	DefaultBuffer* Buffer;
+	SRVView* View;
 
 	~Texture();
 
@@ -25,5 +26,6 @@ public:
 	D3D12_RESOURCE_DESC* GetTextureDesc();
 
 	void LoadTexture(LPCWSTR texturePath);
+	void CreateView(ComPtr<ID3D12Device> &device, std::unique_ptr<DescriptorHeapManager> &manager);
 	void ReleaseTexture();
 };

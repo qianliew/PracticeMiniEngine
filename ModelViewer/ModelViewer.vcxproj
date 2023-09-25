@@ -117,10 +117,12 @@
     <ClInclude Include="Allocator.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="DefaultBuffer.h" />
+    <ClInclude Include="DescriptorHeapManager.h" />
     <ClInclude Include="FBXImporter.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="UploadBuffer.h" />
+    <ClInclude Include="View.h" />
     <ClInclude Include="Win32Application.h" />
     <ClInclude Include="ModelViewer.h" />
     <ClInclude Include="d3dx12.h" />
@@ -133,6 +135,7 @@
     <ClCompile Include="Buffer.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DefaultBuffer.cpp" />
+    <ClCompile Include="DescriptorHeapManager.cpp" />
     <ClCompile Include="FBXImporter.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Texture.cpp" />

@@ -18,6 +18,7 @@
 #include "Camera.h"
 #include "Mesh.h"
 #include "Allocator.h"
+#include "DescriptorHeapManager.h"
 #include "Texture.h"
 
 using namespace DirectX;
@@ -67,13 +68,13 @@ private:
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
     ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
     ComPtr<ID3D12DescriptorHeap> m_cbvHeap;
-    ComPtr<ID3D12DescriptorHeap> m_srvHeap;
     ComPtr<ID3D12PipelineState> m_pipelineState;
     ComPtr<ID3D12GraphicsCommandList> m_commandList;
     UINT m_rtvDescriptorSize;
     UINT m_dsvDescriptorSize;
 
     unique_ptr<Allocator> m_allocator;
+    unique_ptr<DescriptorHeapManager> m_descriptorHeapManager;
 
     // App resources.
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;

@@ -40,4 +40,6 @@
 #include "Buffer.h"
 #include "UploadBuffer.h"
 #include "DefaultBuffer.h"
+#include "View.h"
+#include "DescriptorHeapManager.h"
 #include "Texture.h"

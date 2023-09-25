@@ -108,6 +108,8 @@ void ModelViewer::LoadPipeline()
     ThrowIfFailed(swapChain.As(&m_swapChain));
     m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
+    m_descriptorHeapManager = std::make_unique<DescriptorHeapManager>(m_device);
+
     // Create descriptor heaps.
     {
         // Describe and create a render target view (RTV) descriptor heap.
@@ -134,14 +136,6 @@ void ModelViewer::LoadPipeline()
         cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&m_cbvHeap)));
-
-        // Describe and create a shader resource view (SRV) descriptor heap.
-
-        D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-        srvHeapDesc.NumDescriptors = 1;
-        srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-        ThrowIfFailed(m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
     }
 
     // Create frame resources.
@@ -402,12 +396,7 @@ void ModelViewer::LoadAssets()
         // Update texture data from upload buffer to gpu buffer.
         UpdateSubresources(m_commandList.Get(), m_texture->Buffer->GetBuffer().Get(), tempBuffer->GetBuffer().Get(), 0, 0, 1, &textureData);
 
-        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        srvDesc.Format = m_texture->GetTextureDesc()->Format;
-        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-        srvDesc.Texture2D.MipLevels = 1;
-        m_device->CreateShaderResourceView(m_texture->Buffer->GetBuffer().Get(), &srvDesc, m_srvHeap->GetCPUDescriptorHandleForHeapStart());
+        m_texture->CreateView(m_device, m_descriptorHeapManager);
     }
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
@@ -547,9 +536,7 @@ void ModelViewer::PopulateCommandList()
     m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
     m_commandList->SetGraphicsRootDescriptorTable(0, m_cbvHeap->GetGPUDescriptorHandleForHeapStart());
 
-    descriptorHeaps[0] = m_srvHeap.Get();
-    m_commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-    m_commandList->SetGraphicsRootDescriptorTable(1, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
+    m_descriptorHeapManager->SetSRVs(m_commandList);
 
     // Set necessary state.
     m_commandList->RSSetViewports(1, &m_viewport);
