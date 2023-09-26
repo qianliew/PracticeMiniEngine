@@ -35,11 +35,13 @@
 #include <shellapi.h>
 #include <fstream>
 #include <iostream>
+#include <unordered_map>
 
 #include "DXSampleHelper.h"
-#include "Buffer.h"
-#include "UploadBuffer.h"
-#include "DefaultBuffer.h"
-#include "View.h"
-#include "DescriptorHeapManager.h"
-#include "Texture.h"
+#include "D3D12Buffer.h"
+#include "D3D12UploadBuffer.h"
+#include "D3D12DefaultBuffer.h"
+#include "D3D12View.h"
+
+#include "D3D12BufferManager.h"
+#include "D3D12DescriptorHeapManager.h"

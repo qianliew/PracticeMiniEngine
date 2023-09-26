@@ -1,14 +1,12 @@
 #pragma once
-#include "Buffer.h"
 
 #define UPLOAD_BUFFER_ALIGNMENT D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT
 
-class UploadBuffer : public Buffer
+class D3D12UploadBuffer : public D3D12Buffer
 {
 public:
-	~UploadBuffer();
+	~D3D12UploadBuffer();
 
-	ComPtr<ID3D12Resource> GetBuffer();
 	void* GetStartLocation();
 	UINT GetDataSize();
 

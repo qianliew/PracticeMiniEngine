@@ -8,11 +8,10 @@ Mesh::Mesh()
 Mesh::~Mesh()
 {
     delete m_vertexDesc;
-    delete VertexBuffer;
     delete View;
 
     m_vertexDesc = nullptr;
-    VertexBuffer = nullptr;
+    ResourceLocation = nullptr;
     View = nullptr;
 }
 
@@ -36,8 +35,7 @@ void Mesh::SetVertices(Vertex* triangleVertices, UINT size)
     m_vertexDesc->Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
     m_vertexDesc->Flags = D3D12_RESOURCE_FLAG_NONE;
 
-    VertexBuffer = new DefaultBuffer();
-    View = new VBV();
+    View = new D3D12VBV();
 }
 
 void Mesh::SetIndices(UINT16* triangleIndices, UINT size)
@@ -89,10 +87,10 @@ void Mesh::CopyIndices(void* destination)
     memcpy(destination, m_indices.get(), m_indicesSize);
 }
 
-void Mesh::CreateView(ComPtr<ID3D12Device>& device, std::unique_ptr<DescriptorHeapManager>& manager)
+void Mesh::CreateView(ComPtr<ID3D12Device>& device, std::unique_ptr<D3D12DescriptorHeapManager>& manager)
 {
     // Initialize the vertex buffer view.
-    View->VertexBufferView.BufferLocation = VertexBuffer->GetBuffer()->GetGPUVirtualAddress();
+    View->VertexBufferView.BufferLocation = ResourceLocation->Resource->GetGPUVirtualAddress();
     View->VertexBufferView.StrideInBytes = sizeof(Vertex);
     View->VertexBufferView.SizeInBytes = m_verticesSize;
 }

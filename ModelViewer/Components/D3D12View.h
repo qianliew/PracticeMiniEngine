@@ -1,17 +1,17 @@
 #pragma once
 #include "stdafx.h"
 
-class View
+class D3D12View
 {
 };
 
-class SRV : public View
+class D3D12SRV : public D3D12View
 {
 public:
 	CD3DX12_CPU_DESCRIPTOR_HANDLE CPUHandle;
 };
 
-class VBV : public View
+class D3D12VBV : public D3D12View
 {
 public:
 	D3D12_VERTEX_BUFFER_VIEW VertexBufferView;

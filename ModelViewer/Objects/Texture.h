@@ -1,6 +1,7 @@
 #pragma once
+#include "Resource.h"
 
-class Texture
+class Texture : public Resource
 {
 private:
 	UINT m_width;
@@ -13,8 +14,7 @@ private:
 	std::unique_ptr<BYTE*> m_data;
 
 public:
-	DefaultBuffer* Buffer;
-	SRV* View;
+	D3D12SRV* View;
 
 	~Texture();
 
@@ -26,6 +26,6 @@ public:
 	D3D12_RESOURCE_DESC* GetTextureDesc();
 
 	void LoadTexture(LPCWSTR texturePath);
-	void CreateView(ComPtr<ID3D12Device> &device, std::unique_ptr<DescriptorHeapManager> &manager);
+	void CreateView(ComPtr<ID3D12Device> &device, std::unique_ptr<D3D12DescriptorHeapManager> &manager);
 	void ReleaseTexture();
 };

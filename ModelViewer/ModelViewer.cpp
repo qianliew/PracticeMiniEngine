@@ -108,7 +108,7 @@ void ModelViewer::LoadPipeline()
     ThrowIfFailed(swapChain.As(&m_swapChain));
     m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
-    m_descriptorHeapManager = std::make_unique<DescriptorHeapManager>(m_device);
+    m_descriptorHeapManager = std::make_unique<D3D12DescriptorHeapManager>(m_device);
 
     // Create descriptor heaps.
     {
@@ -187,7 +187,7 @@ void ModelViewer::LoadAssets()
 {
     // Create scene objects.
     {
-        m_allocator = std::make_unique<Allocator>(m_device);
+        m_allocator = std::make_unique<D3D12BufferManager>(m_device);
         m_camera = std::make_shared<Camera>();
         m_constant = std::make_shared<Constant>();
         m_mesh = std::make_shared<Mesh>();
@@ -310,11 +310,11 @@ void ModelViewer::LoadAssets()
 
     // Create the constant buffer.
     {
-        m_constantBuffer = std::make_unique<UploadBuffer>();
+        m_constantBuffer = std::make_unique<D3D12UploadBuffer>();
         m_constantBuffer->CreateConstantBuffer(m_device.Get(), sizeof(Constant));
 
         D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-        cbvDesc.BufferLocation = m_constantBuffer->GetBuffer()->GetGPUVirtualAddress();
+        cbvDesc.BufferLocation = m_constantBuffer->ResourceLocation->Resource->GetGPUVirtualAddress();
         cbvDesc.SizeInBytes = CalculateConstantBufferByteSize(m_constantBuffer->GetDataSize());
 
         m_device->CreateConstantBufferView(&cbvDesc, m_cbvHeap->GetCPUDescriptorHandleForHeapStart());
@@ -322,16 +322,16 @@ void ModelViewer::LoadAssets()
 
     // Create the vertex and index buffer.
     {
-        UploadBuffer* tempVertexBuffer = new UploadBuffer();
+        D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
         m_allocator->AllocateUploadBuffer(tempVertexBuffer, UploadBufferType::Vertex);
-        m_allocator->AllocateVertexBuffer(m_mesh.get());
+        m_allocator->AllocateDefaultBuffer(m_mesh->ResourceLocation, m_mesh->GetVertexDesc());
         tempVertexBuffer->CopyData(m_mesh->GetVerticesData(), m_mesh->GetVerticesSize());
 
         m_mesh->CreateView(m_device, m_descriptorHeapManager);
-        m_commandList->CopyResource(m_mesh->VertexBuffer->GetBuffer().Get(), tempVertexBuffer->GetBuffer().Get());
+        m_commandList->CopyResource(m_mesh->ResourceLocation->Resource.Get(), tempVertexBuffer->ResourceLocation->Resource.Get());
 
-        m_indexBuffer = std::make_unique<UploadBuffer>();
-        m_indexStaticBuffer = std::make_unique<DefaultBuffer>();
+        m_indexBuffer = std::make_unique<D3D12UploadBuffer>();
+        m_indexStaticBuffer = std::make_unique<D3D12DefaultBuffer>();
         const UINT indexBufferSize = m_mesh->GetIndicesSize();
 
         D3D12_RESOURCE_DESC indexDesc = {};
@@ -353,20 +353,20 @@ void ModelViewer::LoadAssets()
         m_indexStaticBuffer->CreateBuffer(m_device.Get(), &indexDesc);
 
         // Initialize the index buffer view.
-        m_indexBufferView.BufferLocation = m_indexStaticBuffer->GetBuffer()->GetGPUVirtualAddress();
+        m_indexBufferView.BufferLocation = m_indexStaticBuffer->ResourceLocation->Resource->GetGPUVirtualAddress();
         m_indexBufferView.Format = DXGI_FORMAT_R16_UINT;
         m_indexBufferView.SizeInBytes = indexBufferSize;
 
-        m_commandList->CopyResource(m_indexStaticBuffer->GetBuffer().Get(), m_indexBuffer->GetBuffer().Get());
+        m_commandList->CopyResource(m_indexStaticBuffer->ResourceLocation->Resource.Get(), m_indexBuffer->ResourceLocation->Resource.Get());
     }
 
     // Load textures.
     {
         m_texture->LoadTexture(L"test.png");
-        UploadBuffer* tempBuffer = new UploadBuffer();
+        D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
 
         m_allocator->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
-        m_allocator->AllocateTextureBuffer(m_texture.get());
+        m_allocator->AllocateDefaultBuffer(m_texture->ResourceLocation, m_texture->GetTextureDesc());
 
         // Init texture data.
         UINT numRows;
@@ -378,7 +378,7 @@ void ModelViewer::LoadAssets()
         textureData.SlicePitch = rowSizeInBytes * numRows;
 
         // Update texture data from upload buffer to gpu buffer.
-        UpdateSubresources(m_commandList.Get(), m_texture->Buffer->GetBuffer().Get(), tempBuffer->GetBuffer().Get(), 0, 0, 1, &textureData);
+        UpdateSubresources(m_commandList.Get(), m_texture->ResourceLocation->Resource.Get(), tempBuffer->ResourceLocation->Resource.Get(), 0, 0, 1, &textureData);
 
         m_texture->CreateView(m_device, m_descriptorHeapManager);
     }
@@ -400,11 +400,11 @@ void ModelViewer::LoadAssets()
         // complete before continuing.
         WaitForPreviousFrame();
 
-        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_texture->Buffer->GetBuffer().Get(),
+        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_texture->ResourceLocation->Resource.Get(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_mesh->VertexBuffer->GetBuffer().Get(),
+        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_mesh->ResourceLocation->Resource.Get(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
-        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_indexStaticBuffer->GetBuffer().Get(),
+        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_indexStaticBuffer->ResourceLocation->Resource.Get(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
         ThrowIfFailed(m_commandList->Close());
 

@@ -89,7 +89,7 @@ void Texture::LoadTexture(LPCWSTR texturePath)
     m_desc->Flags = D3D12_RESOURCE_FLAG_NONE;
 }
 
-void Texture::CreateView(ComPtr<ID3D12Device>& device, std::unique_ptr<DescriptorHeapManager>& manager)
+void Texture::CreateView(ComPtr<ID3D12Device>& device, std::unique_ptr<D3D12DescriptorHeapManager>& manager)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -99,15 +99,17 @@ void Texture::CreateView(ComPtr<ID3D12Device>& device, std::unique_ptr<Descripto
 
     if (View == nullptr)
     {
-        View = new SRV();
+        View = new D3D12SRV();
     }
     manager->GetSRVHandle(View, 0);
-    device->CreateShaderResourceView(Buffer->GetBuffer().Get(), &srvDesc, View->CPUHandle);
+    device->CreateShaderResourceView(ResourceLocation->Resource.Get(), &srvDesc, View->CPUHandle);
 }
 
 void Texture::ReleaseTexture()
 {
     m_data.release();
     delete m_desc;
+
     m_desc = nullptr;
+    ResourceLocation = nullptr;
 }

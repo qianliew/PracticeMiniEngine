@@ -1,4 +1,5 @@
 #pragma once
+#include "Resource.h"
 
 using namespace DirectX;
 
@@ -9,7 +10,7 @@ struct Vertex
     XMFLOAT4 color;
 };
 
-class Mesh
+class Mesh : public Resource
 {
 private:
 	XMVECTOR m_position;
@@ -23,11 +24,9 @@ private:
 
 public:
     Mesh();
-    
     ~Mesh();
 
-    DefaultBuffer* VertexBuffer;
-    VBV* View;
+    D3D12VBV* View;
 
     void SetVertices(Vertex* triangleVertices, UINT size);
     void SetIndices(UINT16* triangleIndices, UINT size);
@@ -40,5 +39,5 @@ public:
     void CopyVertices(void* destination);
     void CopyIndices(void* destination);
 
-    void CreateView(ComPtr<ID3D12Device>& device, std::unique_ptr<DescriptorHeapManager>& manager);
+    void CreateView(ComPtr<ID3D12Device>& device, std::unique_ptr<D3D12DescriptorHeapManager>& manager);
 };

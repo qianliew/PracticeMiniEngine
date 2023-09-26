@@ -12,13 +12,9 @@
 #pragma once
 
 #include "DXSample.h"
-#include "UploadBuffer.h"
-#include "DefaultBuffer.h"
 #include "FBXImporter.h"
 #include "Camera.h"
 #include "Mesh.h"
-#include "Allocator.h"
-#include "DescriptorHeapManager.h"
 #include "Texture.h"
 
 using namespace DirectX;
@@ -73,15 +69,15 @@ private:
     UINT m_rtvDescriptorSize;
     UINT m_dsvDescriptorSize;
 
-    unique_ptr<Allocator> m_allocator;
-    unique_ptr<DescriptorHeapManager> m_descriptorHeapManager;
+    unique_ptr<D3D12BufferManager> m_allocator;
+    unique_ptr<D3D12DescriptorHeapManager> m_descriptorHeapManager;
 
     // App resources.
     D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
 
-    unique_ptr<UploadBuffer> m_indexBuffer;
-    unique_ptr<UploadBuffer> m_constantBuffer;
-    unique_ptr<DefaultBuffer> m_indexStaticBuffer;
+    unique_ptr<D3D12UploadBuffer> m_indexBuffer;
+    unique_ptr<D3D12UploadBuffer> m_constantBuffer;
+    unique_ptr<D3D12DefaultBuffer> m_indexStaticBuffer;
 
     // Synchronization objects.
     UINT m_frameIndex;

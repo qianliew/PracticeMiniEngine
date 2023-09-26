@@ -58,7 +58,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>FBXSDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>FBXSDK\include;$(ProjectDir);$(ProjectDir)Components;$(ProjectDir)Managers;$(ProjectDir)Objects;$(ProjectDir)Utilities;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAsWinRT>false</CompileAsWinRT>
     </ClCompile>
     <Link>
@@ -113,16 +113,17 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Buffer.h" />
-    <ClInclude Include="Allocator.h" />
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="DefaultBuffer.h" />
-    <ClInclude Include="DescriptorHeapManager.h" />
-    <ClInclude Include="FBXImporter.h" />
-    <ClInclude Include="Mesh.h" />
-    <ClInclude Include="Texture.h" />
-    <ClInclude Include="UploadBuffer.h" />
-    <ClInclude Include="View.h" />
+    <ClInclude Include="Components\D3D12Buffer.h" />
+    <ClInclude Include="Components\D3D12DefaultBuffer.h" />
+    <ClInclude Include="Components\D3D12UploadBuffer.h" />
+    <ClInclude Include="Components\D3D12View.h" />
+    <ClInclude Include="Managers\D3D12BufferManager.h" />
+    <ClInclude Include="Managers\D3D12DescriptorHeapManager.h" />
+    <ClInclude Include="Objects\Camera.h" />
+    <ClInclude Include="Objects\Mesh.h" />
+    <ClInclude Include="Objects\Resource.h" />
+    <ClInclude Include="Objects\Texture.h" />
+    <ClInclude Include="Utilities\FBXImporter.h" />
     <ClInclude Include="Win32Application.h" />
     <ClInclude Include="ModelViewer.h" />
     <ClInclude Include="d3dx12.h" />
@@ -131,15 +132,16 @@
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Allocator.cpp" />
-    <ClCompile Include="Buffer.cpp" />
-    <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="DefaultBuffer.cpp" />
-    <ClCompile Include="DescriptorHeapManager.cpp" />
-    <ClCompile Include="FBXImporter.cpp" />
-    <ClCompile Include="Mesh.cpp" />
-    <ClCompile Include="Texture.cpp" />
-    <ClCompile Include="UploadBuffer.cpp" />
+    <ClCompile Include="Components\D3D12Buffer.cpp" />
+    <ClCompile Include="Components\D3D12DefaultBuffer.cpp" />
+    <ClCompile Include="Components\D3D12UploadBuffer.cpp" />
+    <ClCompile Include="Managers\D3D12BufferManager.cpp" />
+    <ClCompile Include="Managers\D3D12DescriptorHeapManager.cpp" />
+    <ClCompile Include="Objects\Camera.cpp" />
+    <ClCompile Include="Objects\Mesh.cpp" />
+    <ClCompile Include="Objects\Resource.cpp" />
+    <ClCompile Include="Objects\Texture.cpp" />
+    <ClCompile Include="Utilities\FBXImporter.cpp" />
     <ClCompile Include="Win32Application.cpp" />
     <ClCompile Include="ModelViewer.cpp" />
     <ClCompile Include="DXSample.cpp" />
