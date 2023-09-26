@@ -99,7 +99,7 @@ void Texture::CreateView(ComPtr<ID3D12Device>& device, std::unique_ptr<Descripto
 
     if (View == nullptr)
     {
-        View = new SRVView();
+        View = new SRV();
     }
     manager->GetSRVHandle(View, 0);
     device->CreateShaderResourceView(Buffer->GetBuffer().Get(), &srvDesc, View->CPUHandle);

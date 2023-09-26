@@ -19,10 +19,15 @@ private:
     UINT m_indicesSize;
     UINT m_indicesNum;
 
+    D3D12_RESOURCE_DESC* m_vertexDesc;
+
 public:
     Mesh();
     
     ~Mesh();
+
+    DefaultBuffer* VertexBuffer;
+    VBV* View;
 
     void SetVertices(Vertex* triangleVertices, UINT size);
     void SetIndices(UINT16* triangleIndices, UINT size);
@@ -31,6 +36,9 @@ public:
     UINT GetIndicesNum();
     void const* GetVerticesData();
     void const* GetIndicesData();
+    D3D12_RESOURCE_DESC* GetVertexDesc();
     void CopyVertices(void* destination);
     void CopyIndices(void* destination);
+
+    void CreateView(ComPtr<ID3D12Device>& device, std::unique_ptr<DescriptorHeapManager>& manager);
 };

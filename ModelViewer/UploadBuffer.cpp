@@ -60,3 +60,8 @@ void UploadBuffer::CopyData(void const* source)
 {
 	memcpy(m_startLocation, source, m_dataSize);
 }
+
+void UploadBuffer::CopyData(void const* source, size_t size)
+{
+	memcpy(m_startLocation, source, size);
+}

@@ -1,4 +1,5 @@
 #pragma once
+#include "Mesh.h"
 #include "Texture.h"
 #include <unordered_map>
 
@@ -21,6 +22,7 @@ private:
 public:
 	Allocator(ComPtr<ID3D12Device>& device);
 
-	void AllocateUploadBuffer(UploadBuffer* &pBuffer);
+	void AllocateUploadBuffer(UploadBuffer* &pBuffer, UploadBufferType type);
 	void AllocateTextureBuffer(Texture* pTexture);
+	void AllocateVertexBuffer(Mesh* pMesh);
 };

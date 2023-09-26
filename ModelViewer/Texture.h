@@ -14,7 +14,7 @@ private:
 
 public:
 	DefaultBuffer* Buffer;
-	SRVView* View;
+	SRV* View;
 
 	~Texture();
 

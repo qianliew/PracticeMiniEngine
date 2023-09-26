@@ -3,39 +3,17 @@
 
 Mesh::Mesh()
 {
-    Vertex triangleVertices[] =
-    {
-        { { -1.0f, -1.0f, 1.0f }, { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-        { { -1.0f, 1.0f, 1.0f }, { 0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-        { { 1.0f, 1.0f, 1.0f }, { 0.5f, 0.5f },  { 0.0f, 0.0f, 1.0f, 1.0f } },
-        { { 1.0f, -1.0f, 1.0f }, { 0.0f, 0.5f }, { 0.0f, 0.0f, 0.0f, 1.0f } },
-        { { -1.0f, -1.0f, -1.0f }, { 1.0f, 1.0f }, { 1.0f, 1.0f, 0.0f, 1.0f } },
-        { { -1.0f, 1.0f, -1.0f }, { 0.5f, 1.0f }, { 0.0f, 1.0f, 1.0f, 1.0f } },
-        { { 1.0f, 1.0f, -1.0f }, { 1.0f, 0.5f }, { 1.0f, 0.0f, 1.0f, 1.0f } },
-        { { 1.0f, -1.0f, -1.0f }, { 0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
-    };
-
-    m_verticesSize = sizeof(triangleVertices);
-    m_vertices = std::make_unique<Vertex*>((Vertex*)malloc(m_verticesSize));
-    memcpy(*(m_vertices.get()), &triangleVertices, m_verticesSize);
-
-    UINT16 triangleIndices[] =
-    {
-        0, 1, 2, 0, 2, 3,
-        1, 5, 6, 1, 6, 2,
-        4, 6, 5, 4, 7, 6,
-        4, 5, 1, 4, 1, 0,
-        3, 2, 6, 3, 6, 7,
-        4, 0, 3, 4, 3, 7
-    };
-
-    m_indicesSize = sizeof(triangleIndices);
-    m_indices = std::make_unique<UINT16*>((UINT16*)malloc(m_indicesSize));
-    memcpy(*(m_indices.get()), &triangleIndices, sizeof(triangleIndices));
 }
 
 Mesh::~Mesh()
 {
+    delete m_vertexDesc;
+    delete VertexBuffer;
+    delete View;
+
+    m_vertexDesc = nullptr;
+    VertexBuffer = nullptr;
+    View = nullptr;
 }
 
 void Mesh::SetVertices(Vertex* triangleVertices, UINT size)
@@ -44,6 +22,22 @@ void Mesh::SetVertices(Vertex* triangleVertices, UINT size)
     m_vertices.release();
     m_vertices = std::make_unique<Vertex*>((Vertex*)malloc(size));
     memcpy(*(m_vertices.get()), triangleVertices, m_verticesSize);
+
+    m_vertexDesc = new D3D12_RESOURCE_DESC();
+    m_vertexDesc->Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    m_vertexDesc->Alignment = 0;
+    m_vertexDesc->Width = m_verticesSize;
+    m_vertexDesc->Height = 1;
+    m_vertexDesc->DepthOrArraySize = 1;
+    m_vertexDesc->MipLevels = 1;
+    m_vertexDesc->Format = DXGI_FORMAT_UNKNOWN;
+    m_vertexDesc->SampleDesc.Count = 1;
+    m_vertexDesc->SampleDesc.Quality = 0;
+    m_vertexDesc->Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    m_vertexDesc->Flags = D3D12_RESOURCE_FLAG_NONE;
+
+    VertexBuffer = new DefaultBuffer();
+    View = new VBV();
 }
 
 void Mesh::SetIndices(UINT16* triangleIndices, UINT size)
@@ -80,6 +74,11 @@ void const* Mesh::GetIndicesData()
     return *(m_indices.get());
 }
 
+D3D12_RESOURCE_DESC* Mesh::GetVertexDesc()
+{
+    return m_vertexDesc;
+}
+
 void Mesh::CopyVertices(void* destination)
 {
     memcpy(destination, m_vertices.get(), m_verticesSize);
@@ -88,4 +87,12 @@ void Mesh::CopyVertices(void* destination)
 void Mesh::CopyIndices(void* destination)
 {
     memcpy(destination, m_indices.get(), m_indicesSize);
+}
+
+void Mesh::CreateView(ComPtr<ID3D12Device>& device, std::unique_ptr<DescriptorHeapManager>& manager)
+{
+    // Initialize the vertex buffer view.
+    View->VertexBufferView.BufferLocation = VertexBuffer->GetBuffer()->GetGPUVirtualAddress();
+    View->VertexBufferView.StrideInBytes = sizeof(Vertex);
+    View->VertexBufferView.SizeInBytes = m_verticesSize;
 }

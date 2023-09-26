@@ -322,35 +322,17 @@ void ModelViewer::LoadAssets()
 
     // Create the vertex and index buffer.
     {
-        m_vertexBuffer = std::make_unique<UploadBuffer>();
-        m_vertexStaticBuffer = std::make_unique<DefaultBuffer>();
+        UploadBuffer* tempVertexBuffer = new UploadBuffer();
+        m_allocator->AllocateUploadBuffer(tempVertexBuffer, UploadBufferType::Vertex);
+        m_allocator->AllocateVertexBuffer(m_mesh.get());
+        tempVertexBuffer->CopyData(m_mesh->GetVerticesData(), m_mesh->GetVerticesSize());
+
+        m_mesh->CreateView(m_device, m_descriptorHeapManager);
+        m_commandList->CopyResource(m_mesh->VertexBuffer->GetBuffer().Get(), tempVertexBuffer->GetBuffer().Get());
+
         m_indexBuffer = std::make_unique<UploadBuffer>();
         m_indexStaticBuffer = std::make_unique<DefaultBuffer>();
-        const UINT vertexBufferSize = m_mesh->GetVerticesSize();
         const UINT indexBufferSize = m_mesh->GetIndicesSize();
-
-        D3D12_RESOURCE_DESC vertexDesc = {};
-        vertexDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-        vertexDesc.Alignment = 0;
-        vertexDesc.Width = vertexBufferSize;
-        vertexDesc.Height = 1;
-        vertexDesc.DepthOrArraySize = 1;
-        vertexDesc.MipLevels = 1;
-        vertexDesc.Format = DXGI_FORMAT_UNKNOWN;
-        vertexDesc.SampleDesc.Count = 1;
-        vertexDesc.SampleDesc.Quality = 0;
-        vertexDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-        vertexDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-        // Initialize the vertex buffer.
-        m_vertexBuffer->CreateBuffer(m_device.Get(), vertexBufferSize);
-        m_vertexBuffer->CopyData(m_mesh->GetVerticesData());
-        m_vertexStaticBuffer->CreateBuffer(m_device.Get(), &vertexDesc);
-
-        // Initialize the vertex buffer view.
-        m_vertexBufferView.BufferLocation = m_vertexStaticBuffer->GetBuffer()->GetGPUVirtualAddress();
-        m_vertexBufferView.StrideInBytes = sizeof(Vertex);
-        m_vertexBufferView.SizeInBytes = vertexBufferSize;
 
         D3D12_RESOURCE_DESC indexDesc = {};
         indexDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -374,6 +356,8 @@ void ModelViewer::LoadAssets()
         m_indexBufferView.BufferLocation = m_indexStaticBuffer->GetBuffer()->GetGPUVirtualAddress();
         m_indexBufferView.Format = DXGI_FORMAT_R16_UINT;
         m_indexBufferView.SizeInBytes = indexBufferSize;
+
+        m_commandList->CopyResource(m_indexStaticBuffer->GetBuffer().Get(), m_indexBuffer->GetBuffer().Get());
     }
 
     // Load textures.
@@ -381,7 +365,7 @@ void ModelViewer::LoadAssets()
         m_texture->LoadTexture(L"test.png");
         UploadBuffer* tempBuffer = new UploadBuffer();
 
-        m_allocator->AllocateUploadBuffer(tempBuffer);
+        m_allocator->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
         m_allocator->AllocateTextureBuffer(m_texture.get());
 
         // Init texture data.
@@ -418,9 +402,7 @@ void ModelViewer::LoadAssets()
 
         m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_texture->Buffer->GetBuffer().Get(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-        m_commandList->CopyResource(m_vertexStaticBuffer->GetBuffer().Get(), m_vertexBuffer->GetBuffer().Get());
-        m_commandList->CopyResource(m_indexStaticBuffer->GetBuffer().Get(), m_indexBuffer->GetBuffer().Get());
-        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_vertexStaticBuffer->GetBuffer().Get(),
+        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_mesh->VertexBuffer->GetBuffer().Get(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
         m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_indexStaticBuffer->GetBuffer().Get(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
@@ -434,7 +416,6 @@ void ModelViewer::LoadAssets()
         m_fenceValue++;
 
         m_texture->ReleaseTexture();
-        m_vertexBuffer.release();
         m_indexBuffer.release();
     }
 }
@@ -555,7 +536,7 @@ void ModelViewer::PopulateCommandList()
     m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+    m_commandList->IASetVertexBuffers(0, 1, &m_mesh->View->VertexBufferView);
     m_commandList->IASetIndexBuffer(&m_indexBufferView);
 
     m_commandList->DrawIndexedInstanced(m_mesh->GetIndicesNum(), 1, 0, 0, 0);

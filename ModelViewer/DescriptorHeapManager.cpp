@@ -14,7 +14,7 @@ DescriptorHeapManager::DescriptorHeapManager(ComPtr<ID3D12Device> &device)
     m_srvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
 
-void DescriptorHeapManager::GetSRVHandle(View* handle, INT offset)
+void DescriptorHeapManager::GetSRVHandle(SRV* handle, INT offset)
 {
     handle->CPUHandle = m_srvHeap->GetCPUDescriptorHandleForHeapStart();
     handle->CPUHandle.Offset(offset, m_srvDescriptorSize);

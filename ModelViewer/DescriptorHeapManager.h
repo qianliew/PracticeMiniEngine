@@ -9,7 +9,7 @@ private:
 public:
 	DescriptorHeapManager(ComPtr<ID3D12Device>& device);
 
-	void GetSRVHandle(View* handle, INT offset);
+	void GetSRVHandle(SRV* handle, INT offset);
 
 	void SetSRVs(ComPtr<ID3D12GraphicsCommandList>& commandList);
 };

@@ -77,13 +77,10 @@ private:
     unique_ptr<DescriptorHeapManager> m_descriptorHeapManager;
 
     // App resources.
-    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
     D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
 
-    unique_ptr<UploadBuffer> m_vertexBuffer;
     unique_ptr<UploadBuffer> m_indexBuffer;
     unique_ptr<UploadBuffer> m_constantBuffer;
-    unique_ptr<DefaultBuffer> m_vertexStaticBuffer;
     unique_ptr<DefaultBuffer> m_indexStaticBuffer;
 
     // Synchronization objects.
@@ -103,6 +100,4 @@ private:
     void LoadAssets();
     void PopulateCommandList();
     void WaitForPreviousFrame();
-
-    void CreateTexture();
 };

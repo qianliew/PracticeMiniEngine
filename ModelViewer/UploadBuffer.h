@@ -2,7 +2,6 @@
 #include "Buffer.h"
 
 #define UPLOAD_BUFFER_ALIGNMENT D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT
-#define BIG_BLOCK_SIZE 16777216
 
 class UploadBuffer : public Buffer
 {
@@ -16,4 +15,5 @@ public:
 	void CreateBuffer(ID3D12Device* device, UINT size);
 	void CreateConstantBuffer(ID3D12Device* device, UINT size);
 	void CopyData(void const* source);
+	void CopyData(void const* source, size_t size);
 };
