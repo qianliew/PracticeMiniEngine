@@ -7,7 +7,7 @@ using std::shared_ptr;
 #define CAMERA_MOVING_SPEED 2.0f
 #define CAMERA_ROTATING_SPEED XM_PI / 36.0f
 
-class Camera
+class D3D12Camera
 {
 private:
     unique_ptr<XMVECTOR> m_cameraPosition;
@@ -20,9 +20,9 @@ private:
     FLOAT farZ;
 
 public:
-    Camera();
+    D3D12Camera();
 
-    ~Camera();
+    ~D3D12Camera();
 
     XMMATRIX GetMVPMatrix();
 

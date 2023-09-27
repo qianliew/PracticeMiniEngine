@@ -188,10 +188,10 @@ void ModelViewer::LoadAssets()
     // Create scene objects.
     {
         m_allocator = std::make_unique<D3D12BufferManager>(m_device);
-        m_camera = std::make_shared<Camera>();
+        m_camera = std::make_shared<D3D12Camera>();
         m_constant = std::make_shared<Constant>();
-        m_mesh = std::make_shared<Mesh>();
-        m_texture = std::make_shared<Texture>();
+        m_mesh = std::make_shared<D3D12Mesh>();
+        m_texture = std::make_shared<D3D12Texture>();
         m_fbxImporter = std::make_unique<FBXImporter>();
         m_fbxImporter->InitializeSdkObjects();
         if (m_fbxImporter->ImportFBX("cube.fbx"))
@@ -324,11 +324,12 @@ void ModelViewer::LoadAssets()
     {
         D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
         m_allocator->AllocateUploadBuffer(tempVertexBuffer, UploadBufferType::Vertex);
-        m_allocator->AllocateDefaultBuffer(m_mesh->ResourceLocation, m_mesh->GetVertexDesc());
+        m_allocator->AllocateDefaultBuffer(m_mesh->VertexBuffer->ResourceLocation, m_mesh->VertexBuffer->ResourceDesc);
         tempVertexBuffer->CopyData(m_mesh->GetVerticesData(), m_mesh->GetVerticesSize());
 
         m_mesh->CreateView(m_device, m_descriptorHeapManager);
-        m_commandList->CopyResource(m_mesh->ResourceLocation->Resource.Get(), tempVertexBuffer->ResourceLocation->Resource.Get());
+        m_commandList->CopyResource(m_mesh->VertexBuffer->ResourceLocation->Resource.Get(),
+            tempVertexBuffer->ResourceLocation->Resource.Get());
 
         m_indexBuffer = std::make_unique<D3D12UploadBuffer>();
         m_indexStaticBuffer = std::make_unique<D3D12DefaultBuffer>();
@@ -400,11 +401,14 @@ void ModelViewer::LoadAssets()
         // complete before continuing.
         WaitForPreviousFrame();
 
-        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_texture->ResourceLocation->Resource.Get(),
+        m_commandList->ResourceBarrier(1,
+            &CD3DX12_RESOURCE_BARRIER::Transition(m_texture->ResourceLocation->Resource.Get(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_mesh->ResourceLocation->Resource.Get(),
+        m_commandList->ResourceBarrier(1,
+            &CD3DX12_RESOURCE_BARRIER::Transition(m_mesh->VertexBuffer->ResourceLocation->Resource.Get(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
-        m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_indexStaticBuffer->ResourceLocation->Resource.Get(),
+        m_commandList->ResourceBarrier(1,
+            &CD3DX12_RESOURCE_BARRIER::Transition(m_indexStaticBuffer->ResourceLocation->Resource.Get(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
         ThrowIfFailed(m_commandList->Close());
 
@@ -536,7 +540,7 @@ void ModelViewer::PopulateCommandList()
     m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_commandList->IASetVertexBuffers(0, 1, &m_mesh->View->VertexBufferView);
+    m_commandList->IASetVertexBuffers(0, 1, &m_mesh->VertexBuffer->View->VertexBufferView);
     m_commandList->IASetIndexBuffer(&m_indexBufferView);
 
     m_commandList->DrawIndexedInstanced(m_mesh->GetIndicesNum(), 1, 0, 0, 0);

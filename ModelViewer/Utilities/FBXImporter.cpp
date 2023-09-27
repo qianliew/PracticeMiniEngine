@@ -198,14 +198,14 @@ bool FBXImporter::ImportFBX(char* path)
     return lStatus;
 }
 
-void FBXImporter::LoadFBX(const std::shared_ptr<Mesh>& mesh)
+void FBXImporter::LoadFBX(const std::shared_ptr<D3D12Mesh>& mesh)
 {
     FbxGeometryConverter converter(m_fbxManager);
     converter.Triangulate(m_fbxScene, true);
     LoadContent(m_fbxScene, mesh);
 }
 
-void FBXImporter::LoadContent(FbxScene* pScene, const std::shared_ptr<Mesh>& mesh)
+void FBXImporter::LoadContent(FbxScene* pScene, const std::shared_ptr<D3D12Mesh>& mesh)
 {
     int i;
     FbxNode* lNode = pScene->GetRootNode();
@@ -219,7 +219,7 @@ void FBXImporter::LoadContent(FbxScene* pScene, const std::shared_ptr<Mesh>& mes
     }
 }
 
-void FBXImporter::LoadContent(FbxNode* pNode, const std::shared_ptr<Mesh>& mesh)
+void FBXImporter::LoadContent(FbxNode* pNode, const std::shared_ptr<D3D12Mesh>& mesh)
 {
     FbxNodeAttribute::EType lAttributeType;
     int i;
@@ -249,7 +249,7 @@ void FBXImporter::LoadContent(FbxNode* pNode, const std::shared_ptr<Mesh>& mesh)
     }
 }
 
-void FBXImporter::LoadMesh(FbxNode* pNode, const std::shared_ptr<Mesh>& mesh)
+void FBXImporter::LoadMesh(FbxNode* pNode, const std::shared_ptr<D3D12Mesh>& mesh)
 {
     FbxMesh* lMesh = (FbxMesh*)pNode->GetNodeAttribute();
     UINT polygonSize = lMesh->GetPolygonCount();

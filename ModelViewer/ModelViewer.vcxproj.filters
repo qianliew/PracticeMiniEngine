@@ -48,16 +48,16 @@
     <ClInclude Include="Components\D3D12UploadBuffer.h">
       <Filter>Components\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\Resource.h">
+    <ClInclude Include="Objects\D3D12Resource.h">
       <Filter>Objects\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\Camera.h">
+    <ClInclude Include="Objects\D3D12Camera.h">
       <Filter>Objects\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\Mesh.h">
+    <ClInclude Include="Objects\D3D12Mesh.h">
       <Filter>Objects\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\Texture.h">
+    <ClInclude Include="Objects\D3D12Texture.h">
       <Filter>Objects\Headers</Filter>
     </ClInclude>
     <ClInclude Include="Components\D3D12View.h">
@@ -78,6 +78,9 @@
     <ClInclude Include="Utilities\FBXImporter.h">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="D3D12VertexBuffer.h">
+      <Filter>Objects\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Components\D3D12Buffer.cpp">
@@ -89,16 +92,16 @@
     <ClCompile Include="Components\D3D12UploadBuffer.cpp">
       <Filter>Components\Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\Resource.cpp">
+    <ClCompile Include="Objects\D3D12Resource.cpp">
       <Filter>Objects\Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\Camera.cpp">
+    <ClCompile Include="Objects\D3D12Camera.cpp">
       <Filter>Objects\Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\Mesh.cpp">
+    <ClCompile Include="Objects\D3D12Mesh.cpp">
       <Filter>Objects\Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\Texture.cpp">
+    <ClCompile Include="Objects\D3D12Texture.cpp">
       <Filter>Objects\Sources</Filter>
     </ClCompile>
     <ClCompile Include="DXSample.cpp" />
@@ -114,6 +117,9 @@
     </ClCompile>
     <ClCompile Include="Utilities\FBXImporter.cpp">
       <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12VertexBuffer.cpp">
+      <Filter>Objects\Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

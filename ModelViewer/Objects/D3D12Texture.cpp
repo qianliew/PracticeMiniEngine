@@ -1,42 +1,42 @@
 #include "stdafx.h"
-#include "Texture.h"
+#include "D3D12Texture.h"
 
-Texture::~Texture()
+D3D12Texture::~D3D12Texture()
 {
     ReleaseTexture();
 }
 
-UINT Texture::GetTextureWidth()
+UINT D3D12Texture::GetTextureWidth()
 {
     return m_width;
 }
 
-UINT Texture::GetTextureHeight()
+UINT D3D12Texture::GetTextureHeight()
 {
     return m_height;
 }
 
-UINT Texture::GetTextureSize()
+UINT D3D12Texture::GetTextureSize()
 {
     return m_size;
 }
 
-UINT Texture::GetTextureBytesPerRow()
+UINT D3D12Texture::GetTextureBytesPerRow()
 {
     return m_bytesPerRow;
 }
 
-BYTE* Texture::GetTextureData()
+BYTE* D3D12Texture::GetTextureData()
 {
     return *m_data.get();
 }
 
-D3D12_RESOURCE_DESC* Texture::GetTextureDesc()
+D3D12_RESOURCE_DESC* D3D12Texture::GetTextureDesc()
 {
     return m_desc;
 }
 
-void Texture::LoadTexture(LPCWSTR texturePath)
+void D3D12Texture::LoadTexture(LPCWSTR texturePath)
 {
     IWICImagingFactory* pFactory = NULL;
     IWICBitmapDecoder* pDecoder = NULL;
@@ -89,7 +89,7 @@ void Texture::LoadTexture(LPCWSTR texturePath)
     m_desc->Flags = D3D12_RESOURCE_FLAG_NONE;
 }
 
-void Texture::CreateView(ComPtr<ID3D12Device>& device, std::unique_ptr<D3D12DescriptorHeapManager>& manager)
+void D3D12Texture::CreateView(ComPtr<ID3D12Device>& device, std::unique_ptr<D3D12DescriptorHeapManager>& manager)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -105,7 +105,7 @@ void Texture::CreateView(ComPtr<ID3D12Device>& device, std::unique_ptr<D3D12Desc
     device->CreateShaderResourceView(ResourceLocation->Resource.Get(), &srvDesc, View->CPUHandle);
 }
 
-void Texture::ReleaseTexture()
+void D3D12Texture::ReleaseTexture()
 {
     m_data.release();
     delete m_desc;

@@ -1,7 +1,7 @@
 #include "stdafx.h"
-#include "Camera.h"
+#include "D3D12Camera.h"
 
-Camera::Camera()
+D3D12Camera::D3D12Camera()
 {
     m_cameraPosition = std::make_unique<XMVECTOR>();
     m_fowardDirction = std::make_unique<XMVECTOR>();
@@ -9,14 +9,14 @@ Camera::Camera()
     ResetCamera();
 }
 
-Camera::~Camera()
+D3D12Camera::~D3D12Camera()
 {
     m_cameraPosition.release();
     m_fowardDirction.release();
     m_upDirction.release();
 }
 
-XMMATRIX Camera::GetMVPMatrix()
+XMMATRIX D3D12Camera::GetMVPMatrix()
 {
     // Get the view matrix.
     XMMATRIX view = XMMatrixLookAtRH(*m_cameraPosition, *m_cameraPosition + *m_fowardDirction, *m_upDirction);
@@ -27,7 +27,7 @@ XMMATRIX Camera::GetMVPMatrix()
     return view * proj;
 }
 
-void Camera::ResetCamera()
+void D3D12Camera::ResetCamera()
 {
     *m_cameraPosition = XMVectorSet(0, 0, -50, 1);
     *m_fowardDirction = XMVectorSet(0, 0, 1, 0);
@@ -38,26 +38,26 @@ void Camera::ResetCamera()
     farZ = 1000.0f;
 }
 
-void Camera::MoveCameraAlongZ(FLOAT direction)
+void D3D12Camera::MoveCameraAlongZ(FLOAT direction)
 {
     *m_cameraPosition += *m_fowardDirction * CAMERA_MOVING_SPEED * direction;
 }
 
-void Camera::MoveCameraAlongX(FLOAT direction)
+void D3D12Camera::MoveCameraAlongX(FLOAT direction)
 {
     XMVECTOR vec = XMVector3Cross(*m_upDirction, *m_fowardDirction);
 
     *m_cameraPosition += vec * CAMERA_MOVING_SPEED * direction;
 }
 
-void Camera::RotateCameraAlongY(FLOAT direction)
+void D3D12Camera::RotateCameraAlongY(FLOAT direction)
 {
     XMMATRIX trans = XMMatrixRotationNormal(g_XMIdentityR1, CAMERA_ROTATING_SPEED * direction);
     *m_fowardDirction = XMPlaneNormalize(XMVector3Transform(*m_fowardDirction, trans));
     *m_upDirction = XMPlaneNormalize(XMVector3Transform(*m_upDirction, trans));
 }
 
-void Camera::RotateCameraAlongX(FLOAT direction)
+void D3D12Camera::RotateCameraAlongX(FLOAT direction)
 {
     XMVECTOR vec = XMVector3Cross(*m_upDirction, *m_fowardDirction);
 

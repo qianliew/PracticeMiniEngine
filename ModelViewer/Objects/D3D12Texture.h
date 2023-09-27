@@ -1,7 +1,7 @@
 #pragma once
-#include "Resource.h"
+#include "D3D12Resource.h"
 
-class Texture : public Resource
+class D3D12Texture : public D3D12Resource
 {
 private:
 	UINT m_width;
@@ -16,7 +16,7 @@ private:
 public:
 	D3D12SRV* View;
 
-	~Texture();
+	~D3D12Texture();
 
 	UINT GetTextureWidth();
 	UINT GetTextureHeight();
