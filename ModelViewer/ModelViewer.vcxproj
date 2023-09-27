@@ -117,6 +117,7 @@
     <ClInclude Include="Components\D3D12DefaultBuffer.h" />
     <ClInclude Include="Components\D3D12UploadBuffer.h" />
     <ClInclude Include="Components\D3D12View.h" />
+    <ClInclude Include="D3D12IndexBuffer.h" />
     <ClInclude Include="Managers\D3D12BufferManager.h" />
     <ClInclude Include="Managers\D3D12DescriptorHeapManager.h" />
     <ClInclude Include="Objects\D3D12Camera.h" />
@@ -136,6 +137,7 @@
     <ClCompile Include="Components\D3D12Buffer.cpp" />
     <ClCompile Include="Components\D3D12DefaultBuffer.cpp" />
     <ClCompile Include="Components\D3D12UploadBuffer.cpp" />
+    <ClCompile Include="D3D12IndexBuffer.cpp" />
     <ClCompile Include="Managers\D3D12BufferManager.cpp" />
     <ClCompile Include="Managers\D3D12DescriptorHeapManager.cpp" />
     <ClCompile Include="Objects\D3D12Camera.cpp" />

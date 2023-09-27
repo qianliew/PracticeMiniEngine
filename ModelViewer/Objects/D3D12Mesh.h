@@ -1,5 +1,6 @@
 #pragma once
 #include "D3D12VertexBuffer.h"
+#include "D3D12IndexBuffer.h"
 
 using namespace DirectX;
 
@@ -33,4 +34,5 @@ public:
     void CreateView(ComPtr<ID3D12Device>& device, std::unique_ptr<D3D12DescriptorHeapManager>& manager);
 
     std::unique_ptr<D3D12VertexBuffer> VertexBuffer;
+    std::unique_ptr<D3D12IndexBuffer> IndexBuffer;
 };

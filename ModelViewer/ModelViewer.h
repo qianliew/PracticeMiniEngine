@@ -73,11 +73,7 @@ private:
     unique_ptr<D3D12DescriptorHeapManager> m_descriptorHeapManager;
 
     // App resources.
-    D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
-
-    unique_ptr<D3D12UploadBuffer> m_indexBuffer;
     unique_ptr<D3D12UploadBuffer> m_constantBuffer;
-    unique_ptr<D3D12DefaultBuffer> m_indexStaticBuffer;
 
     // Synchronization objects.
     UINT m_frameIndex;

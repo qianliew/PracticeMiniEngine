@@ -81,6 +81,9 @@
     <ClInclude Include="D3D12VertexBuffer.h">
       <Filter>Objects\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="D3D12IndexBuffer.h">
+      <Filter>Objects\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Components\D3D12Buffer.cpp">
@@ -119,6 +122,9 @@
       <Filter>Utilities</Filter>
     </ClCompile>
     <ClCompile Include="D3D12VertexBuffer.cpp">
+      <Filter>Objects\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12IndexBuffer.cpp">
       <Filter>Objects\Sources</Filter>
     </ClCompile>
   </ItemGroup>

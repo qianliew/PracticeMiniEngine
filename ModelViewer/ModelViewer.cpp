@@ -327,38 +327,22 @@ void ModelViewer::LoadAssets()
         m_allocator->AllocateDefaultBuffer(m_mesh->VertexBuffer->ResourceLocation, m_mesh->VertexBuffer->ResourceDesc);
         tempVertexBuffer->CopyData(m_mesh->GetVerticesData(), m_mesh->GetVerticesSize());
 
+        D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer();
+        m_allocator->AllocateUploadBuffer(tempIndexBuffer, UploadBufferType::Index);
+        m_allocator->AllocateDefaultBuffer(m_mesh->IndexBuffer->ResourceLocation, m_mesh->IndexBuffer->ResourceDesc);
+        tempIndexBuffer->CopyData(m_mesh->GetIndicesData(), m_mesh->GetIndicesSize());
+
         m_mesh->CreateView(m_device, m_descriptorHeapManager);
-        m_commandList->CopyResource(m_mesh->VertexBuffer->ResourceLocation->Resource.Get(),
-            tempVertexBuffer->ResourceLocation->Resource.Get());
-
-        m_indexBuffer = std::make_unique<D3D12UploadBuffer>();
-        m_indexStaticBuffer = std::make_unique<D3D12DefaultBuffer>();
-        const UINT indexBufferSize = m_mesh->GetIndicesSize();
-
-        D3D12_RESOURCE_DESC indexDesc = {};
-        indexDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-        indexDesc.Alignment = 0;
-        indexDesc.Width = indexBufferSize;
-        indexDesc.Height = 1;
-        indexDesc.DepthOrArraySize = 1;
-        indexDesc.MipLevels = 1;
-        indexDesc.Format = DXGI_FORMAT_UNKNOWN;
-        indexDesc.SampleDesc.Count = 1;
-        indexDesc.SampleDesc.Quality = 0;
-        indexDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-        indexDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-        // Initialize the index buffer.
-        m_indexBuffer->CreateBuffer(m_device.Get(), indexBufferSize);
-        m_indexBuffer->CopyData(m_mesh->GetIndicesData());
-        m_indexStaticBuffer->CreateBuffer(m_device.Get(), &indexDesc);
-
-        // Initialize the index buffer view.
-        m_indexBufferView.BufferLocation = m_indexStaticBuffer->ResourceLocation->Resource->GetGPUVirtualAddress();
-        m_indexBufferView.Format = DXGI_FORMAT_R16_UINT;
-        m_indexBufferView.SizeInBytes = indexBufferSize;
-
-        m_commandList->CopyResource(m_indexStaticBuffer->ResourceLocation->Resource.Get(), m_indexBuffer->ResourceLocation->Resource.Get());
+        m_commandList->CopyBufferRegion(m_mesh->VertexBuffer->ResourceLocation->Resource.Get(),
+            0,
+            tempVertexBuffer->ResourceLocation->Resource.Get(),
+            0,
+            m_mesh->VertexBuffer->View->VertexBufferView.SizeInBytes);
+        m_commandList->CopyBufferRegion(m_mesh->IndexBuffer->ResourceLocation->Resource.Get(),
+            0,
+            tempIndexBuffer->ResourceLocation->Resource.Get(),
+            0,
+            m_mesh->IndexBuffer->View->IndexBufferView.SizeInBytes);
     }
 
     // Load textures.
@@ -408,7 +392,7 @@ void ModelViewer::LoadAssets()
             &CD3DX12_RESOURCE_BARRIER::Transition(m_mesh->VertexBuffer->ResourceLocation->Resource.Get(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
         m_commandList->ResourceBarrier(1,
-            &CD3DX12_RESOURCE_BARRIER::Transition(m_indexStaticBuffer->ResourceLocation->Resource.Get(),
+            &CD3DX12_RESOURCE_BARRIER::Transition(m_mesh->IndexBuffer->ResourceLocation->Resource.Get(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
         ThrowIfFailed(m_commandList->Close());
 
@@ -420,7 +404,6 @@ void ModelViewer::LoadAssets()
         m_fenceValue++;
 
         m_texture->ReleaseTexture();
-        m_indexBuffer.release();
     }
 }
 
@@ -541,7 +524,7 @@ void ModelViewer::PopulateCommandList()
     m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_mesh->VertexBuffer->View->VertexBufferView);
-    m_commandList->IASetIndexBuffer(&m_indexBufferView);
+    m_commandList->IASetIndexBuffer(&m_mesh->IndexBuffer->View->IndexBufferView);
 
     m_commandList->DrawIndexedInstanced(m_mesh->GetIndicesNum(), 1, 0, 0, 0);
 

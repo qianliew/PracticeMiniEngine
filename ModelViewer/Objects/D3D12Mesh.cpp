@@ -31,6 +31,21 @@ void D3D12Mesh::SetIndices(UINT16* triangleIndices, UINT size)
     m_indices.release();
     m_indices = std::make_unique<UINT16*>((UINT16*)malloc(size));
     memcpy(*(m_indices.get()), triangleIndices, m_indicesSize);
+
+    IndexBuffer = std::make_unique<D3D12IndexBuffer>();
+
+    IndexBuffer->ResourceDesc = new D3D12_RESOURCE_DESC();
+    IndexBuffer->ResourceDesc->Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    IndexBuffer->ResourceDesc->Alignment = 0;
+    IndexBuffer->ResourceDesc->Width = m_indicesSize;
+    IndexBuffer->ResourceDesc->Height = 1;
+    IndexBuffer->ResourceDesc->DepthOrArraySize = 1;
+    IndexBuffer->ResourceDesc->MipLevels = 1;
+    IndexBuffer->ResourceDesc->Format = DXGI_FORMAT_UNKNOWN;
+    IndexBuffer->ResourceDesc->SampleDesc.Count = 1;
+    IndexBuffer->ResourceDesc->SampleDesc.Quality = 0;
+    IndexBuffer->ResourceDesc->Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    IndexBuffer->ResourceDesc->Flags = D3D12_RESOURCE_FLAG_NONE;
 }
 
 UINT D3D12Mesh::GetVerticesSize()
@@ -74,4 +89,9 @@ void D3D12Mesh::CreateView(ComPtr<ID3D12Device>& device, std::unique_ptr<D3D12De
     VertexBuffer->View->VertexBufferView.BufferLocation = VertexBuffer->ResourceLocation->Resource->GetGPUVirtualAddress();
     VertexBuffer->View->VertexBufferView.StrideInBytes = sizeof(Vertex);
     VertexBuffer->View->VertexBufferView.SizeInBytes = m_verticesSize;
+
+    // Initialize the index buffer view.
+    IndexBuffer->View->IndexBufferView.BufferLocation = IndexBuffer->ResourceLocation->Resource->GetGPUVirtualAddress();
+    IndexBuffer->View->IndexBufferView.Format = DXGI_FORMAT_R16_UINT;
+    IndexBuffer->View->IndexBufferView.SizeInBytes = m_indicesSize;
 }
