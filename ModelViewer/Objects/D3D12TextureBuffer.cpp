@@ -1,42 +1,39 @@
 #include "stdafx.h"
-#include "D3D12Texture.h"
+#include "D3D12TextureBuffer.h"
 
-D3D12Texture::~D3D12Texture()
+D3D12TextureBuffer::~D3D12TextureBuffer()
 {
     ReleaseTexture();
+
+    delete View;
 }
 
-UINT D3D12Texture::GetTextureWidth()
+UINT* D3D12TextureBuffer::GetTextureWidth()
 {
-    return m_width;
+    return &m_width;
 }
 
-UINT D3D12Texture::GetTextureHeight()
+UINT* D3D12TextureBuffer::GetTextureHeight()
 {
-    return m_height;
+    return &m_height;
 }
 
-UINT D3D12Texture::GetTextureSize()
+UINT* D3D12TextureBuffer::GetTextureSize()
 {
-    return m_size;
+    return &m_size;
 }
 
-UINT D3D12Texture::GetTextureBytesPerRow()
+UINT64* D3D12TextureBuffer::GetTextureBytesPerRow()
 {
-    return m_bytesPerRow;
+    return &m_bytesPerRow;
 }
 
-BYTE* D3D12Texture::GetTextureData()
+BYTE* D3D12TextureBuffer::GetTextureData()
 {
     return *m_data.get();
 }
 
-D3D12_RESOURCE_DESC* D3D12Texture::GetTextureDesc()
-{
-    return m_desc;
-}
-
-void D3D12Texture::LoadTexture(LPCWSTR texturePath)
+void D3D12TextureBuffer::LoadTexture(LPCWSTR texturePath)
 {
     IWICImagingFactory* pFactory = NULL;
     IWICBitmapDecoder* pDecoder = NULL;
@@ -74,42 +71,36 @@ void D3D12Texture::LoadTexture(LPCWSTR texturePath)
     ThrowIfFailed(pConverter->CopyPixels(0, m_bytesPerRow, m_size, *m_data.get()));
 
     // Create texture desc.
-    m_desc = new D3D12_RESOURCE_DESC();
+    ResourceDesc = new D3D12_RESOURCE_DESC();
 
-    m_desc->Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    m_desc->Alignment = 0;
-    m_desc->Width = m_width;
-    m_desc->Height = m_height;
-    m_desc->DepthOrArraySize = 1;
-    m_desc->MipLevels = 1;
-    m_desc->Format = m_dxgiFormat;
-    m_desc->SampleDesc.Count = 1;
-    m_desc->SampleDesc.Quality = 0;
-    m_desc->Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    m_desc->Flags = D3D12_RESOURCE_FLAG_NONE;
+    ResourceDesc->Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    ResourceDesc->Alignment = 0;
+    ResourceDesc->Width = m_width;
+    ResourceDesc->Height = m_height;
+    ResourceDesc->DepthOrArraySize = 1;
+    ResourceDesc->MipLevels = 1;
+    ResourceDesc->Format = m_dxgiFormat;
+    ResourceDesc->SampleDesc.Count = 1;
+    ResourceDesc->SampleDesc.Quality = 0;
+    ResourceDesc->Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    ResourceDesc->Flags = D3D12_RESOURCE_FLAG_NONE;
 }
 
-void D3D12Texture::CreateView(ComPtr<ID3D12Device>& device, std::unique_ptr<D3D12DescriptorHeapManager>& manager)
+void D3D12TextureBuffer::CreateView()
 {
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.Format = m_desc->Format;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MipLevels = 1;
-
     if (View == nullptr)
     {
         View = new D3D12SRV();
+        View->SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        View->SRVDesc.Format = ResourceDesc->Format;
+        View->SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        View->SRVDesc.Texture2D.MipLevels = 1;
     }
-    manager->GetSRVHandle(View, 0);
-    device->CreateShaderResourceView(ResourceLocation->Resource.Get(), &srvDesc, View->CPUHandle);
 }
 
-void D3D12Texture::ReleaseTexture()
+void D3D12TextureBuffer::ReleaseTexture()
 {
-    m_data.release();
-    delete m_desc;
+    if (m_data == nullptr) return;
 
-    m_desc = nullptr;
-    ResourceLocation = nullptr;
+    m_data.release();
 }

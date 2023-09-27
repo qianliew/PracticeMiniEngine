@@ -191,7 +191,7 @@ void ModelViewer::LoadAssets()
         m_camera = std::make_shared<D3D12Camera>();
         m_constant = std::make_shared<Constant>();
         m_mesh = std::make_shared<D3D12Mesh>();
-        m_texture = std::make_shared<D3D12Texture>();
+        m_texture = std::make_shared<D3D12TextureBuffer>();
         m_fbxImporter = std::make_unique<FBXImporter>();
         m_fbxImporter->InitializeSdkObjects();
         if (m_fbxImporter->ImportFBX("cube.fbx"))
@@ -324,15 +324,15 @@ void ModelViewer::LoadAssets()
     {
         D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
         m_allocator->AllocateUploadBuffer(tempVertexBuffer, UploadBufferType::Vertex);
-        m_allocator->AllocateDefaultBuffer(m_mesh->VertexBuffer->ResourceLocation, m_mesh->VertexBuffer->ResourceDesc);
+        m_allocator->AllocateDefaultBuffer(m_mesh->VertexBuffer.get());
         tempVertexBuffer->CopyData(m_mesh->GetVerticesData(), m_mesh->GetVerticesSize());
 
         D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer();
         m_allocator->AllocateUploadBuffer(tempIndexBuffer, UploadBufferType::Index);
-        m_allocator->AllocateDefaultBuffer(m_mesh->IndexBuffer->ResourceLocation, m_mesh->IndexBuffer->ResourceDesc);
+        m_allocator->AllocateDefaultBuffer(m_mesh->IndexBuffer.get());
         tempIndexBuffer->CopyData(m_mesh->GetIndicesData(), m_mesh->GetIndicesSize());
 
-        m_mesh->CreateView(m_device, m_descriptorHeapManager);
+        m_mesh->CreateView();
         m_commandList->CopyBufferRegion(m_mesh->VertexBuffer->ResourceLocation->Resource.Get(),
             0,
             tempVertexBuffer->ResourceLocation->Resource.Get(),
@@ -351,21 +351,22 @@ void ModelViewer::LoadAssets()
         D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
 
         m_allocator->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
-        m_allocator->AllocateDefaultBuffer(m_texture->ResourceLocation, m_texture->GetTextureDesc());
+        m_allocator->AllocateDefaultBuffer(m_texture.get());
 
         // Init texture data.
-        UINT numRows;
-        UINT64 rowSizeInBytes;
-        m_device.Get()->GetCopyableFootprints(m_texture->GetTextureDesc(), 0, 1, 0, nullptr, &numRows, &rowSizeInBytes, nullptr);
+        m_device.Get()->GetCopyableFootprints(m_texture->ResourceDesc, 0, 1, 0, nullptr,
+            m_texture->GetTextureHeight(), m_texture->GetTextureBytesPerRow(), nullptr);
         D3D12_SUBRESOURCE_DATA textureData = {};
         textureData.pData = m_texture->GetTextureData();
-        textureData.RowPitch = rowSizeInBytes;
-        textureData.SlicePitch = rowSizeInBytes * numRows;
+        textureData.RowPitch = *m_texture->GetTextureBytesPerRow();
+        textureData.SlicePitch = *m_texture->GetTextureBytesPerRow() * *m_texture->GetTextureHeight();
 
         // Update texture data from upload buffer to gpu buffer.
         UpdateSubresources(m_commandList.Get(), m_texture->ResourceLocation->Resource.Get(), tempBuffer->ResourceLocation->Resource.Get(), 0, 0, 1, &textureData);
 
-        m_texture->CreateView(m_device, m_descriptorHeapManager);
+        m_texture->CreateView();
+        m_descriptorHeapManager->GetSRVHandle(m_texture->View, 0);
+        m_device->CreateShaderResourceView(m_texture->ResourceLocation->Resource.Get(), &m_texture->View->SRVDesc, m_texture->View->CPUHandle);
     }
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.

@@ -8,6 +8,7 @@ class D3D12View
 class D3D12SRV : public D3D12View
 {
 public:
+	D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE CPUHandle;
 };
 

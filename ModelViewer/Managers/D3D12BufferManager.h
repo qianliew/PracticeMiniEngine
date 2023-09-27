@@ -23,5 +23,5 @@ public:
 	~D3D12BufferManager();
 
 	void AllocateUploadBuffer(D3D12UploadBuffer* &pBuffer, UploadBufferType type);
-	void AllocateDefaultBuffer(D3D12ResourceLocation* pTexture, D3D12_RESOURCE_DESC* pDESC);
+	void AllocateDefaultBuffer(D3D12Resource* pResource);
 };

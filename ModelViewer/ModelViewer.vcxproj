@@ -123,7 +123,7 @@
     <ClInclude Include="Objects\D3D12Camera.h" />
     <ClInclude Include="Objects\D3D12Mesh.h" />
     <ClInclude Include="Objects\D3D12Resource.h" />
-    <ClInclude Include="Objects\D3D12Texture.h" />
+    <ClInclude Include="Objects\D3D12TextureBuffer.h" />
     <ClInclude Include="Utilities\FBXImporter.h" />
     <ClInclude Include="D3D12VertexBuffer.h" />
     <ClInclude Include="Win32Application.h" />
@@ -143,7 +143,7 @@
     <ClCompile Include="Objects\D3D12Camera.cpp" />
     <ClCompile Include="Objects\D3D12Mesh.cpp" />
     <ClCompile Include="Objects\D3D12Resource.cpp" />
-    <ClCompile Include="Objects\D3D12Texture.cpp" />
+    <ClCompile Include="Objects\D3D12TextureBuffer.cpp" />
     <ClCompile Include="Utilities\FBXImporter.cpp" />
     <ClCompile Include="D3D12VertexBuffer.cpp" />
     <ClCompile Include="Win32Application.cpp" />

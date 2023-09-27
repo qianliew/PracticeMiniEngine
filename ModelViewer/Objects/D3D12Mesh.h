@@ -31,7 +31,7 @@ public:
     void const* GetIndicesData();
     void CopyVertices(void* destination);
     void CopyIndices(void* destination);
-    void CreateView(ComPtr<ID3D12Device>& device, std::unique_ptr<D3D12DescriptorHeapManager>& manager);
+    void CreateView();
 
     std::unique_ptr<D3D12VertexBuffer> VertexBuffer;
     std::unique_ptr<D3D12IndexBuffer> IndexBuffer;
