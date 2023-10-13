@@ -14,8 +14,7 @@
 #include "DXSample.h"
 #include "FBXImporter.h"
 #include "D3D12Camera.h"
-#include "D3D12Mesh.h"
-#include "D3D12TextureBuffer.h"
+#include "D3D12Model.h"
 
 using namespace DirectX;
 
@@ -84,8 +83,7 @@ private:
     // Scene objects
     shared_ptr<Constant> m_constant;
     shared_ptr<D3D12Camera> m_camera;
-    shared_ptr<D3D12Mesh> m_mesh;
-    shared_ptr<D3D12TextureBuffer> m_texture;
+    shared_ptr<D3D12Model> m_model;
     unique_ptr<FBXImporter> m_fbxImporter;
 
     void LoadPipeline();

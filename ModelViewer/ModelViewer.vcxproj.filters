@@ -84,6 +84,9 @@
     <ClInclude Include="Objects\D3D12Resource.h">
       <Filter>Components\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Objects\D3D12Model.h">
+      <Filter>Objects\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Components\D3D12Buffer.cpp">
@@ -126,6 +129,9 @@
     </ClCompile>
     <ClCompile Include="Objects\D3D12Resource.cpp">
       <Filter>Components\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Objects\D3D12Model.cpp">
+      <Filter>Objects\Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -190,14 +190,10 @@ void ModelViewer::LoadAssets()
         m_allocator = std::make_unique<D3D12BufferManager>(m_device);
         m_camera = std::make_shared<D3D12Camera>();
         m_constant = std::make_shared<Constant>();
-        m_mesh = std::make_shared<D3D12Mesh>();
-        m_texture = std::make_shared<D3D12TextureBuffer>();
         m_fbxImporter = std::make_unique<FBXImporter>();
         m_fbxImporter->InitializeSdkObjects();
-        if (m_fbxImporter->ImportFBX("cube.fbx"))
-        {
-            m_fbxImporter->LoadFBX(m_mesh);
-        }
+        m_model = std::make_shared<D3D12Model>((char*)"cube.fbx", (char*)"test.png");
+        m_model->LoadModel(m_fbxImporter);
     }
 
     // Create an empty root signature.
@@ -324,49 +320,50 @@ void ModelViewer::LoadAssets()
     {
         D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
         m_allocator->AllocateUploadBuffer(tempVertexBuffer, UploadBufferType::Vertex);
-        m_allocator->AllocateDefaultBuffer(m_mesh->VertexBuffer.get());
-        tempVertexBuffer->CopyData(m_mesh->GetVerticesData(), m_mesh->GetVerticesSize());
+        m_allocator->AllocateDefaultBuffer(m_model->GetMesh()->VertexBuffer.get());
+        tempVertexBuffer->CopyData(m_model->GetMesh()->GetVerticesData(), m_model->GetMesh()->GetVerticesSize());
 
         D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer();
         m_allocator->AllocateUploadBuffer(tempIndexBuffer, UploadBufferType::Index);
-        m_allocator->AllocateDefaultBuffer(m_mesh->IndexBuffer.get());
-        tempIndexBuffer->CopyData(m_mesh->GetIndicesData(), m_mesh->GetIndicesSize());
+        m_allocator->AllocateDefaultBuffer(m_model->GetMesh()->IndexBuffer.get());
+        tempIndexBuffer->CopyData(m_model->GetMesh()->GetIndicesData(), m_model->GetMesh()->GetIndicesSize());
 
-        m_mesh->CreateView();
-        m_commandList->CopyBufferRegion(m_mesh->VertexBuffer->ResourceLocation->Resource.Get(),
+        m_model->GetMesh()->CreateView();
+        m_commandList->CopyBufferRegion(m_model->GetMesh()->VertexBuffer->ResourceLocation->Resource.Get(),
             0,
             tempVertexBuffer->ResourceLocation->Resource.Get(),
             0,
-            m_mesh->VertexBuffer->View->VertexBufferView.SizeInBytes);
-        m_commandList->CopyBufferRegion(m_mesh->IndexBuffer->ResourceLocation->Resource.Get(),
+            m_model->GetMesh()->VertexBuffer->View->VertexBufferView.SizeInBytes);
+        m_commandList->CopyBufferRegion(m_model->GetMesh()->IndexBuffer->ResourceLocation->Resource.Get(),
             0,
             tempIndexBuffer->ResourceLocation->Resource.Get(),
             0,
-            m_mesh->IndexBuffer->View->IndexBufferView.SizeInBytes);
+            m_model->GetMesh()->IndexBuffer->View->IndexBufferView.SizeInBytes);
     }
 
     // Load textures.
     {
-        m_texture->LoadTexture(L"test.png");
         D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
 
         m_allocator->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
-        m_allocator->AllocateDefaultBuffer(m_texture.get());
+        m_allocator->AllocateDefaultBuffer(m_model->GetTexture().get());
 
         // Init texture data.
-        m_device.Get()->GetCopyableFootprints(m_texture->ResourceDesc, 0, 1, 0, nullptr,
-            m_texture->GetTextureHeight(), m_texture->GetTextureBytesPerRow(), nullptr);
+        m_device.Get()->GetCopyableFootprints(m_model->GetTexture()->ResourceDesc, 0, 1, 0, nullptr,
+            m_model->GetTexture()->GetTextureHeight(), m_model->GetTexture()->GetTextureBytesPerRow(), nullptr);
         D3D12_SUBRESOURCE_DATA textureData = {};
-        textureData.pData = m_texture->GetTextureData();
-        textureData.RowPitch = *m_texture->GetTextureBytesPerRow();
-        textureData.SlicePitch = *m_texture->GetTextureBytesPerRow() * *m_texture->GetTextureHeight();
+        textureData.pData = m_model->GetTexture()->GetTextureData();
+        textureData.RowPitch = *m_model->GetTexture()->GetTextureBytesPerRow();
+        textureData.SlicePitch = *m_model->GetTexture()->GetTextureBytesPerRow() * *m_model->GetTexture()->GetTextureHeight();
 
         // Update texture data from upload buffer to gpu buffer.
-        UpdateSubresources(m_commandList.Get(), m_texture->ResourceLocation->Resource.Get(), tempBuffer->ResourceLocation->Resource.Get(), 0, 0, 1, &textureData);
+        UpdateSubresources(m_commandList.Get(), m_model->GetTexture()->ResourceLocation->Resource.Get(),
+            tempBuffer->ResourceLocation->Resource.Get(), 0, 0, 1, &textureData);
 
-        m_texture->CreateView();
-        m_descriptorHeapManager->GetSRVHandle(m_texture->View, 0);
-        m_device->CreateShaderResourceView(m_texture->ResourceLocation->Resource.Get(), &m_texture->View->SRVDesc, m_texture->View->CPUHandle);
+        m_model->GetTexture()->CreateView();
+        m_descriptorHeapManager->GetSRVHandle(m_model->GetTexture()->View, 0);
+        m_device->CreateShaderResourceView(m_model->GetTexture()->ResourceLocation->Resource.Get(),
+            &m_model->GetTexture()->View->SRVDesc, m_model->GetTexture()->View->CPUHandle);
     }
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
@@ -387,13 +384,13 @@ void ModelViewer::LoadAssets()
         WaitForPreviousFrame();
 
         m_commandList->ResourceBarrier(1,
-            &CD3DX12_RESOURCE_BARRIER::Transition(m_texture->ResourceLocation->Resource.Get(),
+            &CD3DX12_RESOURCE_BARRIER::Transition(m_model->GetTexture()->ResourceLocation->Resource.Get(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
         m_commandList->ResourceBarrier(1,
-            &CD3DX12_RESOURCE_BARRIER::Transition(m_mesh->VertexBuffer->ResourceLocation->Resource.Get(),
+            &CD3DX12_RESOURCE_BARRIER::Transition(m_model->GetMesh()->VertexBuffer->ResourceLocation->Resource.Get(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
         m_commandList->ResourceBarrier(1,
-            &CD3DX12_RESOURCE_BARRIER::Transition(m_mesh->IndexBuffer->ResourceLocation->Resource.Get(),
+            &CD3DX12_RESOURCE_BARRIER::Transition(m_model->GetMesh()->IndexBuffer->ResourceLocation->Resource.Get(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
         ThrowIfFailed(m_commandList->Close());
 
@@ -404,7 +401,7 @@ void ModelViewer::LoadAssets()
         ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), fence));
         m_fenceValue++;
 
-        m_texture->ReleaseTexture();
+        m_model->GetTexture()->ReleaseTexture();
     }
 }
 
@@ -524,10 +521,10 @@ void ModelViewer::PopulateCommandList()
     m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_commandList->IASetVertexBuffers(0, 1, &m_mesh->VertexBuffer->View->VertexBufferView);
-    m_commandList->IASetIndexBuffer(&m_mesh->IndexBuffer->View->IndexBufferView);
+    m_commandList->IASetVertexBuffers(0, 1, &m_model->GetMesh()->VertexBuffer->View->VertexBufferView);
+    m_commandList->IASetIndexBuffer(&m_model->GetMesh()->IndexBuffer->View->IndexBufferView);
 
-    m_commandList->DrawIndexedInstanced(m_mesh->GetIndicesNum(), 1, 0, 0, 0);
+    m_commandList->DrawIndexedInstanced(m_model->GetMesh()->GetIndicesNum(), 1, 0, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
     m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));

@@ -122,6 +122,7 @@
     <ClInclude Include="Managers\D3D12DescriptorHeapManager.h" />
     <ClInclude Include="Objects\D3D12Camera.h" />
     <ClInclude Include="Objects\D3D12Mesh.h" />
+    <ClInclude Include="Objects\D3D12Model.h" />
     <ClInclude Include="Objects\D3D12Resource.h" />
     <ClInclude Include="Objects\D3D12TextureBuffer.h" />
     <ClInclude Include="Utilities\FBXImporter.h" />
@@ -142,6 +143,7 @@
     <ClCompile Include="Managers\D3D12DescriptorHeapManager.cpp" />
     <ClCompile Include="Objects\D3D12Camera.cpp" />
     <ClCompile Include="Objects\D3D12Mesh.cpp" />
+    <ClCompile Include="Objects\D3D12Model.cpp" />
     <ClCompile Include="Objects\D3D12Resource.cpp" />
     <ClCompile Include="Objects\D3D12TextureBuffer.cpp" />
     <ClCompile Include="Utilities\FBXImporter.cpp" />
