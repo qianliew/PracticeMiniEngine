@@ -87,6 +87,9 @@
     <ClInclude Include="Objects\D3D12Model.h">
       <Filter>Objects\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="D3D12Texture.h">
+      <Filter>Objects\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Components\D3D12Buffer.cpp">
@@ -131,6 +134,9 @@
       <Filter>Components\Sources</Filter>
     </ClCompile>
     <ClCompile Include="Objects\D3D12Model.cpp">
+      <Filter>Objects\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Texture.cpp">
       <Filter>Objects\Sources</Filter>
     </ClCompile>
   </ItemGroup>

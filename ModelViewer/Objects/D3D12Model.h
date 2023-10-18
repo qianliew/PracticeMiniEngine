@@ -1,7 +1,7 @@
 #pragma once
 #include "FBXImporter.h"
 #include "D3D12Mesh.h"
-#include "D3D12TextureBuffer.h"
+#include "D3D12Texture.h"
 
 using namespace std;
 
@@ -9,7 +9,7 @@ class D3D12Model
 {
 private:
     shared_ptr<D3D12Mesh> m_mesh;
-    shared_ptr<D3D12TextureBuffer> m_texture;
+    shared_ptr<D3D12Texture> m_texture;
 
     char* m_meshPath;
     char* m_texturePath;
@@ -19,5 +19,5 @@ public:
 
     void LoadModel(unique_ptr<FBXImporter>&);
     shared_ptr<D3D12Mesh> const GetMesh();
-    shared_ptr<D3D12TextureBuffer> const GetTexture();
+    shared_ptr<D3D12Texture> const GetTexture();
 };

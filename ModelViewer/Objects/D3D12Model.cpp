@@ -4,7 +4,7 @@
 D3D12Model::D3D12Model(char* meshPath, char* texturePath)
 {
     m_mesh = std::make_shared<D3D12Mesh>();
-    m_texture = std::make_shared<D3D12TextureBuffer>();
+    m_texture = std::make_shared<D3D12Texture>();
 
     m_meshPath = meshPath;
     m_texturePath = texturePath;
@@ -30,7 +30,7 @@ shared_ptr<D3D12Mesh> const D3D12Model::GetMesh()
     return m_mesh;
 }
 
-shared_ptr<D3D12TextureBuffer> const D3D12Model::GetTexture()
+shared_ptr<D3D12Texture> const D3D12Model::GetTexture()
 {
     return m_texture;
 }
