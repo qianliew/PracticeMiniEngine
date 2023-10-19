@@ -50,12 +50,12 @@ void D3D12BufferManager::AllocateUploadBuffer(D3D12UploadBuffer* &pBuffer, Uploa
 
 void D3D12BufferManager::AllocateDefaultBuffer(D3D12Resource* pResource)
 {
-    if (pResource->ResourceLocation == nullptr 
-        || DefaultBufferPool.find(pResource->ResourceLocation) == DefaultBufferPool.end())
+    if (pResource->GetResourceLocation() == nullptr 
+        || DefaultBufferPool.find(pResource->GetResourceLocation()) == DefaultBufferPool.end())
     {
         D3D12DefaultBuffer* pbuffer = new D3D12DefaultBuffer();
-        pbuffer->CreateBuffer(m_device.Get(), pResource->ResourceDesc);
-        DefaultBufferPool.insert(std::make_pair(pResource->ResourceLocation, pbuffer));
-        pResource->ResourceLocation->Resource = pbuffer->ResourceLocation->Resource;
+        pbuffer->CreateBuffer(m_device.Get(), pResource->GetResourceDesc());
+        DefaultBufferPool.insert(std::make_pair(pResource->GetResourceLocation(), pbuffer));
+        pResource->SetResourceLoaction(pbuffer->ResourceLocation);
     }
 }

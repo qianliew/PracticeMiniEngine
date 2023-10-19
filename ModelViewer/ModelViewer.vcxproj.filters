@@ -81,14 +81,14 @@
     <ClInclude Include="D3D12IndexBuffer.h">
       <Filter>Objects\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\D3D12Resource.h">
-      <Filter>Components\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="Objects\D3D12Model.h">
       <Filter>Objects\Headers</Filter>
     </ClInclude>
     <ClInclude Include="D3D12Texture.h">
       <Filter>Objects\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\D3D12Resource.h">
+      <Filter>Components\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -130,14 +130,14 @@
     <ClCompile Include="D3D12IndexBuffer.cpp">
       <Filter>Objects\Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\D3D12Resource.cpp">
-      <Filter>Components\Sources</Filter>
-    </ClCompile>
     <ClCompile Include="Objects\D3D12Model.cpp">
       <Filter>Objects\Sources</Filter>
     </ClCompile>
     <ClCompile Include="D3D12Texture.cpp">
       <Filter>Objects\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\D3D12Resource.cpp">
+      <Filter>Components\Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

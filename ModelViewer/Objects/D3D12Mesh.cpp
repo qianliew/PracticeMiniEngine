@@ -10,18 +10,19 @@ void D3D12Mesh::SetVertices(Vertex* triangleVertices, UINT size)
 
     VertexBuffer = std::make_unique<D3D12VertexBuffer>();
 
-    VertexBuffer->ResourceDesc = new D3D12_RESOURCE_DESC();
-    VertexBuffer->ResourceDesc->Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    VertexBuffer->ResourceDesc->Alignment = 0;
-    VertexBuffer->ResourceDesc->Width = m_verticesSize;
-    VertexBuffer->ResourceDesc->Height = 1;
-    VertexBuffer->ResourceDesc->DepthOrArraySize = 1;
-    VertexBuffer->ResourceDesc->MipLevels = 1;
-    VertexBuffer->ResourceDesc->Format = DXGI_FORMAT_UNKNOWN;
-    VertexBuffer->ResourceDesc->SampleDesc.Count = 1;
-    VertexBuffer->ResourceDesc->SampleDesc.Quality = 0;
-    VertexBuffer->ResourceDesc->Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    VertexBuffer->ResourceDesc->Flags = D3D12_RESOURCE_FLAG_NONE;
+    D3D12_RESOURCE_DESC* desc = new D3D12_RESOURCE_DESC();
+    desc->Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    desc->Alignment = 0;
+    desc->Width = m_verticesSize;
+    desc->Height = 1;
+    desc->DepthOrArraySize = 1;
+    desc->MipLevels = 1;
+    desc->Format = DXGI_FORMAT_UNKNOWN;
+    desc->SampleDesc.Count = 1;
+    desc->SampleDesc.Quality = 0;
+    desc->Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    desc->Flags = D3D12_RESOURCE_FLAG_NONE;
+    VertexBuffer->SetResourceDesc(desc);
 }
 
 void D3D12Mesh::SetIndices(UINT16* triangleIndices, UINT size)
@@ -34,18 +35,19 @@ void D3D12Mesh::SetIndices(UINT16* triangleIndices, UINT size)
 
     IndexBuffer = std::make_unique<D3D12IndexBuffer>();
 
-    IndexBuffer->ResourceDesc = new D3D12_RESOURCE_DESC();
-    IndexBuffer->ResourceDesc->Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    IndexBuffer->ResourceDesc->Alignment = 0;
-    IndexBuffer->ResourceDesc->Width = m_indicesSize;
-    IndexBuffer->ResourceDesc->Height = 1;
-    IndexBuffer->ResourceDesc->DepthOrArraySize = 1;
-    IndexBuffer->ResourceDesc->MipLevels = 1;
-    IndexBuffer->ResourceDesc->Format = DXGI_FORMAT_UNKNOWN;
-    IndexBuffer->ResourceDesc->SampleDesc.Count = 1;
-    IndexBuffer->ResourceDesc->SampleDesc.Quality = 0;
-    IndexBuffer->ResourceDesc->Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    IndexBuffer->ResourceDesc->Flags = D3D12_RESOURCE_FLAG_NONE;
+    D3D12_RESOURCE_DESC* desc = new D3D12_RESOURCE_DESC();
+    desc->Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    desc->Alignment = 0;
+    desc->Width = m_indicesSize;
+    desc->Height = 1;
+    desc->DepthOrArraySize = 1;
+    desc->MipLevels = 1;
+    desc->Format = DXGI_FORMAT_UNKNOWN;
+    desc->SampleDesc.Count = 1;
+    desc->SampleDesc.Quality = 0;
+    desc->Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    desc->Flags = D3D12_RESOURCE_FLAG_NONE;
+    IndexBuffer->SetResourceDesc(desc);
 }
 
 UINT D3D12Mesh::GetVerticesSize()

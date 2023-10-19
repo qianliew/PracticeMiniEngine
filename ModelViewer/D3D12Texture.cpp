@@ -69,19 +69,20 @@ void D3D12Texture::LoadTexture(LPCWSTR texturePath)
         TextureBuffer = std::make_unique<D3D12TextureBuffer>();
     }
 
-    TextureBuffer->ResourceDesc = new D3D12_RESOURCE_DESC();
+    D3D12_RESOURCE_DESC* desc = new D3D12_RESOURCE_DESC();
+    desc->Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    desc->Alignment = 0;
+    desc->Width = m_width;
+    desc->Height = m_height;
+    desc->DepthOrArraySize = 1;
+    desc->MipLevels = 1;
+    desc->Format = m_dxgiFormat;
+    desc->SampleDesc.Count = 1;
+    desc->SampleDesc.Quality = 0;
+    desc->Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    desc->Flags = D3D12_RESOURCE_FLAG_NONE;
 
-    TextureBuffer->ResourceDesc->Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    TextureBuffer->ResourceDesc->Alignment = 0;
-    TextureBuffer->ResourceDesc->Width = m_width;
-    TextureBuffer->ResourceDesc->Height = m_height;
-    TextureBuffer->ResourceDesc->DepthOrArraySize = 1;
-    TextureBuffer->ResourceDesc->MipLevels = 1;
-    TextureBuffer->ResourceDesc->Format = m_dxgiFormat;
-    TextureBuffer->ResourceDesc->SampleDesc.Count = 1;
-    TextureBuffer->ResourceDesc->SampleDesc.Quality = 0;
-    TextureBuffer->ResourceDesc->Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    TextureBuffer->ResourceDesc->Flags = D3D12_RESOURCE_FLAG_NONE;
+    TextureBuffer->SetResourceDesc(desc);
 }
 
 void D3D12Texture::ReleaseTexture()

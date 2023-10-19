@@ -329,16 +329,16 @@ void ModelViewer::LoadAssets()
         tempIndexBuffer->CopyData(m_model->GetMesh()->GetIndicesData(), m_model->GetMesh()->GetIndicesSize());
 
         m_model->GetMesh()->CreateView();
-        m_commandList->CopyBufferRegion(m_model->GetMesh()->VertexBuffer->ResourceLocation->Resource.Get(),
+        m_commandList->CopyBufferRegion(m_model->GetMesh()->VertexBuffer->GetResource(),
             0,
             tempVertexBuffer->ResourceLocation->Resource.Get(),
             0,
-            m_model->GetMesh()->VertexBuffer->View->VertexBufferView.SizeInBytes);
-        m_commandList->CopyBufferRegion(m_model->GetMesh()->IndexBuffer->ResourceLocation->Resource.Get(),
+            m_model->GetMesh()->GetVerticesSize());
+        m_commandList->CopyBufferRegion(m_model->GetMesh()->IndexBuffer->GetResource(),
             0,
             tempIndexBuffer->ResourceLocation->Resource.Get(),
             0,
-            m_model->GetMesh()->IndexBuffer->View->IndexBufferView.SizeInBytes);
+            m_model->GetMesh()->GetIndicesSize());
     }
 
     // Load textures.
@@ -349,7 +349,7 @@ void ModelViewer::LoadAssets()
         m_allocator->AllocateDefaultBuffer(m_model->GetTexture()->TextureBuffer.get());
 
         // Init texture data.
-        m_device.Get()->GetCopyableFootprints(m_model->GetTexture()->TextureBuffer->ResourceDesc, 0, 1, 0, nullptr,
+        m_device.Get()->GetCopyableFootprints(m_model->GetTexture()->TextureBuffer->GetResourceDesc(), 0, 1, 0, nullptr,
             m_model->GetTexture()->GetTextureHeight(), m_model->GetTexture()->GetTextureBytesPerRow(), nullptr);
         D3D12_SUBRESOURCE_DATA textureData = {};
         textureData.pData = m_model->GetTexture()->GetTextureData();
@@ -357,13 +357,14 @@ void ModelViewer::LoadAssets()
         textureData.SlicePitch = *m_model->GetTexture()->GetTextureBytesPerRow() * *m_model->GetTexture()->GetTextureHeight();
 
         // Update texture data from upload buffer to gpu buffer.
-        UpdateSubresources(m_commandList.Get(), m_model->GetTexture()->TextureBuffer->ResourceLocation->Resource.Get(),
+        UpdateSubresources(m_commandList.Get(), m_model->GetTexture()->TextureBuffer->GetResource(),
             tempBuffer->ResourceLocation->Resource.Get(), 0, 0, 1, &textureData);
 
         m_model->GetTexture()->TextureBuffer->CreateView();
         m_descriptorHeapManager->GetSRVHandle(m_model->GetTexture()->TextureBuffer->View, 0);
-        m_device->CreateShaderResourceView(m_model->GetTexture()->TextureBuffer->ResourceLocation->Resource.Get(),
-            &m_model->GetTexture()->TextureBuffer->View->SRVDesc, m_model->GetTexture()->TextureBuffer->View->CPUHandle);
+        m_device->CreateShaderResourceView(m_model->GetTexture()->TextureBuffer->GetResource(),
+            &m_model->GetTexture()->TextureBuffer->View->SRVDesc,
+            m_model->GetTexture()->TextureBuffer->View->CPUHandle);
     }
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
@@ -384,13 +385,13 @@ void ModelViewer::LoadAssets()
         WaitForPreviousFrame();
 
         m_commandList->ResourceBarrier(1,
-            &CD3DX12_RESOURCE_BARRIER::Transition(m_model->GetTexture()->TextureBuffer->ResourceLocation->Resource.Get(),
+            &CD3DX12_RESOURCE_BARRIER::Transition(m_model->GetTexture()->TextureBuffer->GetResource(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
         m_commandList->ResourceBarrier(1,
-            &CD3DX12_RESOURCE_BARRIER::Transition(m_model->GetMesh()->VertexBuffer->ResourceLocation->Resource.Get(),
+            &CD3DX12_RESOURCE_BARRIER::Transition(m_model->GetMesh()->VertexBuffer->GetResource(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
         m_commandList->ResourceBarrier(1,
-            &CD3DX12_RESOURCE_BARRIER::Transition(m_model->GetMesh()->IndexBuffer->ResourceLocation->Resource.Get(),
+            &CD3DX12_RESOURCE_BARRIER::Transition(m_model->GetMesh()->IndexBuffer->GetResource(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
         ThrowIfFailed(m_commandList->Close());
 

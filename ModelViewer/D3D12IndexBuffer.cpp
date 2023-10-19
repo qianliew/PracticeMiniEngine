@@ -14,4 +14,3 @@ void D3D12IndexBuffer::CreateView()
     }
     View->IndexBufferView.BufferLocation = ResourceLocation->Resource->GetGPUVirtualAddress();
 }
-
