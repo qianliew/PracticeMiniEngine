@@ -1,0 +1,148 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{7c0ed02f-d786-4a06-ad97-7da2db407d88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Objects">
+      <UniqueIdentifier>{8753eb30-a964-4617-800b-cfc07ed747a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Objects\Headers">
+      <UniqueIdentifier>{d70ccc06-016f-4967-a03b-fc4844e7cc8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Objects\Sources">
+      <UniqueIdentifier>{dcab2cbf-6d33-49ca-b9b0-4a9d19917cf9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Managers">
+      <UniqueIdentifier>{cbcaa08e-7805-4519-abd8-954deb0e544c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Managers\Sources">
+      <UniqueIdentifier>{47d17718-4a77-47c5-a5db-7fb6ddc1ef05}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Managers\Headers">
+      <UniqueIdentifier>{ff30a836-9096-4466-ba4d-4ef278c46464}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Components">
+      <UniqueIdentifier>{6a66e409-ec4b-4923-bbb7-33f8ee2cbd93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Components\Headers">
+      <UniqueIdentifier>{55e5ba7b-5997-4d96-afcd-031b9291ee5b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Components\Sources">
+      <UniqueIdentifier>{a23603ee-9287-4800-b510-25d5f72b76aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{537e72d2-e946-410d-a9ed-405ffc11081f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Sources\Engine\Objects\D3D12Camera.h">
+      <Filter>Engine\Objects\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Objects\D3D12IndexBuffer.h">
+      <Filter>Engine\Objects\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Objects\D3D12Mesh.h">
+      <Filter>Engine\Objects\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Objects\D3D12Model.h">
+      <Filter>Engine\Objects\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Objects\D3D12Texture.h">
+      <Filter>Engine\Objects\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Objects\D3D12TextureBuffer.h">
+      <Filter>Engine\Objects\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Objects\D3D12VertexBuffer.h">
+      <Filter>Engine\Objects\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Managers\D3D12BufferManager.h">
+      <Filter>Engine\Managers\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Managers\D3D12DescriptorHeapManager.h">
+      <Filter>Engine\Managers\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Components\D3D12Buffer.h">
+      <Filter>Engine\Components\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Components\D3D12DefaultBuffer.h">
+      <Filter>Engine\Components\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Components\D3D12Resource.h">
+      <Filter>Engine\Components\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Components\D3D12Sampler.h">
+      <Filter>Engine\Components\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Components\D3D12UploadBuffer.h">
+      <Filter>Engine\Components\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Components\D3D12View.h">
+      <Filter>Engine\Components\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Utilities\FBXImporter.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Win32Application.h" />
+    <ClInclude Include="MiniEngine.h" />
+    <ClInclude Include="..\Sources\Utilities\PathHelper.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\d3dx12.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Sources\Engine\Objects\D3D12Camera.cpp">
+      <Filter>Engine\Objects\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Objects\D3D12IndexBuffer.cpp">
+      <Filter>Engine\Objects\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Objects\D3D12Mesh.cpp">
+      <Filter>Engine\Objects\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Objects\D3D12Model.cpp">
+      <Filter>Engine\Objects\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Objects\D3D12Texture.cpp">
+      <Filter>Engine\Objects\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Objects\D3D12TextureBuffer.cpp">
+      <Filter>Engine\Objects\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Objects\D3D12VertexBuffer.cpp">
+      <Filter>Engine\Objects\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Managers\D3D12BufferManager.cpp">
+      <Filter>Engine\Managers\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Managers\D3D12DescriptorHeapManager.cpp">
+      <Filter>Engine\Managers\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Components\D3D12Buffer.cpp">
+      <Filter>Engine\Components\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Components\D3D12DefaultBuffer.cpp">
+      <Filter>Engine\Components\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Components\D3D12Resource.cpp">
+      <Filter>Engine\Components\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Components\D3D12Sampler.cpp">
+      <Filter>Engine\Components\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Components\D3D12UploadBuffer.cpp">
+      <Filter>Engine\Components\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Utilities\FBXImporter.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Win32Application.cpp" />
+    <ClCompile Include="MiniEngine.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="shaders.hlsl" />
+  </ItemGroup>
+</Project>
