@@ -45,8 +45,6 @@ private:
     };
 
     // Pipeline objects.
-    CD3DX12_VIEWPORT viewport;
-    CD3DX12_RECT scissorRect;
     ComPtr<IDXGISwapChain3> swapChain;
     ComPtr<ID3D12Device> device;
     ComPtr<ID3D12Resource> renderTargets[FrameCount];

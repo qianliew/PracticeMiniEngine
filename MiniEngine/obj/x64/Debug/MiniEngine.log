@@ -1,5 +1,4 @@
-﻿  Main.cpp
-  MiniEngine.cpp
-  Win32Application.cpp
-  Generating Code...
+﻿  D3D12Camera.cpp
+D:\Projects\DX12\Sources\Engine\Objects\D3D12Camera.cpp(16,43): warning C4244: 'argument': conversion from 'float' to 'LONG', possible loss of data
+D:\Projects\DX12\Sources\Engine\Objects\D3D12Camera.cpp(16,37): warning C4244: 'argument': conversion from 'float' to 'LONG', possible loss of data
   MiniEngine.vcxproj -> D:\Projects\DX12\MiniEngine\bin\x64\Debug\MiniEngine.exe

@@ -6,8 +6,6 @@ using namespace Microsoft::WRL;
 MiniEngine::MiniEngine(UINT width, UINT height, std::wstring name) :
     Window(width, height, name),
     frameIndex(0),
-    viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)),
-    scissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height)),
     rtvDescriptorSize(0),
     useWarpDevice(false)
 {
@@ -259,7 +257,10 @@ void MiniEngine::LoadAssets()
     // Create scene objects.
     {
         allocator = std::make_unique<D3D12BufferManager>(device);
-        camera = std::make_shared<D3D12Camera>();
+        camera = std::make_shared<D3D12Camera>(static_cast<FLOAT>(width), static_cast<FLOAT>(height));
+        camera->SetViewport(static_cast<FLOAT>(width), static_cast<FLOAT>(height));
+        camera->SetScissorRect(static_cast<LONG>(width), static_cast<LONG>(height));
+
         constant = std::make_shared<Constant>();
         fbxImporter = std::make_unique<FBXImporter>();
         fbxImporter->InitializeSdkObjects();
@@ -603,9 +604,9 @@ void MiniEngine::PopulateCommandList()
     descriptorHeapManager->SetSRVs(commandList);
     descriptorHeapManager->SetSamplers(commandList);
 
-    // Set necessary state.
-    commandList->RSSetViewports(1, &viewport);
-    commandList->RSSetScissorRects(1, &scissorRect);
+    // Set camera relating state.
+    commandList->RSSetViewports(1, camera->GetViewport());
+    commandList->RSSetScissorRects(1, camera->GetScissorRect());
 
     // Indicate that the back buffer will be used as a render target.
     commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
