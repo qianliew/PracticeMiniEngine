@@ -1,2 +1,5 @@
-﻿  Performing Custom Build Tools
+﻿  Main.cpp
+  MiniEngine.cpp
+  Win32Application.cpp
+  Generating Code...
   MiniEngine.vcxproj -> D:\Projects\DX12\MiniEngine\bin\x64\Debug\MiniEngine.exe

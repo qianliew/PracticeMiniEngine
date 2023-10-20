@@ -91,6 +91,9 @@
       <Filter>Utilities</Filter>
     </ClInclude>
     <ClInclude Include="..\Sources\Engine\d3dx12.h" />
+    <ClInclude Include="..\Sources\Engine\Window.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Camera.cpp">
@@ -141,6 +144,9 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Win32Application.cpp" />
     <ClCompile Include="MiniEngine.cpp" />
+    <ClCompile Include="..\Sources\Engine\Window.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="shaders.hlsl" />

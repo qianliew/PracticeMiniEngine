@@ -1,5 +1,4 @@
 #pragma once
-#include "MiniEngine.h"
 
 class MiniEngine;
 
