@@ -116,6 +116,7 @@
     <ClInclude Include="Components\D3D12Buffer.h" />
     <ClInclude Include="Components\D3D12DefaultBuffer.h" />
     <ClInclude Include="Components\D3D12Resource.h" />
+    <ClInclude Include="Components\D3D12Sampler.h" />
     <ClInclude Include="Components\D3D12UploadBuffer.h" />
     <ClInclude Include="Components\D3D12View.h" />
     <ClInclude Include="D3D12IndexBuffer.h" />
@@ -139,6 +140,7 @@
     <ClCompile Include="Components\D3D12Buffer.cpp" />
     <ClCompile Include="Components\D3D12DefaultBuffer.cpp" />
     <ClCompile Include="Components\D3D12Resource.cpp" />
+    <ClCompile Include="Components\D3D12Sampler.cpp" />
     <ClCompile Include="Components\D3D12UploadBuffer.cpp" />
     <ClCompile Include="D3D12IndexBuffer.cpp" />
     <ClCompile Include="D3D12Texture.cpp" />

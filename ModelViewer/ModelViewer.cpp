@@ -212,6 +212,13 @@ void ModelViewer::LoadAssets()
         srvDescriptorTableRanges[0].RegisterSpace = 0;
         srvDescriptorTableRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
+        D3D12_DESCRIPTOR_RANGE samplerDescriptorTableRanges[1];
+        samplerDescriptorTableRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+        samplerDescriptorTableRanges[0].NumDescriptors = 1;
+        samplerDescriptorTableRanges[0].BaseShaderRegister = 0;
+        samplerDescriptorTableRanges[0].RegisterSpace = 0;
+        samplerDescriptorTableRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
         D3D12_ROOT_DESCRIPTOR_TABLE cbvDescriptorTable;
         cbvDescriptorTable.NumDescriptorRanges = _countof(cbvDescriptorTableRanges);
         cbvDescriptorTable.pDescriptorRanges = &cbvDescriptorTableRanges[0];
@@ -220,7 +227,11 @@ void ModelViewer::LoadAssets()
         srvDescriptorTable.NumDescriptorRanges = _countof(srvDescriptorTableRanges);
         srvDescriptorTable.pDescriptorRanges = &srvDescriptorTableRanges[0];
 
-        CD3DX12_ROOT_PARAMETER rootParameters[2];
+        D3D12_ROOT_DESCRIPTOR_TABLE samplerDescriptorTable;
+        samplerDescriptorTable.NumDescriptorRanges = _countof(samplerDescriptorTableRanges);
+        samplerDescriptorTable.pDescriptorRanges = &samplerDescriptorTableRanges[0];
+
+        CD3DX12_ROOT_PARAMETER rootParameters[3];
         rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
         rootParameters[0].DescriptorTable = cbvDescriptorTable;
         rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
@@ -228,6 +239,10 @@ void ModelViewer::LoadAssets()
         rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
         rootParameters[1].DescriptorTable = srvDescriptorTable;
         rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+        rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        rootParameters[2].DescriptorTable = samplerDescriptorTable;
+        rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
         // create a static sampler
         D3D12_STATIC_SAMPLER_DESC sampler = {};
@@ -241,7 +256,7 @@ void ModelViewer::LoadAssets()
         sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
         sampler.MinLOD = 0.0f;
         sampler.MaxLOD = D3D12_FLOAT32_MAX;
-        sampler.ShaderRegister = 0;
+        sampler.ShaderRegister = 1;
         sampler.RegisterSpace = 0;
         sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
@@ -254,8 +269,14 @@ void ModelViewer::LoadAssets()
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
-        ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, signature.GetAddressOf(), error.GetAddressOf()));
-        ThrowIfFailed(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
+        ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc,
+            D3D_ROOT_SIGNATURE_VERSION_1,
+            signature.GetAddressOf(),
+            error.GetAddressOf()));
+        ThrowIfFailed(m_device->CreateRootSignature(0,
+            signature->GetBufferPointer(),
+            signature->GetBufferSize(),
+            IID_PPV_ARGS(&m_rootSignature)));
     }
 
     // Create the pipeline state, which includes compiling and loading shaders.
@@ -365,6 +386,11 @@ void ModelViewer::LoadAssets()
         m_device->CreateShaderResourceView(m_model->GetTexture()->TextureBuffer->GetResource(),
             &m_model->GetTexture()->TextureBuffer->View->SRVDesc,
             m_model->GetTexture()->TextureBuffer->View->CPUHandle);
+
+        m_model->GetTexture()->CreateSampler();
+        m_descriptorHeapManager->GetSamplerHandle(m_model->GetTexture()->TextureSampler.get(), 0);
+        m_device->CreateSampler(&m_model->GetTexture()->TextureSampler->SamplerDesc,
+            m_model->GetTexture()->TextureSampler->CPUHandle);
     }
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
@@ -504,6 +530,7 @@ void ModelViewer::PopulateCommandList()
     m_commandList->SetGraphicsRootDescriptorTable(0, m_cbvHeap->GetGPUDescriptorHandleForHeapStart());
 
     m_descriptorHeapManager->SetSRVs(m_commandList);
+    m_descriptorHeapManager->SetSamplers(m_commandList);
 
     // Set necessary state.
     m_commandList->RSSetViewports(1, &m_viewport);

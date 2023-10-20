@@ -21,6 +21,8 @@ public:
 
 	void LoadTexture(LPCWSTR texturePath);
 	void ReleaseTexture();
+	void CreateSampler();
 
 	std::unique_ptr<D3D12TextureBuffer> TextureBuffer;
+	std::unique_ptr<D3D12Sampler> TextureSampler;
 };

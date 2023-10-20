@@ -85,6 +85,25 @@ void D3D12Texture::LoadTexture(LPCWSTR texturePath)
     TextureBuffer->SetResourceDesc(desc);
 }
 
+void D3D12Texture::CreateSampler()
+{
+    if (TextureSampler == nullptr)
+    {
+        TextureSampler = std::make_unique<D3D12Sampler>();
+    }
+
+    TextureSampler->SamplerDesc.Filter = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR;
+    TextureSampler->SamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    TextureSampler->SamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    TextureSampler->SamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    TextureSampler->SamplerDesc.MipLODBias = 0;
+    TextureSampler->SamplerDesc.MaxAnisotropy = 0;
+    TextureSampler->SamplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    TextureSampler->SamplerDesc.BorderColor[3] = 1;
+    TextureSampler->SamplerDesc.MinLOD = 0.0f;
+    TextureSampler->SamplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+}
+
 void D3D12Texture::ReleaseTexture()
 {
     if (m_data == nullptr) return;
