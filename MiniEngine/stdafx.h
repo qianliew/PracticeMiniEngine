@@ -31,5 +31,7 @@
 #include "D3D12Sampler.h"
 #include "D3D12Resource.h"
 
+#include "Transform.h"
+
 #include "D3D12BufferManager.h"
 #include "D3D12DescriptorHeapManager.h"

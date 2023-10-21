@@ -477,7 +477,7 @@ void ModelViewer::OnKeyUp(UINT8 key)
 void ModelViewer::OnUpdate()
 {
     // Update scene objects.
-    XMStoreFloat4x4(&m_constant->ObjectToWorldMatrix, m_camera->GetMVPMatrix());
+    XMStoreFloat4x4(&m_constant->ObjectToWorldMatrix, m_camera->GetVPMatrix());
 
     m_constant->a.x = 1;
     m_constant->a.y = 0;

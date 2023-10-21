@@ -94,6 +94,9 @@
     <ClInclude Include="..\Sources\Engine\Window.h">
       <Filter>Engine</Filter>
     </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Components\Transform.h">
+      <Filter>Engine\Components\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Camera.cpp">
@@ -146,6 +149,9 @@
     <ClCompile Include="MiniEngine.cpp" />
     <ClCompile Include="..\Sources\Engine\Window.cpp">
       <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Components\Transform.cpp">
+      <Filter>Engine\Components\Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

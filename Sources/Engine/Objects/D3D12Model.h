@@ -5,11 +5,12 @@
 
 using namespace std;
 
-class D3D12Model
+class D3D12Model : public Transform
 {
 private:
-    shared_ptr<D3D12Mesh> m_mesh;
-    shared_ptr<D3D12Texture> m_texture;
+    shared_ptr<D3D12Mesh> mesh;
+    shared_ptr<D3D12Texture> texture;
+    shared_ptr<D3D12UploadBuffer> constant;
 
     char* m_meshPath;
     char* m_texturePath;
@@ -18,6 +19,7 @@ public:
     D3D12Model(char*, char*);
 
     void LoadModel(unique_ptr<FBXImporter>&);
-    shared_ptr<D3D12Mesh> const GetMesh();
-    shared_ptr<D3D12Texture> const GetTexture();
+    const shared_ptr<D3D12Mesh> GetMesh() const { return mesh; }
+    const shared_ptr<D3D12Texture> GetTexture() const { return texture; }
+    const shared_ptr<D3D12UploadBuffer> GetConstant() const { return constant; }
 };

@@ -261,7 +261,6 @@ void MiniEngine::LoadAssets()
         camera->SetViewport(static_cast<FLOAT>(width), static_cast<FLOAT>(height));
         camera->SetScissorRect(static_cast<LONG>(width), static_cast<LONG>(height));
 
-        constant = std::make_shared<Constant>();
         fbxImporter = std::make_unique<FBXImporter>();
         fbxImporter->InitializeSdkObjects();
         model = std::make_shared<D3D12Model>((char*)"cube.fbx", (char*)"test.png");
@@ -399,12 +398,11 @@ void MiniEngine::LoadAssets()
 
     // Create the constant buffer.
     {
-        constantBuffer = std::make_unique<D3D12UploadBuffer>();
-        constantBuffer->CreateConstantBuffer(device.Get(), sizeof(Constant));
+        model->GetConstant()->CreateConstantBuffer(device.Get(), sizeof(Matrices));
 
         D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-        cbvDesc.BufferLocation = constantBuffer->ResourceLocation->Resource->GetGPUVirtualAddress();
-        cbvDesc.SizeInBytes = CalculateConstantBufferByteSize(constantBuffer->GetDataSize());
+        cbvDesc.BufferLocation = model->GetConstant()->ResourceLocation->Resource->GetGPUVirtualAddress();
+        cbvDesc.SizeInBytes = CalculateConstantBufferByteSize(model->GetConstant()->GetDataSize());
 
         device->CreateConstantBufferView(&cbvDesc, cbvHeap->GetCPUDescriptorHandleForHeapStart());
     }
@@ -509,33 +507,33 @@ void MiniEngine::OnKeyDown(UINT8 key)
     switch (key)
     {
     case 'A':
-        camera->MoveCameraAlongX(1);
+        camera->MoveAlongX(1);
         break;
     case 'D':
-        camera->MoveCameraAlongX(-1);
+        camera->MoveAlongX(-1);
         break;
     case 'W':
-        camera->MoveCameraAlongZ(1);
+        camera->MoveAlongZ(1);
         break;
     case 'S':
-        camera->MoveCameraAlongZ(-1);
+        camera->MoveAlongZ(-1);
         break;
 
     case 'Q':
-        camera->RotateCameraAlongY(1);
+        camera->RotateAlongY(1);
         break;
     case 'E':
-        camera->RotateCameraAlongY(-1);
+        camera->RotateAlongY(-1);
         break;
     case 'Z':
-        camera->RotateCameraAlongX(1);
+        camera->RotateAlongX(1);
         break;
     case 'X':
-        camera->RotateCameraAlongX(-1);
+        camera->RotateAlongX(-1);
         break;
 
     case 'C':
-        camera->ResetCamera();
+        camera->ResetTransform();
         break;
     }
 }
@@ -549,14 +547,11 @@ void MiniEngine::OnKeyUp(UINT8 key)
 void MiniEngine::OnUpdate()
 {
     // Update scene objects.
-    XMStoreFloat4x4(&constant->ObjectToWorldMatrix, camera->GetMVPMatrix());
+    Matrices matrices = model->GetMatrices();
+    model->SetObjectToWorldMatrix();
+    XMStoreFloat4x4(&matrices.WorldToProjectionMatrix, camera->GetVPMatrix());
 
-    constant->a.x = 1;
-    constant->a.y = 0;
-    constant->a.z = 1;
-    constant->a.w = 1;
-
-    constantBuffer->CopyData(constant.get());
+    model->GetConstant()->CopyData(&matrices);
 }
 
 // Render the scene.

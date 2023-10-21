@@ -12,7 +12,7 @@
 cbuffer Constant : register(b0)
 {
     float4x4 ObjectToWorldMatrix;
-    float4 a;
+    float4x4 WorldToProjectionMatrix;
 };
 
 Texture2D t1 : register(t0);
@@ -37,7 +37,7 @@ PSInput VSMain(VSInput input)
     PSInput result;
 
     input.position.w = 1;
-    result.position = mul(ObjectToWorldMatrix, input.position);
+    result.position = mul(mul(ObjectToWorldMatrix, WorldToProjectionMatrix), input.position);
     result.texCoord = input.texCoord;
     result.color = input.color;
 

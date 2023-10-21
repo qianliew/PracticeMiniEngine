@@ -154,6 +154,7 @@
     <ClInclude Include="..\Sources\Engine\Components\D3D12Sampler.h" />
     <ClInclude Include="..\Sources\Engine\Components\D3D12UploadBuffer.h" />
     <ClInclude Include="..\Sources\Engine\Components\D3D12View.h" />
+    <ClInclude Include="..\Sources\Engine\Components\Transform.h" />
     <ClInclude Include="..\Sources\Engine\d3dx12.h" />
     <ClInclude Include="..\Sources\Engine\Managers\D3D12BufferManager.h" />
     <ClInclude Include="..\Sources\Engine\Managers\D3D12DescriptorHeapManager.h" />
@@ -177,6 +178,7 @@
     <ClCompile Include="..\Sources\Engine\Components\D3D12Resource.cpp" />
     <ClCompile Include="..\Sources\Engine\Components\D3D12Sampler.cpp" />
     <ClCompile Include="..\Sources\Engine\Components\D3D12UploadBuffer.cpp" />
+    <ClCompile Include="..\Sources\Engine\Components\Transform.cpp" />
     <ClCompile Include="..\Sources\Engine\Managers\D3D12BufferManager.cpp" />
     <ClCompile Include="..\Sources\Engine\Managers\D3D12DescriptorHeapManager.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Camera.cpp" />

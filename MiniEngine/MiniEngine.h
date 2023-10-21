@@ -38,12 +38,6 @@ private:
 
     static const UINT FrameCount = 2;
 
-    struct Constant
-    {
-        XMFLOAT4X4 ObjectToWorldMatrix;
-        XMFLOAT4 a;
-    };
-
     // Pipeline objects.
     ComPtr<IDXGISwapChain3> swapChain;
     ComPtr<ID3D12Device> device;
@@ -63,9 +57,6 @@ private:
     unique_ptr<D3D12BufferManager> allocator;
     unique_ptr<D3D12DescriptorHeapManager> descriptorHeapManager;
 
-    // App resources.
-    unique_ptr<D3D12UploadBuffer> constantBuffer;
-
     // Synchronization objects.
     UINT frameIndex;
     HANDLE fenceEvent;
@@ -73,7 +64,6 @@ private:
     UINT64 fenceValue;
 
     // Scene objects
-    shared_ptr<Constant> constant;
     shared_ptr<D3D12Camera> camera;
     shared_ptr<D3D12Model> model;
     unique_ptr<FBXImporter> fbxImporter;
