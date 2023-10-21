@@ -6,7 +6,7 @@ D3D12IndexBuffer::~D3D12IndexBuffer()
     delete View;
 }
 
-void D3D12IndexBuffer::CreateView()
+void D3D12IndexBuffer::CreateViewDesc()
 {
     if (View == nullptr)
     {

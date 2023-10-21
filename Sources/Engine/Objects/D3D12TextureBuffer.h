@@ -9,5 +9,5 @@ public:
 
 	~D3D12TextureBuffer();
 
-	void CreateView() override;
+	void CreateViewDesc() override;
 };

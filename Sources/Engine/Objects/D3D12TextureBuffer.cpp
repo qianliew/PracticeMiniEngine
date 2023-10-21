@@ -6,7 +6,7 @@ D3D12TextureBuffer::~D3D12TextureBuffer()
     delete View;
 }
 
-void D3D12TextureBuffer::CreateView()
+void D3D12TextureBuffer::CreateViewDesc()
 {
     if (View == nullptr)
     {

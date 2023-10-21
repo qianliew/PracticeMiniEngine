@@ -7,7 +7,7 @@ private:
 public:
     ~D3D12VertexBuffer();
 
-    void CreateView() override;
+    void CreateViewDesc() override;
 
     D3D12VBV* View;
 };

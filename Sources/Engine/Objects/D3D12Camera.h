@@ -28,7 +28,6 @@ private:
     FLOAT farZ;
 
     shared_ptr<D3D12UploadBuffer> cameraConstantBuffer;
-    D3D12_CONSTANT_BUFFER_VIEW_DESC cameraCBVDesc;
 
 public:
     D3D12Camera(FLOAT width, FLOAT height);
@@ -43,10 +42,7 @@ public:
     const D3D12_VIEWPORT* GetViewport() const { return pViewport; }
     const D3D12_RECT* GetScissorRect() const { return pScissorRect; }
     CameraConstant& GetCameraConstant() { return cameraConstant; }
+    const shared_ptr<D3D12UploadBuffer> GetCameraConstantBuffer() const { return cameraConstantBuffer; }
 
     const XMMATRIX GetVPMatrix();
-
-    void CreateCameraView();
-    const shared_ptr<D3D12UploadBuffer> GetCameraConstantBuffer() const { return cameraConstantBuffer; }
-    const D3D12_CONSTANT_BUFFER_VIEW_DESC GetCameraCBVDesc() const { return cameraCBVDesc; }
 };

@@ -23,9 +23,7 @@ protected:
     XMVECTOR upDirction;
 
     TransformConstant transformConstant;
-
     shared_ptr<D3D12UploadBuffer> transformConstantBuffer;
-    D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
 
 public:
     Transform();
@@ -39,8 +37,5 @@ public:
     virtual void RotateAlongX(const FLOAT direction);
 
     TransformConstant& GetTransformConstant() { return transformConstant; }
-
-    void CreateView();
     const shared_ptr<D3D12UploadBuffer> GetTransformConstantBuffer() const { return transformConstantBuffer; }
-    const D3D12_CONSTANT_BUFFER_VIEW_DESC GetCBVDesc() const { return cbvDesc; }
 };

@@ -8,9 +8,9 @@ struct D3D12ResourceLocation
 class D3D12Buffer
 {
 protected:
-	void* m_startLocation;
-	UINT m_bufferSize;
-	UINT m_dataSize;
+	void* startLocation;
+	UINT bufferSize;
+	UINT dataSize;
 
 public:
 	D3D12ResourceLocation* ResourceLocation;

@@ -349,7 +349,7 @@ void ModelViewer::LoadAssets()
         m_allocator->AllocateDefaultBuffer(m_model->GetMesh()->IndexBuffer.get());
         tempIndexBuffer->CopyData(m_model->GetMesh()->GetIndicesData(), m_model->GetMesh()->GetIndicesSize());
 
-        m_model->GetMesh()->CreateView();
+        m_model->GetMesh()->CreateViewDesc();
         m_commandList->CopyBufferRegion(m_model->GetMesh()->VertexBuffer->GetResource(),
             0,
             tempVertexBuffer->ResourceLocation->Resource.Get(),
@@ -381,7 +381,7 @@ void ModelViewer::LoadAssets()
         UpdateSubresources(m_commandList.Get(), m_model->GetTexture()->TextureBuffer->GetResource(),
             tempBuffer->ResourceLocation->Resource.Get(), 0, 0, 1, &textureData);
 
-        m_model->GetTexture()->TextureBuffer->CreateView();
+        m_model->GetTexture()->TextureBuffer->CreateViewDesc();
         m_descriptorHeapManager->GetSRVHandle(m_model->GetTexture()->TextureBuffer->View, 0);
         m_device->CreateShaderResourceView(m_model->GetTexture()->TextureBuffer->GetResource(),
             &m_model->GetTexture()->TextureBuffer->View->SRVDesc,

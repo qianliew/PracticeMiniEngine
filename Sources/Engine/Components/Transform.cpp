@@ -49,9 +49,3 @@ void Transform::RotateAlongX(const FLOAT direction)
     forwardDirction = XMPlaneNormalize(XMVector3Transform(forwardDirction, trans));
     upDirction = XMPlaneNormalize(XMVector3Transform(upDirction, trans));
 }
-
-void Transform::CreateView()
-{
-    cbvDesc.BufferLocation = transformConstantBuffer->ResourceLocation->Resource->GetGPUVirtualAddress();
-    cbvDesc.SizeInBytes = CalculateConstantBufferByteSize(transformConstantBuffer->GetDataSize());
-}

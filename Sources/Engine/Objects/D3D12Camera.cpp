@@ -56,9 +56,3 @@ const XMMATRIX D3D12Camera::GetVPMatrix()
 
     return view * proj;
 }
-
-void D3D12Camera::CreateCameraView()
-{
-    cameraCBVDesc.BufferLocation = cameraConstantBuffer->ResourceLocation->Resource->GetGPUVirtualAddress();
-    cameraCBVDesc.SizeInBytes = CalculateConstantBufferByteSize(cameraConstantBuffer->GetDataSize());
-}

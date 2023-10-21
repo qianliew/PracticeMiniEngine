@@ -6,7 +6,7 @@ D3D12VertexBuffer::~D3D12VertexBuffer()
     delete View;
 }
 
-void D3D12VertexBuffer::CreateView()
+void D3D12VertexBuffer::CreateViewDesc()
 {
     if (View == nullptr)
     {

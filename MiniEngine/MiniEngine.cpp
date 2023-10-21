@@ -399,16 +399,15 @@ void MiniEngine::LoadAssets()
     // Create the constant buffer.
     {
         model->GetTransformConstantBuffer()->CreateConstantBuffer(device.Get(), sizeof(TransformConstant));
-        model->CreateView();
-        device->CreateConstantBufferView(&model->GetCBVDesc(), cbvHeap->GetCPUDescriptorHandleForHeapStart());
+        device->CreateConstantBufferView(&model->GetTransformConstantBuffer()->GetView()->CBVDesc,
+            cbvHeap->GetCPUDescriptorHandleForHeapStart());
 
         auto size = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         CD3DX12_CPU_DESCRIPTOR_HANDLE CPUHandle(cbvHeap->GetCPUDescriptorHandleForHeapStart());
         CPUHandle.Offset(1, size);
 
         camera->GetCameraConstantBuffer()->CreateConstantBuffer(device.Get(), sizeof(CameraConstant));
-        camera->CreateCameraView();
-        device->CreateConstantBufferView(&camera->GetCameraCBVDesc(), CPUHandle);
+        device->CreateConstantBufferView(&camera->GetCameraConstantBuffer()->GetView()->CBVDesc, CPUHandle);
     }
 
     // Create the vertex and index buffer.
@@ -423,7 +422,7 @@ void MiniEngine::LoadAssets()
         allocator->AllocateDefaultBuffer(model->GetMesh()->IndexBuffer.get());
         tempIndexBuffer->CopyData(model->GetMesh()->GetIndicesData(), model->GetMesh()->GetIndicesSize());
 
-        model->GetMesh()->CreateView();
+        model->GetMesh()->CreateViewDesc();
         commandList->CopyBufferRegion(model->GetMesh()->VertexBuffer->GetResource(),
             0,
             tempVertexBuffer->ResourceLocation->Resource.Get(),
@@ -455,7 +454,7 @@ void MiniEngine::LoadAssets()
         UpdateSubresources(commandList.Get(), model->GetTexture()->TextureBuffer->GetResource(),
             tempBuffer->ResourceLocation->Resource.Get(), 0, 0, 1, &textureData);
 
-        model->GetTexture()->TextureBuffer->CreateView();
+        model->GetTexture()->TextureBuffer->CreateViewDesc();
         descriptorHeapManager->GetSRVHandle(model->GetTexture()->TextureBuffer->View, 0);
         device->CreateShaderResourceView(model->GetTexture()->TextureBuffer->GetResource(),
             &model->GetTexture()->TextureBuffer->View->SRVDesc,

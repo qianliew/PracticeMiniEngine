@@ -1,7 +1,9 @@
 #include "stdafx.h"
 #include "D3D12Buffer.h"
 
-D3D12Buffer::D3D12Buffer()
+D3D12Buffer::D3D12Buffer() :
+    bufferSize(0),
+    dataSize(0)
 {
     ResourceLocation = new D3D12ResourceLocation();
 }
@@ -17,10 +19,10 @@ D3D12Buffer::~D3D12Buffer()
 
 void* D3D12Buffer::GetStartLocation()
 {
-    return m_startLocation;
+    return startLocation;
 }
 
 UINT D3D12Buffer::GetDataSize()
 {
-    return m_dataSize;
+    return dataSize;
 }

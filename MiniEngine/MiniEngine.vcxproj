@@ -159,7 +159,6 @@
     <ClInclude Include="..\Sources\Engine\Managers\D3D12BufferManager.h" />
     <ClInclude Include="..\Sources\Engine\Managers\D3D12DescriptorHeapManager.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12Camera.h" />
-    <ClInclude Include="..\Sources\Engine\Objects\D3D12ConstantBuffer.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12IndexBuffer.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12Mesh.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12Model.h" />
@@ -183,7 +182,6 @@
     <ClCompile Include="..\Sources\Engine\Managers\D3D12BufferManager.cpp" />
     <ClCompile Include="..\Sources\Engine\Managers\D3D12DescriptorHeapManager.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Camera.cpp" />
-    <ClCompile Include="..\Sources\Engine\Objects\D3D12ConstantBuffer.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12IndexBuffer.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Mesh.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Model.cpp" />

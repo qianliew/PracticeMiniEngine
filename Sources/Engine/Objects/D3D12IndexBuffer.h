@@ -7,7 +7,7 @@ private:
 public:
     ~D3D12IndexBuffer();
 
-    void CreateView() override;
+    void CreateViewDesc() override;
 
     D3D12IBV* View;
 };
