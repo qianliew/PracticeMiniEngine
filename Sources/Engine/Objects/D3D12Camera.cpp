@@ -12,6 +12,7 @@ D3D12Camera::D3D12Camera(FLOAT width, FLOAT height) :
 {
     pViewport = new CD3DX12_VIEWPORT(0.0f, 0.0f, width, height);
     pScissorRect = new CD3DX12_RECT(0.0f, 0.0f, static_cast<LONG>(width), static_cast<LONG>(height));
+    cameraConstantBuffer = std::make_shared<D3D12UploadBuffer>();
 }
 
 D3D12Camera::~D3D12Camera()
@@ -54,4 +55,10 @@ const XMMATRIX D3D12Camera::GetVPMatrix()
     XMMATRIX proj = XMMatrixPerspectiveFovRH(fov, aspectRatio, nearZ, farZ);
 
     return view * proj;
+}
+
+void D3D12Camera::CreateCameraView()
+{
+    cameraCBVDesc.BufferLocation = cameraConstantBuffer->ResourceLocation->Resource->GetGPUVirtualAddress();
+    cameraCBVDesc.SizeInBytes = CalculateConstantBufferByteSize(cameraConstantBuffer->GetDataSize());
 }

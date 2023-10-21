@@ -12,6 +12,13 @@ public:
 	CD3DX12_CPU_DESCRIPTOR_HANDLE CPUHandle;
 };
 
+class D3D12CBV : public D3D12View
+{
+public:
+	D3D12_CONSTANT_BUFFER_VIEW_DESC CBVDesc;
+	CD3DX12_CPU_DESCRIPTOR_HANDLE CPUHandle;
+};
+
 class D3D12VBV : public D3D12View
 {
 public:

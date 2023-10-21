@@ -12,6 +12,10 @@
 cbuffer Constant : register(b0)
 {
     float4x4 ObjectToWorldMatrix;
+};
+
+cbuffer Constant : register(b1)
+{
     float4x4 WorldToProjectionMatrix;
 };
 

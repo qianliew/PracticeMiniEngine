@@ -5,8 +5,6 @@
 class D3D12UploadBuffer : public D3D12Buffer
 {
 public:
-	~D3D12UploadBuffer();
-
 	void* GetStartLocation();
 	UINT GetDataSize();
 

@@ -4,11 +4,11 @@
 #define DEFAULT_ROTATING_SPEED XM_PI / 36.0f
 
 using namespace DirectX;
+using std::shared_ptr;
 
-struct Matrices
+struct TransformConstant
 {
     XMFLOAT4X4 ObjectToWorldMatrix;
-    XMFLOAT4X4 WorldToProjectionMatrix;
 };
 
 class Transform
@@ -22,7 +22,10 @@ protected:
     XMVECTOR forwardDirction;
     XMVECTOR upDirction;
 
-    Matrices matrices;
+    TransformConstant transformConstant;
+
+    shared_ptr<D3D12UploadBuffer> transformConstantBuffer;
+    D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
 
 public:
     Transform();
@@ -35,5 +38,9 @@ public:
     virtual void RotateAlongY(const FLOAT direction);
     virtual void RotateAlongX(const FLOAT direction);
 
-    Matrices& GetMatrices() { return matrices; }
+    TransformConstant& GetTransformConstant() { return transformConstant; }
+
+    void CreateView();
+    const shared_ptr<D3D12UploadBuffer> GetTransformConstantBuffer() const { return transformConstantBuffer; }
+    const D3D12_CONSTANT_BUFFER_VIEW_DESC GetCBVDesc() const { return cbvDesc; }
 };

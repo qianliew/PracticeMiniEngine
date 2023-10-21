@@ -1,12 +1,6 @@
 #include "stdafx.h"
 #include "D3D12UploadBuffer.h"
 
-D3D12UploadBuffer::~D3D12UploadBuffer()
-{
-	ResourceLocation->Resource->Unmap(0, nullptr);
-	m_startLocation = nullptr;
-}
-
 void* D3D12UploadBuffer::GetStartLocation()
 {
 	return D3D12Buffer::m_startLocation;

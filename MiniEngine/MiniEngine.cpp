@@ -201,7 +201,7 @@ void MiniEngine::LoadPipeline()
 
         // Describe and create a constant buffer view (CBV) descriptor heap.
         D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
-        cbvHeapDesc.NumDescriptors = 1;
+        cbvHeapDesc.NumDescriptors = 2;
         cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         ThrowIfFailed(device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&cbvHeap)));
@@ -271,7 +271,7 @@ void MiniEngine::LoadAssets()
     {
         D3D12_DESCRIPTOR_RANGE cbvDescriptorTableRanges[1];
         cbvDescriptorTableRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-        cbvDescriptorTableRanges[0].NumDescriptors = 1;
+        cbvDescriptorTableRanges[0].NumDescriptors = 2;
         cbvDescriptorTableRanges[0].BaseShaderRegister = 0;
         cbvDescriptorTableRanges[0].RegisterSpace = 0;
         cbvDescriptorTableRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -398,13 +398,17 @@ void MiniEngine::LoadAssets()
 
     // Create the constant buffer.
     {
-        model->GetConstant()->CreateConstantBuffer(device.Get(), sizeof(Matrices));
+        model->GetTransformConstantBuffer()->CreateConstantBuffer(device.Get(), sizeof(TransformConstant));
+        model->CreateView();
+        device->CreateConstantBufferView(&model->GetCBVDesc(), cbvHeap->GetCPUDescriptorHandleForHeapStart());
 
-        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-        cbvDesc.BufferLocation = model->GetConstant()->ResourceLocation->Resource->GetGPUVirtualAddress();
-        cbvDesc.SizeInBytes = CalculateConstantBufferByteSize(model->GetConstant()->GetDataSize());
+        auto size = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE CPUHandle(cbvHeap->GetCPUDescriptorHandleForHeapStart());
+        CPUHandle.Offset(1, size);
 
-        device->CreateConstantBufferView(&cbvDesc, cbvHeap->GetCPUDescriptorHandleForHeapStart());
+        camera->GetCameraConstantBuffer()->CreateConstantBuffer(device.Get(), sizeof(CameraConstant));
+        camera->CreateCameraView();
+        device->CreateConstantBufferView(&camera->GetCameraCBVDesc(), CPUHandle);
     }
 
     // Create the vertex and index buffer.
@@ -547,11 +551,13 @@ void MiniEngine::OnKeyUp(UINT8 key)
 void MiniEngine::OnUpdate()
 {
     // Update scene objects.
-    Matrices matrices = model->GetMatrices();
-    model->SetObjectToWorldMatrix();
-    XMStoreFloat4x4(&matrices.WorldToProjectionMatrix, camera->GetVPMatrix());
+    CameraConstant cameraConstant = camera->GetCameraConstant();
+    XMStoreFloat4x4(&cameraConstant.WorldToProjectionMatrix, camera->GetVPMatrix());
+    camera->GetCameraConstantBuffer()->CopyData(&cameraConstant);
 
-    model->GetConstant()->CopyData(&matrices);
+    TransformConstant transformConstant = model->GetTransformConstant();
+    model->SetObjectToWorldMatrix();
+    model->GetTransformConstantBuffer()->CopyData(&transformConstant);
 }
 
 // Render the scene.
