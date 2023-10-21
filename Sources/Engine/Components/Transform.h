@@ -1,5 +1,7 @@
 #pragma once
 
+#include "D3D12ConstantBuffer.h"
+
 #define DEFAULT_MOVING_SPEED 2.0f
 #define DEFAULT_ROTATING_SPEED XM_PI / 36.0f
 
@@ -23,7 +25,7 @@ protected:
     XMVECTOR upDirction;
 
     TransformConstant transformConstant;
-    shared_ptr<D3D12UploadBuffer> transformConstantBuffer;
+    shared_ptr<D3D12ConstantBuffer> transformConstantBuffer;
 
 public:
     Transform();
@@ -37,5 +39,5 @@ public:
     virtual void RotateAlongX(const FLOAT direction);
 
     TransformConstant& GetTransformConstant() { return transformConstant; }
-    const shared_ptr<D3D12UploadBuffer> GetTransformConstantBuffer() const { return transformConstantBuffer; }
+    const shared_ptr<D3D12ConstantBuffer> GetTransformConstantBuffer() const { return transformConstantBuffer; }
 };

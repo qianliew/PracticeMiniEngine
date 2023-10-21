@@ -1,6 +1,6 @@
 #pragma once
 
-#define MAX_UPLOAD_BUFFER_COUNT 4
+#define MAX_UPLOAD_BUFFER_COUNT 10
 
 enum class UploadBufferType
 {
@@ -23,5 +23,6 @@ public:
 	~D3D12BufferManager();
 
 	void AllocateUploadBuffer(D3D12UploadBuffer* &pBuffer, UploadBufferType type);
+	void* AllocateUploadBuffer(D3D12Resource* pResource);
 	void AllocateDefaultBuffer(D3D12Resource* pResource);
 };

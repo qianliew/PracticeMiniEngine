@@ -49,6 +49,20 @@ void D3D12BufferManager::AllocateUploadBuffer(D3D12UploadBuffer* &pBuffer, Uploa
     }
 }
 
+void* D3D12BufferManager::AllocateUploadBuffer(D3D12Resource* pResource)
+{
+    D3D12UploadBuffer** ppBuffer = UploadBufferPool[(UINT)UploadBufferType::Constant];
+
+    for (UINT i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++, ppBuffer++)
+    {
+        if (*ppBuffer != nullptr) continue;
+        *ppBuffer = new D3D12UploadBuffer();
+        (**ppBuffer).CreateConstantBuffer(device.Get(), BLOCK_SIZE_TYPE_3);
+        pResource->SetResourceLoaction((*ppBuffer)->ResourceLocation);
+        return (*ppBuffer)->GetStartLocation();
+    }
+}
+
 void D3D12BufferManager::AllocateDefaultBuffer(D3D12Resource* pResource)
 {
     if (pResource->GetResourceLocation() == nullptr 

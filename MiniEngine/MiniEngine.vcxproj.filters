@@ -97,6 +97,9 @@
     <ClInclude Include="..\Sources\Engine\Components\Transform.h">
       <Filter>Engine\Components\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Objects\D3D12ConstantBuffer.h">
+      <Filter>Engine\Objects\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Camera.cpp">
@@ -152,6 +155,9 @@
     </ClCompile>
     <ClCompile Include="..\Sources\Engine\Components\Transform.cpp">
       <Filter>Engine\Components\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Objects\D3D12ConstantBuffer.cpp">
+      <Filter>Engine\Objects\Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

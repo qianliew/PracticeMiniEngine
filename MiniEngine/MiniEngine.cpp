@@ -398,7 +398,10 @@ void MiniEngine::LoadAssets()
 
     // Create the constant buffer.
     {
-        model->GetTransformConstantBuffer()->CreateConstantBuffer(device.Get(), sizeof(TransformConstant));
+        model->GetTransformConstantBuffer()->StartLocation =
+            allocator->AllocateUploadBuffer(model->GetTransformConstantBuffer().get());
+        model->GetTransformConstantBuffer()->CreateViewDesc();
+        model->GetTransformConstantBuffer()->SetBufferSize(256);
         device->CreateConstantBufferView(&model->GetTransformConstantBuffer()->GetView()->CBVDesc,
             cbvHeap->GetCPUDescriptorHandleForHeapStart());
 
@@ -406,7 +409,10 @@ void MiniEngine::LoadAssets()
         CD3DX12_CPU_DESCRIPTOR_HANDLE CPUHandle(cbvHeap->GetCPUDescriptorHandleForHeapStart());
         CPUHandle.Offset(1, size);
 
-        camera->GetCameraConstantBuffer()->CreateConstantBuffer(device.Get(), sizeof(CameraConstant));
+        camera->GetCameraConstantBuffer()->StartLocation =
+            allocator->AllocateUploadBuffer(camera->GetCameraConstantBuffer().get());
+        camera->GetCameraConstantBuffer()->CreateViewDesc();
+        camera->GetCameraConstantBuffer()->SetBufferSize(256);
         device->CreateConstantBufferView(&camera->GetCameraConstantBuffer()->GetView()->CBVDesc, CPUHandle);
     }
 
@@ -552,11 +558,15 @@ void MiniEngine::OnUpdate()
     // Update scene objects.
     CameraConstant cameraConstant = camera->GetCameraConstant();
     XMStoreFloat4x4(&cameraConstant.WorldToProjectionMatrix, camera->GetVPMatrix());
-    camera->GetCameraConstantBuffer()->CopyData(&cameraConstant);
+    memcpy(camera->GetCameraConstantBuffer()->StartLocation, &cameraConstant,
+        camera->GetCameraConstantBuffer()->GetView()->CBVDesc.SizeInBytes);
+    // camera->GetCameraConstantBuffer()->CopyData(&cameraConstant);
 
     TransformConstant transformConstant = model->GetTransformConstant();
     model->SetObjectToWorldMatrix();
-    model->GetTransformConstantBuffer()->CopyData(&transformConstant);
+    memcpy(model->GetTransformConstantBuffer()->StartLocation, &transformConstant,
+        model->GetTransformConstantBuffer()->GetView()->CBVDesc.SizeInBytes);
+    // model->GetTransformConstantBuffer()->CopyData(&transformConstant);
 }
 
 // Render the scene.

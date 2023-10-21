@@ -6,15 +6,9 @@ class D3D12CBV;
 
 class D3D12UploadBuffer : public D3D12Buffer
 {
-private:
-	D3D12CBV* view;
-
 public:
 	void CreateBuffer(ID3D12Device* device, UINT size);
 	void CreateConstantBuffer(ID3D12Device* device, UINT size);
 	void CopyData(void const* source);
 	void CopyData(void const* source, size_t size);
-
-	void CreateViewDesc();
-	const D3D12CBV* GetView() { return view; }
 };

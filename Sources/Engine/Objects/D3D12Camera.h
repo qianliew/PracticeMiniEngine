@@ -1,5 +1,7 @@
 #pragma once
 
+#include "D3D12ConstantBuffer.h"
+
 #define CAMERA_DEFAULT_FOV XM_PI / 3.0f
 #define CAMERA_DEFAULT_ASPECT_RATIO 16.0f / 9.0f
 #define CAMERA_DEFAULT_NEAR_Z 0.03f
@@ -27,7 +29,7 @@ private:
     FLOAT nearZ;
     FLOAT farZ;
 
-    shared_ptr<D3D12UploadBuffer> cameraConstantBuffer;
+    shared_ptr<D3D12ConstantBuffer> cameraConstantBuffer;
 
 public:
     D3D12Camera(FLOAT width, FLOAT height);
@@ -42,7 +44,7 @@ public:
     const D3D12_VIEWPORT* GetViewport() const { return pViewport; }
     const D3D12_RECT* GetScissorRect() const { return pScissorRect; }
     CameraConstant& GetCameraConstant() { return cameraConstant; }
-    const shared_ptr<D3D12UploadBuffer> GetCameraConstantBuffer() const { return cameraConstantBuffer; }
+    const shared_ptr<D3D12ConstantBuffer> GetCameraConstantBuffer() const { return cameraConstantBuffer; }
 
     const XMMATRIX GetVPMatrix();
 };
