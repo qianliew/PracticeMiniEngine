@@ -1,3 +1,6 @@
 /.vs
+/MiniEngine/bin
+/MiniEngine/obj
+/MiniEngine/x64
 /ModelViewer/bin
 /ModelViewer/obj

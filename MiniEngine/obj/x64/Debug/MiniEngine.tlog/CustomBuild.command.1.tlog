@@ -1,2 +1,0 @@
-^D:\PROJECTS\DX12\MINIENGINE\SHADERS.HLSL
-copy shaders.hlsl "bin\x64\Debug\" > NUL
