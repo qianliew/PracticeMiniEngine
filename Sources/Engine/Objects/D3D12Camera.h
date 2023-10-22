@@ -17,10 +17,13 @@ struct CameraConstant
 class D3D12Camera : public Transform
 {
 private:
+    const XMVECTOR DefaultCameraWorldPosition = XMVectorSet(0.0f, 0.0f, -50.0f, 1.0f);
+
     CD3DX12_VIEWPORT* pViewport;
     CD3DX12_RECT* pScissorRect;
 
     CameraConstant cameraConstant;
+    shared_ptr<D3D12ConstantBuffer> cameraConstantBuffer;
 
     FLOAT width;
     FLOAT height;
@@ -29,10 +32,8 @@ private:
     FLOAT nearZ;
     FLOAT farZ;
 
-    shared_ptr<D3D12ConstantBuffer> cameraConstantBuffer;
-
 public:
-    D3D12Camera(FLOAT width, FLOAT height);
+    D3D12Camera(UINT id, FLOAT width, FLOAT height);
 
     ~D3D12Camera();
 

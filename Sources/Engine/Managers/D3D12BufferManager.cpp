@@ -40,29 +40,13 @@ void D3D12BufferManager::AllocateUploadBuffer(D3D12UploadBuffer* &pBuffer, Uploa
     for (UINT i = 0; *ppBuffer == nullptr && i < MAX_UPLOAD_BUFFER_COUNT; i++, ppBuffer++)
     {
         *ppBuffer = new D3D12UploadBuffer();
-        (**ppBuffer).CreateBuffer(device.Get(),
+        (*ppBuffer)->CreateBuffer(device.Get(),
             type == UploadBufferType::Texture ? BLOCK_SIZE_TYPE_1
             : type == UploadBufferType::Vertex ? BLOCK_SIZE_TYPE_2
             : BLOCK_SIZE_TYPE_3);
         pBuffer = *ppBuffer;
         break;
     }
-}
-
-void* D3D12BufferManager::AllocateUploadBuffer(D3D12Resource* pResource)
-{
-    D3D12UploadBuffer** ppBuffer = UploadBufferPool[(UINT)UploadBufferType::Constant];
-
-    for (UINT i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++, ppBuffer++)
-    {
-        if (*ppBuffer != nullptr) continue;
-        *ppBuffer = new D3D12UploadBuffer();
-        (**ppBuffer).CreateConstantBuffer(device.Get(), pResource->GetSize());
-        pResource->SetResourceLoaction((*ppBuffer)->ResourceLocation);
-        return (*ppBuffer)->GetStartLocation();
-    }
-
-    return nullptr;
 }
 
 void D3D12BufferManager::AllocateDefaultBuffer(D3D12Resource* pResource)
@@ -75,4 +59,31 @@ void D3D12BufferManager::AllocateDefaultBuffer(D3D12Resource* pResource)
         DefaultBufferPool.insert(std::make_pair(pResource->GetResourceLocation(), pbuffer));
         pResource->SetResourceLoaction(pbuffer->ResourceLocation);
     }
+}
+
+// Overflow case and Initialization problem.
+void D3D12BufferManager::AllocateConstantBufferHelper(
+    std::shared_ptr<D3D12ConstantBuffer>& pBuffer,
+    D3D12_CPU_DESCRIPTOR_HANDLE& handle)
+{
+    pBuffer = std::make_unique<D3D12ConstantBuffer>(BLOCK_SIZE_TYPE_3);
+    D3D12UploadBuffer** ppBuffer = UploadBufferPool[(UINT)UploadBufferType::Constant];
+
+    *ppBuffer = new D3D12UploadBuffer();
+    (*ppBuffer)->CreateConstantBuffer(device.Get(), BLOCK_SIZE_TYPE_3);
+    pBuffer->SetResourceLoaction((*ppBuffer)->ResourceLocation);
+    pBuffer->SetStartLocation((*ppBuffer)->GetStartLocation());
+
+    pBuffer->CreateViewDesc();
+    device->CreateConstantBufferView(&pBuffer->GetView()->CBVDesc, handle);
+}
+
+void D3D12BufferManager::AllocateGlobalConstantBuffer(D3D12_CPU_DESCRIPTOR_HANDLE& handle)
+{
+    AllocateConstantBufferHelper(globalConstantBuffer, handle);
+}
+
+void D3D12BufferManager::AllocatePerObjectConstantBuffer(D3D12_CPU_DESCRIPTOR_HANDLE& handle)
+{
+    AllocateConstantBufferHelper(perObjectConstantBuffer, handle);
 }

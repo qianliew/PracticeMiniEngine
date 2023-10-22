@@ -11,33 +11,33 @@ using std::shared_ptr;
 struct TransformConstant
 {
     XMFLOAT4X4 ObjectToWorldMatrix;
+    XMUINT2 ID;
 };
 
 class Transform
 {
 protected:
-    const XMVECTOR DefaultWorldPosition = XMVectorSet(0, 0, -50, 1);
-    const XMVECTOR DefaultForwardDirction = XMVectorSet(0, 0, 1, 0);
-    const XMVECTOR DefaultUpDirction = XMVectorSet(0, 1, 0, 0);
+    const XMVECTOR DefaultWorldPosition = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+    const XMVECTOR DefaultForwardDirction = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+    const XMVECTOR DefaultUpDirction = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
     XMVECTOR worldPosition;
     XMVECTOR forwardDirction;
     XMVECTOR upDirction;
 
     TransformConstant transformConstant;
-    shared_ptr<D3D12ConstantBuffer> transformConstantBuffer;
 
 public:
-    Transform();
+    Transform(UINT id);
 
     void SetObjectToWorldMatrix();
 
     virtual void ResetTransform();
-    virtual void MoveAlongZ(const FLOAT direction);
     virtual void MoveAlongX(const FLOAT direction);
+    virtual void MoveAlongY(const FLOAT direction);
+    virtual void MoveAlongZ(const FLOAT direction);
     virtual void RotateAlongY(const FLOAT direction);
     virtual void RotateAlongX(const FLOAT direction);
 
     TransformConstant& GetTransformConstant() { return transformConstant; }
-    const shared_ptr<D3D12ConstantBuffer> GetTransformConstantBuffer() const { return transformConstantBuffer; }
 };

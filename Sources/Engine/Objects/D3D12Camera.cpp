@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "D3D12Camera.h"
 
-D3D12Camera::D3D12Camera(FLOAT width, FLOAT height) :
-    Transform(),
+D3D12Camera::D3D12Camera(UINT id, FLOAT width, FLOAT height) :
+    Transform(id),
     width(width),
     height(height),
     fov(CAMERA_DEFAULT_FOV),
@@ -13,6 +13,7 @@ D3D12Camera::D3D12Camera(FLOAT width, FLOAT height) :
     pViewport = new CD3DX12_VIEWPORT(0.0f, 0.0f, width, height);
     pScissorRect = new CD3DX12_RECT(0.0f, 0.0f, static_cast<LONG>(width), static_cast<LONG>(height));
     cameraConstantBuffer = std::make_shared<D3D12ConstantBuffer>((UINT)sizeof(CameraConstant));
+    worldPosition = DefaultCameraWorldPosition;
 }
 
 D3D12Camera::~D3D12Camera()
@@ -23,7 +24,9 @@ D3D12Camera::~D3D12Camera()
 
 void D3D12Camera::ResetTransform()
 {
-    Transform::ResetTransform();
+    worldPosition = DefaultCameraWorldPosition;
+    forwardDirction = DefaultForwardDirction;
+    upDirction = DefaultUpDirction;
 
     fov = CAMERA_DEFAULT_FOV;
     // aspectRatio = CAMERA_DEFAULT_ASPECT_RATIO;

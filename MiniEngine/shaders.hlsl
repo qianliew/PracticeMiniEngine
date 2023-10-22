@@ -17,6 +17,7 @@ cbuffer Constant : register(b0)
 cbuffer Constant : register(b1)
 {
     float4x4 WorldToProjectionMatrix;
+    uint id;
 };
 
 Texture2D t1 : register(t0);

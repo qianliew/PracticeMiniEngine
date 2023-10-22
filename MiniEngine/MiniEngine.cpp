@@ -256,15 +256,23 @@ void MiniEngine::LoadAssets()
 {
     // Create scene objects.
     {
-        allocator = std::make_unique<D3D12BufferManager>(device);
-        camera = std::make_shared<D3D12Camera>(static_cast<FLOAT>(width), static_cast<FLOAT>(height));
+        bufferManager = std::make_unique<D3D12BufferManager>(device);
+        camera = std::make_shared<D3D12Camera>(0, static_cast<FLOAT>(width), static_cast<FLOAT>(height));
         camera->SetViewport(static_cast<FLOAT>(width), static_cast<FLOAT>(height));
         camera->SetScissorRect(static_cast<LONG>(width), static_cast<LONG>(height));
 
         fbxImporter = std::make_unique<FBXImporter>();
         fbxImporter->InitializeSdkObjects();
-        model = std::make_shared<D3D12Model>((char*)"cube.fbx", (char*)"test.png");
+
+        model = std::make_shared<D3D12Model>(id++, (char*)"cube.fbx", (char*)"test.png");
         model->LoadModel(fbxImporter);
+        //model->MoveAlongX(10.0f);
+
+        model2 = std::make_shared<D3D12Model>(id++, (char*)"cube.fbx", (char*)"test.png");
+        model2->LoadModel(fbxImporter);
+        //model2->MoveAlongY(2.0f);
+
+        models.push_back(model);
     }
 
     // Create an empty root signature.
@@ -398,32 +406,25 @@ void MiniEngine::LoadAssets()
 
     // Create the constant buffer.
     {
-        model->GetTransformConstantBuffer()->StartLocation =
-            allocator->AllocateUploadBuffer(model->GetTransformConstantBuffer().get());
-        model->GetTransformConstantBuffer()->CreateViewDesc();
-        device->CreateConstantBufferView(&model->GetTransformConstantBuffer()->GetView()->CBVDesc,
-            cbvHeap->GetCPUDescriptorHandleForHeapStart());
+        bufferManager->AllocateGlobalConstantBuffer(cbvHeap->GetCPUDescriptorHandleForHeapStart());
 
         auto size = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        CD3DX12_CPU_DESCRIPTOR_HANDLE CPUHandle(cbvHeap->GetCPUDescriptorHandleForHeapStart());
-        CPUHandle.Offset(1, size);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(cbvHeap->GetCPUDescriptorHandleForHeapStart());
+        cpuHandle.Offset(1, size);
 
-        camera->GetCameraConstantBuffer()->StartLocation =
-            allocator->AllocateUploadBuffer(camera->GetCameraConstantBuffer().get());
-        camera->GetCameraConstantBuffer()->CreateViewDesc();
-        device->CreateConstantBufferView(&camera->GetCameraConstantBuffer()->GetView()->CBVDesc, CPUHandle);
+        bufferManager->AllocatePerObjectConstantBuffer(cpuHandle);
     }
 
     // Create the vertex and index buffer.
     {
         D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
-        allocator->AllocateUploadBuffer(tempVertexBuffer, UploadBufferType::Vertex);
-        allocator->AllocateDefaultBuffer(model->GetMesh()->VertexBuffer.get());
+        bufferManager->AllocateUploadBuffer(tempVertexBuffer, UploadBufferType::Vertex);
+        bufferManager->AllocateDefaultBuffer(model->GetMesh()->VertexBuffer.get());
         tempVertexBuffer->CopyData(model->GetMesh()->GetVerticesData(), model->GetMesh()->GetVerticesSize());
 
         D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer();
-        allocator->AllocateUploadBuffer(tempIndexBuffer, UploadBufferType::Index);
-        allocator->AllocateDefaultBuffer(model->GetMesh()->IndexBuffer.get());
+        bufferManager->AllocateUploadBuffer(tempIndexBuffer, UploadBufferType::Index);
+        bufferManager->AllocateDefaultBuffer(model->GetMesh()->IndexBuffer.get());
         tempIndexBuffer->CopyData(model->GetMesh()->GetIndicesData(), model->GetMesh()->GetIndicesSize());
 
         model->GetMesh()->CreateViewDesc();
@@ -443,8 +444,8 @@ void MiniEngine::LoadAssets()
     {
         D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
 
-        allocator->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
-        allocator->AllocateDefaultBuffer(model->GetTexture()->TextureBuffer.get());
+        bufferManager->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
+        bufferManager->AllocateDefaultBuffer(model->GetTexture()->TextureBuffer.get());
 
         // Init texture data.
         device.Get()->GetCopyableFootprints(model->GetTexture()->TextureBuffer->GetResourceDesc(), 0, 1, 0, nullptr,
@@ -556,15 +557,11 @@ void MiniEngine::OnUpdate()
     // Update scene objects.
     CameraConstant cameraConstant = camera->GetCameraConstant();
     XMStoreFloat4x4(&cameraConstant.WorldToProjectionMatrix, camera->GetVPMatrix());
-    memcpy(camera->GetCameraConstantBuffer()->StartLocation, &cameraConstant,
-        camera->GetCameraConstantBuffer()->GetView()->CBVDesc.SizeInBytes);
-    // camera->GetCameraConstantBuffer()->CopyData(&cameraConstant);
+    bufferManager->GetGlobalConstantBuffer()->CopyData(&cameraConstant, sizeof(CameraConstant));
 
-    TransformConstant transformConstant = model->GetTransformConstant();
     model->SetObjectToWorldMatrix();
-    memcpy(model->GetTransformConstantBuffer()->StartLocation, &transformConstant,
-        model->GetTransformConstantBuffer()->GetView()->CBVDesc.SizeInBytes);
-    // model->GetTransformConstantBuffer()->CopyData(&transformConstant);
+    TransformConstant transformConstant = model->GetTransformConstant();
+    bufferManager->GetPerObjectConstantBuffer()->CopyData(&transformConstant, sizeof(TransformConstant));
 }
 
 // Render the scene.

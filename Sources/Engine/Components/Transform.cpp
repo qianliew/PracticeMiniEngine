@@ -1,12 +1,13 @@
 #include "stdafx.h"
 #include "Transform.h"
 
-Transform::Transform() :
+Transform::Transform(UINT id) :
 	worldPosition(DefaultWorldPosition),
 	forwardDirction(DefaultForwardDirction),
 	upDirction(DefaultUpDirction)
 {
-    transformConstantBuffer = std::make_shared<D3D12ConstantBuffer>((UINT)sizeof(TransformConstant));
+    XMVECTOR v = XMVectorSet(id, 0.0f, 0.0f, 0.0f);
+    XMStoreUInt2(&transformConstant.ID, v);
 }
 
 void Transform::ResetTransform()
@@ -18,13 +19,8 @@ void Transform::ResetTransform()
 
 void Transform::SetObjectToWorldMatrix()
 {
-    XMMATRIX m = XMMatrixTranslation(0.0f, 0.3f, 0.0f);
+    XMMATRIX m = XMMatrixTranslationFromVector(worldPosition);
     XMStoreFloat4x4(&transformConstant.ObjectToWorldMatrix, m);
-}
-
-void Transform::MoveAlongZ(const FLOAT direction)
-{
-    worldPosition += forwardDirction * DEFAULT_MOVING_SPEED * direction;
 }
 
 void Transform::MoveAlongX(const FLOAT direction)
@@ -32,6 +28,16 @@ void Transform::MoveAlongX(const FLOAT direction)
     XMVECTOR vec = XMVector3Cross(upDirction, forwardDirction);
 
     worldPosition += vec * DEFAULT_MOVING_SPEED * direction;
+}
+
+void Transform::MoveAlongY(const FLOAT direction)
+{
+    worldPosition += upDirction * DEFAULT_MOVING_SPEED * direction;
+}
+
+void Transform::MoveAlongZ(const FLOAT direction)
+{
+    worldPosition += forwardDirction * DEFAULT_MOVING_SPEED * direction;
 }
 
 void Transform::RotateAlongY(const FLOAT direction)

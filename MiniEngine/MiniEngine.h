@@ -54,8 +54,9 @@ private:
     UINT rtvDescriptorSize;
     UINT dsvDescriptorSize;
 
-    unique_ptr<D3D12BufferManager> allocator;
+    unique_ptr<D3D12BufferManager> bufferManager;
     unique_ptr<D3D12DescriptorHeapManager> descriptorHeapManager;
+    unique_ptr<FBXImporter> fbxImporter;
 
     // Synchronization objects.
     UINT frameIndex;
@@ -64,9 +65,12 @@ private:
     UINT64 fenceValue;
 
     // Scene objects
+    std::vector<shared_ptr<D3D12Model>> models;
     shared_ptr<D3D12Camera> camera;
     shared_ptr<D3D12Model> model;
-    unique_ptr<FBXImporter> fbxImporter;
+    shared_ptr<D3D12Model> model2;
+
+    UINT id = 0;
 
     void LoadPipeline();
     void LoadAssets();

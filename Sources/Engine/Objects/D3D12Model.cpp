@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "D3D12Model.h"
 
-D3D12Model::D3D12Model(char* meshPath, char* texturePath)
+D3D12Model::D3D12Model(UINT id, char* meshPath, char* texturePath) :
+    Transform(id)
 {
     mesh = std::make_shared<D3D12Mesh>();
     texture = std::make_shared<D3D12Texture>();
