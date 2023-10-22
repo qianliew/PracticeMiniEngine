@@ -2,8 +2,7 @@
 #include "D3D12Buffer.h"
 
 D3D12Buffer::D3D12Buffer() :
-    bufferSize(0),
-    dataSize(0)
+    bufferSize(0)
 {
     ResourceLocation = new D3D12ResourceLocation();
 }
@@ -22,7 +21,7 @@ void* D3D12Buffer::GetStartLocation()
     return startLocation;
 }
 
-UINT D3D12Buffer::GetDataSize()
+UINT D3D12Buffer::GetBufferSize()
 {
-    return dataSize;
+    return bufferSize;
 }

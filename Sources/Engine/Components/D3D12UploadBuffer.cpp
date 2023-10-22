@@ -3,7 +3,6 @@
 
 void D3D12UploadBuffer::CreateBuffer(ID3D12Device* device, UINT size)
 {
-	dataSize = size;
 	bufferSize = size;
 
 	ThrowIfFailed(device->CreateCommittedResource(
@@ -20,8 +19,7 @@ void D3D12UploadBuffer::CreateBuffer(ID3D12Device* device, UINT size)
 
 void D3D12UploadBuffer::CreateConstantBuffer(ID3D12Device* device, UINT size)
 {
-	dataSize = size;
-	bufferSize = (dataSize + UPLOAD_BUFFER_ALIGNMENT - 1) & ~(UPLOAD_BUFFER_ALIGNMENT - 1);
+	bufferSize = size;
 
 	ThrowIfFailed(device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
@@ -37,7 +35,7 @@ void D3D12UploadBuffer::CreateConstantBuffer(ID3D12Device* device, UINT size)
 
 void D3D12UploadBuffer::CopyData(void const* source)
 {
-	memcpy(startLocation, source, dataSize);
+	memcpy(startLocation, source, bufferSize);
 }
 
 void D3D12UploadBuffer::CopyData(void const* source, size_t size)

@@ -6,7 +6,7 @@ Transform::Transform() :
 	forwardDirction(DefaultForwardDirction),
 	upDirction(DefaultUpDirction)
 {
-    transformConstantBuffer = std::make_shared<D3D12ConstantBuffer>();
+    transformConstantBuffer = std::make_shared<D3D12ConstantBuffer>((UINT)sizeof(TransformConstant));
 }
 
 void Transform::ResetTransform()

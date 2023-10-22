@@ -6,12 +6,11 @@ private:
 	D3D12CBV* view;
 
 public:
-	D3D12ConstantBuffer();
+	D3D12ConstantBuffer(UINT);
 	~D3D12ConstantBuffer();
 
-	void* StartLocation;
+	virtual void CreateViewDesc() override;
 
-	void CreateViewDesc() override;
-	void SetBufferSize(UINT);
+	void* StartLocation;
 	const D3D12CBV* GetView() { return view; }
 };

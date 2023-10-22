@@ -64,11 +64,12 @@ void D3D12Texture::LoadTexture(LPCWSTR texturePath)
     ThrowIfFailed(pConverter->CopyPixels(0, m_bytesPerRow, m_size, *m_data.get()));
 
     // Create texture desc.
-    if (TextureBuffer == nullptr)
+    if (TextureBuffer != nullptr)
     {
-        TextureBuffer = std::make_unique<D3D12TextureBuffer>();
+        TextureBuffer.release();
     }
 
+    TextureBuffer = std::make_unique<D3D12TextureBuffer>(m_size);
     D3D12_RESOURCE_DESC* desc = new D3D12_RESOURCE_DESC();
     desc->Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     desc->Alignment = 0;

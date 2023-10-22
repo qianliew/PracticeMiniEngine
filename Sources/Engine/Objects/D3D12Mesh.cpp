@@ -8,8 +8,12 @@ void D3D12Mesh::SetVertices(Vertex* triangleVertices, UINT size)
     m_vertices = std::make_unique<Vertex*>((Vertex*)malloc(size));
     memcpy(*(m_vertices.get()), triangleVertices, m_verticesSize);
 
-    VertexBuffer = std::make_unique<D3D12VertexBuffer>();
+    if (VertexBuffer != nullptr)
+    {
+        VertexBuffer.release();
+    }
 
+    VertexBuffer = std::make_unique<D3D12VertexBuffer>(m_verticesSize);
     D3D12_RESOURCE_DESC* desc = new D3D12_RESOURCE_DESC();
     desc->Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
     desc->Alignment = 0;
@@ -33,8 +37,12 @@ void D3D12Mesh::SetIndices(UINT16* triangleIndices, UINT size)
     m_indices = std::make_unique<UINT16*>((UINT16*)malloc(size));
     memcpy(*(m_indices.get()), triangleIndices, m_indicesSize);
 
-    IndexBuffer = std::make_unique<D3D12IndexBuffer>();
+    if (IndexBuffer != nullptr)
+    {
+        IndexBuffer.release();
+    }
 
+    IndexBuffer = std::make_unique<D3D12IndexBuffer>(m_indicesSize);
     D3D12_RESOURCE_DESC* desc = new D3D12_RESOURCE_DESC();
     desc->Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
     desc->Alignment = 0;

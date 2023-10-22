@@ -332,7 +332,7 @@ void ModelViewer::LoadAssets()
 
         D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
         cbvDesc.BufferLocation = m_constantBuffer->ResourceLocation->Resource->GetGPUVirtualAddress();
-        cbvDesc.SizeInBytes = CalculateConstantBufferByteSize(m_constantBuffer->GetDataSize());
+        cbvDesc.SizeInBytes = CalculateConstantBufferByteSize(m_constantBuffer->GetBufferSize());
 
         m_device->CreateConstantBufferView(&cbvDesc, m_cbvHeap->GetCPUDescriptorHandleForHeapStart());
     }

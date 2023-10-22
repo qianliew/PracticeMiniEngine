@@ -401,7 +401,6 @@ void MiniEngine::LoadAssets()
         model->GetTransformConstantBuffer()->StartLocation =
             allocator->AllocateUploadBuffer(model->GetTransformConstantBuffer().get());
         model->GetTransformConstantBuffer()->CreateViewDesc();
-        model->GetTransformConstantBuffer()->SetBufferSize(256);
         device->CreateConstantBufferView(&model->GetTransformConstantBuffer()->GetView()->CBVDesc,
             cbvHeap->GetCPUDescriptorHandleForHeapStart());
 
@@ -412,7 +411,6 @@ void MiniEngine::LoadAssets()
         camera->GetCameraConstantBuffer()->StartLocation =
             allocator->AllocateUploadBuffer(camera->GetCameraConstantBuffer().get());
         camera->GetCameraConstantBuffer()->CreateViewDesc();
-        camera->GetCameraConstantBuffer()->SetBufferSize(256);
         device->CreateConstantBufferView(&camera->GetCameraConstantBuffer()->GetView()->CBVDesc, CPUHandle);
     }
 

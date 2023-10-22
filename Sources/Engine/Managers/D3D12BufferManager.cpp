@@ -57,10 +57,12 @@ void* D3D12BufferManager::AllocateUploadBuffer(D3D12Resource* pResource)
     {
         if (*ppBuffer != nullptr) continue;
         *ppBuffer = new D3D12UploadBuffer();
-        (**ppBuffer).CreateConstantBuffer(device.Get(), BLOCK_SIZE_TYPE_3);
+        (**ppBuffer).CreateConstantBuffer(device.Get(), pResource->GetSize());
         pResource->SetResourceLoaction((*ppBuffer)->ResourceLocation);
         return (*ppBuffer)->GetStartLocation();
     }
+
+    return nullptr;
 }
 
 void D3D12BufferManager::AllocateDefaultBuffer(D3D12Resource* pResource)

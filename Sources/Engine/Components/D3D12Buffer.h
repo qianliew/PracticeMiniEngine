@@ -10,7 +10,6 @@ class D3D12Buffer
 protected:
 	void* startLocation;
 	UINT bufferSize;
-	UINT dataSize;
 
 public:
 	D3D12ResourceLocation* ResourceLocation;
@@ -18,5 +17,5 @@ public:
 	~D3D12Buffer();
 
 	void* GetStartLocation();
-	UINT GetDataSize();
+	UINT GetBufferSize();
 };
