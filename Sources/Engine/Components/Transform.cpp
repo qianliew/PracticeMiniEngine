@@ -1,13 +1,13 @@
 #include "stdafx.h"
 #include "Transform.h"
 
-Transform::Transform(UINT id) :
+Transform::Transform(UINT index) :
 	worldPosition(DefaultWorldPosition),
 	forwardDirction(DefaultForwardDirction),
-	upDirction(DefaultUpDirction)
+	upDirction(DefaultUpDirction),
+    id(index)
 {
-    XMVECTOR v = XMVectorSet(id, 0.0f, 0.0f, 0.0f);
-    XMStoreUInt2(&transformConstant.ID, v);
+
 }
 
 void Transform::ResetTransform()

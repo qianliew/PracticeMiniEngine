@@ -201,10 +201,11 @@ void MiniEngine::LoadPipeline()
 
         // Describe and create a constant buffer view (CBV) descriptor heap.
         D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
-        cbvHeapDesc.NumDescriptors = 2;
+        cbvHeapDesc.NumDescriptors = 1;
         cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-        ThrowIfFailed(device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&cbvHeap)));
+        ThrowIfFailed(device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&cbvHeap0)));
+        ThrowIfFailed(device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&cbvHeap1)));
     }
 
     // Create frame resources.
@@ -277,51 +278,21 @@ void MiniEngine::LoadAssets()
 
     // Create an empty root signature.
     {
-        D3D12_DESCRIPTOR_RANGE cbvDescriptorTableRanges[1];
-        cbvDescriptorTableRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-        cbvDescriptorTableRanges[0].NumDescriptors = 2;
-        cbvDescriptorTableRanges[0].BaseShaderRegister = 0;
-        cbvDescriptorTableRanges[0].RegisterSpace = 0;
-        cbvDescriptorTableRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+        CD3DX12_DESCRIPTOR_RANGE cbvDescriptorTableRanges[2];
+        cbvDescriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0);
+        cbvDescriptorTableRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, 0);
 
-        D3D12_DESCRIPTOR_RANGE srvDescriptorTableRanges[1];
-        srvDescriptorTableRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-        srvDescriptorTableRanges[0].NumDescriptors = 1;
-        srvDescriptorTableRanges[0].BaseShaderRegister = 0;
-        srvDescriptorTableRanges[0].RegisterSpace = 0;
-        srvDescriptorTableRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+        CD3DX12_DESCRIPTOR_RANGE srvDescriptorTableRanges[1];
+        srvDescriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
 
-        D3D12_DESCRIPTOR_RANGE samplerDescriptorTableRanges[1];
-        samplerDescriptorTableRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-        samplerDescriptorTableRanges[0].NumDescriptors = 1;
-        samplerDescriptorTableRanges[0].BaseShaderRegister = 0;
-        samplerDescriptorTableRanges[0].RegisterSpace = 0;
-        samplerDescriptorTableRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+        CD3DX12_DESCRIPTOR_RANGE samplerDescriptorTableRanges[1];
+        samplerDescriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, 0);
 
-        D3D12_ROOT_DESCRIPTOR_TABLE cbvDescriptorTable;
-        cbvDescriptorTable.NumDescriptorRanges = _countof(cbvDescriptorTableRanges);
-        cbvDescriptorTable.pDescriptorRanges = &cbvDescriptorTableRanges[0];
-
-        D3D12_ROOT_DESCRIPTOR_TABLE srvDescriptorTable;
-        srvDescriptorTable.NumDescriptorRanges = _countof(srvDescriptorTableRanges);
-        srvDescriptorTable.pDescriptorRanges = &srvDescriptorTableRanges[0];
-
-        D3D12_ROOT_DESCRIPTOR_TABLE samplerDescriptorTable;
-        samplerDescriptorTable.NumDescriptorRanges = _countof(samplerDescriptorTableRanges);
-        samplerDescriptorTable.pDescriptorRanges = &samplerDescriptorTableRanges[0];
-
-        CD3DX12_ROOT_PARAMETER rootParameters[3];
-        rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-        rootParameters[0].DescriptorTable = cbvDescriptorTable;
-        rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-
-        rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-        rootParameters[1].DescriptorTable = srvDescriptorTable;
-        rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-        rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-        rootParameters[2].DescriptorTable = samplerDescriptorTable;
-        rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        CD3DX12_ROOT_PARAMETER rootParameters[4];
+        rootParameters[0].InitAsDescriptorTable(1, &cbvDescriptorTableRanges[0], D3D12_SHADER_VISIBILITY_VERTEX);
+        rootParameters[1].InitAsDescriptorTable(1, &srvDescriptorTableRanges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[2].InitAsDescriptorTable(1, &samplerDescriptorTableRanges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[3].InitAsDescriptorTable(1, &cbvDescriptorTableRanges[1], D3D12_SHADER_VISIBILITY_VERTEX);
 
         // create a static sampler
         D3D12_STATIC_SAMPLER_DESC sampler = {};
@@ -406,13 +377,8 @@ void MiniEngine::LoadAssets()
 
     // Create the constant buffer.
     {
-        bufferManager->AllocateGlobalConstantBuffer(cbvHeap->GetCPUDescriptorHandleForHeapStart());
-
-        auto size = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(cbvHeap->GetCPUDescriptorHandleForHeapStart());
-        cpuHandle.Offset(1, size);
-
-        bufferManager->AllocatePerObjectConstantBuffer(cpuHandle);
+        bufferManager->AllocateGlobalConstantBuffer(cbvHeap0->GetCPUDescriptorHandleForHeapStart());
+        bufferManager->AllocatePerObjectConstantBuffers(cbvHeap1->GetCPUDescriptorHandleForHeapStart(), model->GetObjectID());
     }
 
     // Create the vertex and index buffer.
@@ -561,7 +527,7 @@ void MiniEngine::OnUpdate()
 
     model->SetObjectToWorldMatrix();
     TransformConstant transformConstant = model->GetTransformConstant();
-    bufferManager->GetPerObjectConstantBuffer()->CopyData(&transformConstant, sizeof(TransformConstant));
+    bufferManager->GetPerObjectConstantBufferAtIndex(model->GetObjectID())->CopyData(&transformConstant, sizeof(TransformConstant));
 }
 
 // Render the scene.
@@ -602,9 +568,17 @@ void MiniEngine::PopulateCommandList()
     ThrowIfFailed(commandList->Reset(commandAllocator.Get(), pipelineState.Get()));
 
     commandList->SetGraphicsRootSignature(rootSignature.Get());
-    ID3D12DescriptorHeap* descriptorHeaps[] = { cbvHeap.Get() };
-    commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-    commandList->SetGraphicsRootDescriptorTable(0, cbvHeap->GetGPUDescriptorHandleForHeapStart());
+
+    {
+        ID3D12DescriptorHeap* descriptorHeaps[] = { cbvHeap0.Get() };
+        commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+        commandList->SetGraphicsRootDescriptorTable(0, cbvHeap0->GetGPUDescriptorHandleForHeapStart());
+    }
+    {
+        ID3D12DescriptorHeap* descriptorHeaps[] = { cbvHeap1.Get() };
+        commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+        commandList->SetGraphicsRootDescriptorTable(3, cbvHeap1->GetGPUDescriptorHandleForHeapStart());
+    }
 
     descriptorHeapManager->SetSRVs(commandList);
     descriptorHeapManager->SetSamplers(commandList);

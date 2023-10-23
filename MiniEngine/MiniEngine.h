@@ -48,7 +48,8 @@ private:
     ComPtr<ID3D12RootSignature> rootSignature;
     ComPtr<ID3D12DescriptorHeap> rtvHeap;
     ComPtr<ID3D12DescriptorHeap> dsvHeap;
-    ComPtr<ID3D12DescriptorHeap> cbvHeap;
+    ComPtr<ID3D12DescriptorHeap> cbvHeap0;
+    ComPtr<ID3D12DescriptorHeap> cbvHeap1;
     ComPtr<ID3D12PipelineState> pipelineState;
     ComPtr<ID3D12GraphicsCommandList> commandList;
     UINT rtvDescriptorSize;

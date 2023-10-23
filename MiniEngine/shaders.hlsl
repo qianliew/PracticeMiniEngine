@@ -9,15 +9,14 @@
 //
 //*********************************************************
 
-cbuffer Constant : register(b0)
+cbuffer GlobalConstants : register(b0)
 {
     float4x4 ObjectToWorldMatrix;
 };
 
-cbuffer Constant : register(b1)
+cbuffer PerObjectConstants : register(b1)
 {
     float4x4 WorldToProjectionMatrix;
-    uint id;
 };
 
 Texture2D t1 : register(t0);

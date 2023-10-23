@@ -4,6 +4,7 @@
 #define BLOCK_SIZE_TYPE_1 16777216
 #define BLOCK_SIZE_TYPE_2 1048576
 #define BLOCK_SIZE_TYPE_3 1024
+#define BLOCK_SIZE_TYPE_4 256
 
 D3D12BufferManager::D3D12BufferManager(ComPtr<ID3D12Device>& device) :
     device(device)
@@ -62,28 +63,45 @@ void D3D12BufferManager::AllocateDefaultBuffer(D3D12Resource* pResource)
 }
 
 // Overflow case and Initialization problem.
-void D3D12BufferManager::AllocateConstantBufferHelper(
-    std::shared_ptr<D3D12ConstantBuffer>& pBuffer,
-    D3D12_CPU_DESCRIPTOR_HANDLE& handle)
+void D3D12BufferManager::AllocateGlobalConstantBuffer(D3D12_CPU_DESCRIPTOR_HANDLE& handle)
 {
-    pBuffer = std::make_unique<D3D12ConstantBuffer>(BLOCK_SIZE_TYPE_3);
+    globalConstantBuffer = std::make_unique<D3D12ConstantBuffer>(BLOCK_SIZE_TYPE_3);
     D3D12UploadBuffer** ppBuffer = UploadBufferPool[(UINT)UploadBufferType::Constant];
 
     *ppBuffer = new D3D12UploadBuffer();
     (*ppBuffer)->CreateConstantBuffer(device.Get(), BLOCK_SIZE_TYPE_3);
-    pBuffer->SetResourceLoaction((*ppBuffer)->ResourceLocation);
-    pBuffer->SetStartLocation((*ppBuffer)->GetStartLocation());
+    globalConstantBuffer->SetResourceLoaction((*ppBuffer)->ResourceLocation);
+    globalConstantBuffer->SetStartLocation((*ppBuffer)->GetStartLocation());
 
-    pBuffer->CreateViewDesc();
-    device->CreateConstantBufferView(&pBuffer->GetView()->CBVDesc, handle);
+    globalConstantBuffer->CreateViewDesc();
+    device->CreateConstantBufferView(&globalConstantBuffer->GetView()->CBVDesc, handle);
 }
 
-void D3D12BufferManager::AllocateGlobalConstantBuffer(D3D12_CPU_DESCRIPTOR_HANDLE& handle)
+void D3D12BufferManager::AllocatePerObjectConstantBuffers(D3D12_CPU_DESCRIPTOR_HANDLE& handle, UINT index)
 {
-    AllocateConstantBufferHelper(globalConstantBuffer, handle);
+    if (perObjectConstantBuffers[index] != nullptr)
+    {
+        delete perObjectConstantBuffers[index];
+    }
+
+    perObjectConstantBuffers[index] = new D3D12ConstantBuffer(BLOCK_SIZE_TYPE_4);
+    D3D12UploadBuffer** ppBuffer = UploadBufferPool[(UINT)UploadBufferType::Constant];
+
+    *ppBuffer = new D3D12UploadBuffer();
+    (*ppBuffer)->CreateConstantBuffer(device.Get(), BLOCK_SIZE_TYPE_4);
+    perObjectConstantBuffers[index]->SetResourceLoaction((*ppBuffer)->ResourceLocation);
+    perObjectConstantBuffers[index]->SetStartLocation((*ppBuffer)->GetStartLocation());
+
+    perObjectConstantBuffers[index]->CreateViewDesc();
+    device->CreateConstantBufferView(&perObjectConstantBuffers[index]->GetView()->CBVDesc, handle);
+
 }
 
-void D3D12BufferManager::AllocatePerObjectConstantBuffer(D3D12_CPU_DESCRIPTOR_HANDLE& handle)
+D3D12ConstantBuffer* D3D12BufferManager::GetPerObjectConstantBufferAtIndex(UINT index)
 {
-    AllocateConstantBufferHelper(perObjectConstantBuffer, handle);
+    if (perObjectConstantBuffers[index] != nullptr)
+    {
+        return perObjectConstantBuffers[index];
+    }
+    return nullptr;
 }

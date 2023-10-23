@@ -11,7 +11,6 @@ using std::shared_ptr;
 struct TransformConstant
 {
     XMFLOAT4X4 ObjectToWorldMatrix;
-    XMUINT2 ID;
 };
 
 class Transform
@@ -25,10 +24,11 @@ protected:
     XMVECTOR forwardDirction;
     XMVECTOR upDirction;
 
+    UINT id;
     TransformConstant transformConstant;
 
 public:
-    Transform(UINT id);
+    Transform(UINT);
 
     void SetObjectToWorldMatrix();
 
@@ -39,5 +39,6 @@ public:
     virtual void RotateAlongY(const FLOAT direction);
     virtual void RotateAlongX(const FLOAT direction);
 
+    const UINT GetObjectID() const { return id; }
     TransformConstant& GetTransformConstant() { return transformConstant; }
 };
