@@ -205,7 +205,10 @@ void MiniEngine::LoadPipeline()
         cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         ThrowIfFailed(device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&cbvHeap0)));
+        cbvHeapDesc.NumDescriptors = 2;
         ThrowIfFailed(device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&cbvHeap1)));
+
+        cbvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     }
 
     // Create frame resources.
@@ -267,11 +270,11 @@ void MiniEngine::LoadAssets()
 
         model = std::make_shared<D3D12Model>(id++, (char*)"cube.fbx", (char*)"test.png");
         model->LoadModel(fbxImporter);
-        //model->MoveAlongX(10.0f);
+        model->MoveAlongX(10.0f);
 
         model2 = std::make_shared<D3D12Model>(id++, (char*)"cube.fbx", (char*)"test.png");
         model2->LoadModel(fbxImporter);
-        //model2->MoveAlongY(2.0f);
+        model2->MoveAlongY(2.0f);
 
         models.push_back(model);
     }
@@ -289,10 +292,10 @@ void MiniEngine::LoadAssets()
         samplerDescriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, 0);
 
         CD3DX12_ROOT_PARAMETER rootParameters[4];
-        rootParameters[0].InitAsDescriptorTable(1, &cbvDescriptorTableRanges[0], D3D12_SHADER_VISIBILITY_VERTEX);
-        rootParameters[1].InitAsDescriptorTable(1, &srvDescriptorTableRanges[0], D3D12_SHADER_VISIBILITY_PIXEL);
-        rootParameters[2].InitAsDescriptorTable(1, &samplerDescriptorTableRanges[0], D3D12_SHADER_VISIBILITY_PIXEL);
-        rootParameters[3].InitAsDescriptorTable(1, &cbvDescriptorTableRanges[1], D3D12_SHADER_VISIBILITY_VERTEX);
+        rootParameters[CONSTANT_BUFFER_VIEW_GLOBAL].InitAsDescriptorTable(1, &cbvDescriptorTableRanges[0], D3D12_SHADER_VISIBILITY_VERTEX);
+        rootParameters[CONSTANT_BUFFER_VIEW_PEROBJECT].InitAsDescriptorTable(1, &cbvDescriptorTableRanges[1], D3D12_SHADER_VISIBILITY_VERTEX);
+        rootParameters[SHADER_RESOURCE_VIEW].InitAsDescriptorTable(1, &srvDescriptorTableRanges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[SAMPLER].InitAsDescriptorTable(1, &samplerDescriptorTableRanges[0], D3D12_SHADER_VISIBILITY_PIXEL);
 
         // create a static sampler
         D3D12_STATIC_SAMPLER_DESC sampler = {};
@@ -378,7 +381,12 @@ void MiniEngine::LoadAssets()
     // Create the constant buffer.
     {
         bufferManager->AllocateGlobalConstantBuffer(cbvHeap0->GetCPUDescriptorHandleForHeapStart());
-        bufferManager->AllocatePerObjectConstantBuffers(cbvHeap1->GetCPUDescriptorHandleForHeapStart(), model->GetObjectID());
+
+        CD3DX12_CPU_DESCRIPTOR_HANDLE handle(cbvHeap1->GetCPUDescriptorHandleForHeapStart());
+        bufferManager->AllocatePerObjectConstantBuffers(handle, model->GetObjectID());
+
+        handle.Offset(cbvDescriptorSize);
+        bufferManager->AllocatePerObjectConstantBuffers(handle, model2->GetObjectID());
     }
 
     // Create the vertex and index buffer.
@@ -528,6 +536,10 @@ void MiniEngine::OnUpdate()
     model->SetObjectToWorldMatrix();
     TransformConstant transformConstant = model->GetTransformConstant();
     bufferManager->GetPerObjectConstantBufferAtIndex(model->GetObjectID())->CopyData(&transformConstant, sizeof(TransformConstant));
+
+    model2->SetObjectToWorldMatrix();
+    TransformConstant transformConstant2 = model2->GetTransformConstant();
+    bufferManager->GetPerObjectConstantBufferAtIndex(model2->GetObjectID())->CopyData(&transformConstant2, sizeof(TransformConstant));
 }
 
 // Render the scene.
@@ -572,12 +584,7 @@ void MiniEngine::PopulateCommandList()
     {
         ID3D12DescriptorHeap* descriptorHeaps[] = { cbvHeap0.Get() };
         commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-        commandList->SetGraphicsRootDescriptorTable(0, cbvHeap0->GetGPUDescriptorHandleForHeapStart());
-    }
-    {
-        ID3D12DescriptorHeap* descriptorHeaps[] = { cbvHeap1.Get() };
-        commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-        commandList->SetGraphicsRootDescriptorTable(3, cbvHeap1->GetGPUDescriptorHandleForHeapStart());
+        commandList->SetGraphicsRootDescriptorTable(CONSTANT_BUFFER_VIEW_GLOBAL, cbvHeap0->GetGPUDescriptorHandleForHeapStart());
     }
 
     descriptorHeapManager->SetSRVs(commandList);
@@ -600,10 +607,30 @@ void MiniEngine::PopulateCommandList()
     commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    commandList->IASetVertexBuffers(0, 1, &model->GetMesh()->VertexBuffer->View->VertexBufferView);
-    commandList->IASetIndexBuffer(&model->GetMesh()->IndexBuffer->View->IndexBufferView);
 
-    commandList->DrawIndexedInstanced(model->GetMesh()->GetIndicesNum(), 1, 0, 0, 0);
+    {
+        ID3D12DescriptorHeap* descriptorHeaps[] = { cbvHeap1.Get() };
+        commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+        commandList->SetGraphicsRootDescriptorTable(CONSTANT_BUFFER_VIEW_PEROBJECT, cbvHeap1->GetGPUDescriptorHandleForHeapStart());
+    }
+
+    {
+        commandList->IASetVertexBuffers(0, 1, &model->GetMesh()->VertexBuffer->View->VertexBufferView);
+        commandList->IASetIndexBuffer(&model->GetMesh()->IndexBuffer->View->IndexBufferView);
+
+        commandList->DrawIndexedInstanced(model->GetMesh()->GetIndicesNum(), 1, 0, 0, 0);
+    }
+
+    {
+        CD3DX12_GPU_DESCRIPTOR_HANDLE handle(cbvHeap1->GetGPUDescriptorHandleForHeapStart());
+        handle.Offset(cbvDescriptorSize);
+        commandList->SetGraphicsRootDescriptorTable(CONSTANT_BUFFER_VIEW_PEROBJECT, handle);
+        //commandList->IASetVertexBuffers(0, 1, &model2->GetMesh()->VertexBuffer->View->VertexBufferView);
+        //commandList->IASetIndexBuffer(&model2->GetMesh()->IndexBuffer->View->IndexBufferView);
+
+        //commandList->DrawIndexedInstanced(model2->GetMesh()->GetIndicesNum(), 1, 0, 0, 0);
+        commandList->DrawIndexedInstanced(model->GetMesh()->GetIndicesNum(), 1, 0, 0, 0);
+    }
 
     // Indicate that the back buffer will now be used to present.
     commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));

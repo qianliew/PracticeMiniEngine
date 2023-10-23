@@ -38,12 +38,12 @@ void D3D12DescriptorHeapManager::SetSRVs(ComPtr<ID3D12GraphicsCommandList>& comm
 {
     ID3D12DescriptorHeap* heap[] = { srvHeap.Get() };
     commandList->SetDescriptorHeaps(_countof(heap), heap);
-    commandList->SetGraphicsRootDescriptorTable(1, srvHeap->GetGPUDescriptorHandleForHeapStart());
+    commandList->SetGraphicsRootDescriptorTable(SHADER_RESOURCE_VIEW, srvHeap->GetGPUDescriptorHandleForHeapStart());
 }
 
 void D3D12DescriptorHeapManager::SetSamplers(ComPtr<ID3D12GraphicsCommandList>& commandList)
 {
     ID3D12DescriptorHeap* heap[] = { samplerHeap.Get() };
     commandList->SetDescriptorHeaps(_countof(heap), heap);
-    commandList->SetGraphicsRootDescriptorTable(2, samplerHeap->GetGPUDescriptorHandleForHeapStart());
+    commandList->SetGraphicsRootDescriptorTable(SAMPLER, samplerHeap->GetGPUDescriptorHandleForHeapStart());
 }

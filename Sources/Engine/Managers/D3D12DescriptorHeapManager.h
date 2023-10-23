@@ -1,5 +1,10 @@
 #pragma once
 
+#define CONSTANT_BUFFER_VIEW_GLOBAL 0
+#define CONSTANT_BUFFER_VIEW_PEROBJECT 1
+#define SHADER_RESOURCE_VIEW 2
+#define SAMPLER 3
+
 class D3D12DescriptorHeapManager
 {
 private:

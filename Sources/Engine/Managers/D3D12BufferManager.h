@@ -18,7 +18,7 @@ private:
 	D3D12UploadBuffer* UploadBufferPool[(int)UploadBufferType::Count][MAX_UPLOAD_BUFFER_COUNT];
 	std::unordered_map<const void*, D3D12DefaultBuffer*> DefaultBufferPool;
 	std::shared_ptr<D3D12ConstantBuffer> globalConstantBuffer;
-	std::unordered_map<UINT, D3D12ConstantBuffer*> perObjectConstantBuffers;
+	std::map<UINT, D3D12ConstantBuffer*> perObjectConstantBuffers;
 
 public:
 	D3D12BufferManager(ComPtr<ID3D12Device>& device);

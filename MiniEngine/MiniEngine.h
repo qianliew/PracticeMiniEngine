@@ -54,6 +54,7 @@ private:
     ComPtr<ID3D12GraphicsCommandList> commandList;
     UINT rtvDescriptorSize;
     UINT dsvDescriptorSize;
+    UINT cbvDescriptorSize;
 
     unique_ptr<D3D12BufferManager> bufferManager;
     unique_ptr<D3D12DescriptorHeapManager> descriptorHeapManager;

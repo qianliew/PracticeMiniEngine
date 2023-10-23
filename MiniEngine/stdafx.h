@@ -20,6 +20,7 @@
 #include <shellapi.h>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <unordered_map>
 
 #include "PathHelper.h"
