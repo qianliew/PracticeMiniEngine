@@ -11,7 +11,7 @@ protected:
 
 public:
 	D3D12Resource(UINT);
-	~D3D12Resource();
+	virtual ~D3D12Resource();
 
 	void SetResourceLoaction(const D3D12ResourceLocation*);
 	void SetResourceDesc(D3D12_RESOURCE_DESC*);

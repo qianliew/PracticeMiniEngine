@@ -10,6 +10,11 @@ Transform::Transform(UINT index) :
 
 }
 
+Transform::~Transform()
+{
+
+}
+
 void Transform::ResetTransform()
 {
 	worldPosition = DefaultWorldPosition;

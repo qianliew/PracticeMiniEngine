@@ -14,7 +14,7 @@ protected:
 public:
 	D3D12ResourceLocation* ResourceLocation;
 	D3D12Buffer();
-	~D3D12Buffer();
+	virtual ~D3D12Buffer();
 
 	void* GetStartLocation();
 	UINT GetBufferSize();

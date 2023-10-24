@@ -29,6 +29,7 @@ protected:
 
 public:
     Transform(UINT);
+    virtual ~Transform();
 
     void SetObjectToWorldMatrix();
 
