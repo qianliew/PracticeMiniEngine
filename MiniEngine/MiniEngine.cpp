@@ -252,7 +252,11 @@ void MiniEngine::LoadPipeline()
         }
     }
 
+    // Create the command allocator.
     ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator)));
+
+    // Create the command list.
+    cmdList = make_unique<D3D12CommandList>(device, commandAllocator);
 }
 
 // Load the sample assets.
@@ -271,6 +275,7 @@ void MiniEngine::LoadAssets()
         model = std::make_shared<D3D12Model>(id++, (char*)"cube.fbx", (char*)"test.png");
         model->LoadModel(fbxImporter);
         model->MoveAlongX(10.0f);
+        model->MoveAlongZ(5.0f);
 
         model2 = std::make_shared<D3D12Model>(id++, (char*)"cube.fbx", (char*)"test.png");
         model2->LoadModel(fbxImporter);
@@ -375,9 +380,6 @@ void MiniEngine::LoadAssets()
         ThrowIfFailed(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
     }
 
-    // Create the command list.
-    ThrowIfFailed(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator.Get(), pipelineState.Get(), IID_PPV_ARGS(&commandList)));
-
     // Create the constant buffer.
     {
         bufferManager->AllocateGlobalConstantBuffer(cbvHeap0->GetCPUDescriptorHandleForHeapStart());
@@ -402,15 +404,11 @@ void MiniEngine::LoadAssets()
         tempIndexBuffer->CopyData(model->GetMesh()->GetIndicesData(), model->GetMesh()->GetIndicesSize());
 
         model->GetMesh()->CreateViewDesc();
-        commandList->CopyBufferRegion(model->GetMesh()->VertexBuffer->GetResource(),
-            0,
+        cmdList->CopyBufferRegion(model->GetMesh()->VertexBuffer->GetResource(),
             tempVertexBuffer->ResourceLocation->Resource.Get(),
-            0,
             model->GetMesh()->GetVerticesSize());
-        commandList->CopyBufferRegion(model->GetMesh()->IndexBuffer->GetResource(),
-            0,
+        cmdList->CopyBufferRegion(model->GetMesh()->IndexBuffer->GetResource(),
             tempIndexBuffer->ResourceLocation->Resource.Get(),
-            0,
             model->GetMesh()->GetIndicesSize());
     }
 
@@ -430,7 +428,7 @@ void MiniEngine::LoadAssets()
         textureData.SlicePitch = *model->GetTexture()->GetTextureBytesPerRow() * *model->GetTexture()->GetTextureHeight();
 
         // Update texture data from upload buffer to gpu buffer.
-        UpdateSubresources(commandList.Get(), model->GetTexture()->TextureBuffer->GetResource(),
+        cmdList->CopyTextureBuffer(model->GetTexture()->TextureBuffer->GetResource(),
             tempBuffer->ResourceLocation->Resource.Get(), 0, 0, 1, &textureData);
 
         model->GetTexture()->TextureBuffer->CreateViewDesc();
@@ -462,25 +460,16 @@ void MiniEngine::LoadAssets()
         // complete before continuing.
         WaitForPreviousFrame();
 
-        commandList->ResourceBarrier(1,
-            &CD3DX12_RESOURCE_BARRIER::Transition(model->GetTexture()->TextureBuffer->GetResource(),
-                D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-        commandList->ResourceBarrier(1,
-            &CD3DX12_RESOURCE_BARRIER::Transition(model->GetMesh()->VertexBuffer->GetResource(),
-                D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
-        commandList->ResourceBarrier(1,
-            &CD3DX12_RESOURCE_BARRIER::Transition(model->GetMesh()->IndexBuffer->GetResource(),
-                D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
-        ThrowIfFailed(commandList->Close());
+        cmdList->AddTransitionResourceBarriers(model->GetTexture()->TextureBuffer->GetResource(),
+            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        cmdList->AddTransitionResourceBarriers(model->GetMesh()->VertexBuffer->GetResource(),
+            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+        cmdList->AddTransitionResourceBarriers(model->GetMesh()->IndexBuffer->GetResource(),
+            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+        cmdList->FlushResourceBarriers();
 
-        ID3D12CommandList* ppCommandLists[] = { commandList.Get() };
-        commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-
-        const UINT64 value = fenceValue;
-        ThrowIfFailed(commandQueue->Signal(fence.Get(), value));
-        fenceValue++;
-
-        model->GetTexture()->ReleaseTexture();
+        ExecuteCommandList();
+        UpdateFence();
     }
 }
 
@@ -548,10 +537,6 @@ void MiniEngine::OnRender()
     // Record all the commands we need to render the scene into the command list.
     PopulateCommandList();
 
-    // Execute the command list.
-    ID3D12CommandList* ppCommandLists[] = { commandList.Get() };
-    commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-
     // Present the frame.
     ThrowIfFailed(swapChain->Present(1, 0));
 
@@ -560,6 +545,8 @@ void MiniEngine::OnRender()
 
 void MiniEngine::OnDestroy()
 {
+    model->GetTexture()->ReleaseTexture();
+
     // Ensure that the GPU is no longer referencing resources that are about to be
     // cleaned up by the destructor.
     WaitForPreviousFrame();
@@ -577,66 +564,67 @@ void MiniEngine::PopulateCommandList()
     // However, when ExecuteCommandList() is called on a particular command 
     // list, that command list can then be reset at any time and must be before 
     // re-recording.
-    ThrowIfFailed(commandList->Reset(commandAllocator.Get(), pipelineState.Get()));
+    cmdList->SetPipelineState(commandAllocator, pipelineState);
+    cmdList->SetRootSignature(rootSignature);
 
-    commandList->SetGraphicsRootSignature(rootSignature.Get());
+    ID3D12DescriptorHeap* descriptorHeaps[] = { cbvHeap0.Get() };
+    cmdList->GetCommandList()->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+    cmdList->GetCommandList()->SetGraphicsRootDescriptorTable(CONSTANT_BUFFER_VIEW_GLOBAL, cbvHeap0->GetGPUDescriptorHandleForHeapStart());
 
-    {
-        ID3D12DescriptorHeap* descriptorHeaps[] = { cbvHeap0.Get() };
-        commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-        commandList->SetGraphicsRootDescriptorTable(CONSTANT_BUFFER_VIEW_GLOBAL, cbvHeap0->GetGPUDescriptorHandleForHeapStart());
-    }
-
-    descriptorHeapManager->SetSRVs(commandList);
-    descriptorHeapManager->SetSamplers(commandList);
+    descriptorHeapManager->SetSRVs(cmdList->GetCommandList());
+    descriptorHeapManager->SetSamplers(cmdList->GetCommandList());
 
     // Set camera relating state.
-    commandList->RSSetViewports(1, camera->GetViewport());
-    commandList->RSSetScissorRects(1, camera->GetScissorRect());
+    cmdList->SetViewports(camera->GetViewport());
+    cmdList->SetScissorRects(camera->GetScissorRect());
 
     // Indicate that the back buffer will be used as a render target.
-    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
-    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(depthStencils[frameIndex].Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+    cmdList->AddTransitionResourceBarriers(renderTargets[frameIndex].Get(),
+        D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    cmdList->AddTransitionResourceBarriers(depthStencils[frameIndex].Get(),
+        D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+    cmdList->FlushResourceBarriers();
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
     CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsvHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, dsvDescriptorSize);
-    commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+    cmdList->SetRenderTargets(1, &rtvHandle, &dsvHandle);
 
     // Record commands.
     const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-    commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-    commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    cmdList->ClearColor(rtvHandle, clearColor);
+    cmdList->ClearDepth(dsvHandle);
+    cmdList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     {
         ID3D12DescriptorHeap* descriptorHeaps[] = { cbvHeap1.Get() };
-        commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-        commandList->SetGraphicsRootDescriptorTable(CONSTANT_BUFFER_VIEW_PEROBJECT, cbvHeap1->GetGPUDescriptorHandleForHeapStart());
-    }
+        cmdList->GetCommandList()->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+        cmdList->GetCommandList()->SetGraphicsRootDescriptorTable(CONSTANT_BUFFER_VIEW_PEROBJECT, cbvHeap1->GetGPUDescriptorHandleForHeapStart());
 
-    {
-        commandList->IASetVertexBuffers(0, 1, &model->GetMesh()->VertexBuffer->View->VertexBufferView);
-        commandList->IASetIndexBuffer(&model->GetMesh()->IndexBuffer->View->IndexBufferView);
+        cmdList->SetVertexBuffers(0, 1, &model->GetMesh()->VertexBuffer->View->VertexBufferView);
+        cmdList->SetIndexBuffer(&model->GetMesh()->IndexBuffer->View->IndexBufferView);
 
-        commandList->DrawIndexedInstanced(model->GetMesh()->GetIndicesNum(), 1, 0, 0, 0);
+        cmdList->DrawIndexedInstanced(model->GetMesh()->GetIndicesNum());
     }
 
     {
         CD3DX12_GPU_DESCRIPTOR_HANDLE handle(cbvHeap1->GetGPUDescriptorHandleForHeapStart());
         handle.Offset(cbvDescriptorSize);
-        commandList->SetGraphicsRootDescriptorTable(CONSTANT_BUFFER_VIEW_PEROBJECT, handle);
+        cmdList->GetCommandList()->SetGraphicsRootDescriptorTable(CONSTANT_BUFFER_VIEW_PEROBJECT, handle);
         //commandList->IASetVertexBuffers(0, 1, &model2->GetMesh()->VertexBuffer->View->VertexBufferView);
         //commandList->IASetIndexBuffer(&model2->GetMesh()->IndexBuffer->View->IndexBufferView);
 
         //commandList->DrawIndexedInstanced(model2->GetMesh()->GetIndicesNum(), 1, 0, 0, 0);
-        commandList->DrawIndexedInstanced(model->GetMesh()->GetIndicesNum(), 1, 0, 0, 0);
+        cmdList->DrawIndexedInstanced(model->GetMesh()->GetIndicesNum());
     }
 
     // Indicate that the back buffer will now be used to present.
-    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
-    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(depthStencils[frameIndex].Get(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON));
+    cmdList->AddTransitionResourceBarriers(renderTargets[frameIndex].Get(),
+        D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+    cmdList->AddTransitionResourceBarriers(depthStencils[frameIndex].Get(),
+        D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON);
+    cmdList->FlushResourceBarriers();
 
-    ThrowIfFailed(commandList->Close());
+    ExecuteCommandList();
 }
 
 void MiniEngine::WaitForPreviousFrame()
@@ -647,9 +635,7 @@ void MiniEngine::WaitForPreviousFrame()
     // maximize GPU utilization.
 
     // Signal and increment the fence value.
-    const UINT64 value = fenceValue;
-    ThrowIfFailed(commandQueue->Signal(fence.Get(), value));
-    fenceValue++;
+    const UINT64 value = UpdateFence();
 
     // Wait until the previous frame is finished.
     if (fence->GetCompletedValue() < value)
@@ -659,4 +645,22 @@ void MiniEngine::WaitForPreviousFrame()
     }
 
     frameIndex = swapChain->GetCurrentBackBufferIndex();
+}
+
+void MiniEngine::ExecuteCommandList()
+{
+    ThrowIfFailed(cmdList->GetCommandList()->Close());
+
+    // Execute the command list.
+    ID3D12CommandList* ppCommandLists[] = { cmdList->GetCommandList().Get() };
+    commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+}
+
+UINT64 MiniEngine::UpdateFence()
+{
+    const UINT64 value = fenceValue;
+    ThrowIfFailed(commandQueue->Signal(fence.Get(), value));
+    fenceValue++;
+
+    return value;
 }

@@ -2,6 +2,7 @@
 
 #include "Window.h"
 #include "FBXImporter.h"
+#include "D3D12CommandList.h"
 #include "D3D12Camera.h"
 #include "D3D12Model.h"
 
@@ -46,12 +47,11 @@ private:
     ComPtr<ID3D12CommandAllocator> commandAllocator;
     ComPtr<ID3D12CommandQueue> commandQueue;
     ComPtr<ID3D12RootSignature> rootSignature;
+    ComPtr<ID3D12PipelineState> pipelineState;
     ComPtr<ID3D12DescriptorHeap> rtvHeap;
     ComPtr<ID3D12DescriptorHeap> dsvHeap;
     ComPtr<ID3D12DescriptorHeap> cbvHeap0;
     ComPtr<ID3D12DescriptorHeap> cbvHeap1;
-    ComPtr<ID3D12PipelineState> pipelineState;
-    ComPtr<ID3D12GraphicsCommandList> commandList;
     UINT rtvDescriptorSize;
     UINT dsvDescriptorSize;
     UINT cbvDescriptorSize;
@@ -59,6 +59,8 @@ private:
     unique_ptr<D3D12BufferManager> bufferManager;
     unique_ptr<D3D12DescriptorHeapManager> descriptorHeapManager;
     unique_ptr<FBXImporter> fbxImporter;
+
+    unique_ptr<D3D12CommandList> cmdList;
 
     // Synchronization objects.
     UINT frameIndex;
@@ -78,4 +80,6 @@ private:
     void LoadAssets();
     void PopulateCommandList();
     void WaitForPreviousFrame();
+    void ExecuteCommandList();
+    UINT64 UpdateFence();
 };
