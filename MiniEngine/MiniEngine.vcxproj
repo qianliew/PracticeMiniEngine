@@ -167,7 +167,6 @@
     <ClInclude Include="..\Sources\Engine\Objects\D3D12Texture.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12TextureBuffer.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12VertexBuffer.h" />
-    <ClInclude Include="..\Sources\Engine\RenderPass\DrawObjectsPass.h" />
     <ClInclude Include="..\Sources\Engine\Window.h" />
     <ClInclude Include="..\Sources\Utilities\FBXImporter.h" />
     <ClInclude Include="..\Sources\Utilities\PathHelper.h" />
@@ -193,7 +192,6 @@
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Texture.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12TextureBuffer.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12VertexBuffer.cpp" />
-    <ClCompile Include="..\Sources\Engine\RenderPass\DrawObjectsPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Window.cpp" />
     <ClCompile Include="..\Sources\Utilities\FBXImporter.cpp" />
     <ClCompile Include="Main.cpp" />

@@ -27,8 +27,8 @@ public:
 	void AllocateUploadBuffer(D3D12UploadBuffer* &pBuffer, UploadBufferType type);
 	void AllocateDefaultBuffer(D3D12Resource* pResource);
 
-	void AllocateGlobalConstantBuffer(D3D12_CPU_DESCRIPTOR_HANDLE&);
-	void AllocatePerObjectConstantBuffers(D3D12_CPU_DESCRIPTOR_HANDLE&, UINT);
+	void AllocateGlobalConstantBuffer();
+	void AllocatePerObjectConstantBuffers(UINT);
 
 	std::shared_ptr<D3D12ConstantBuffer> GetGlobalConstantBuffer() const { return globalConstantBuffer; }
 	D3D12ConstantBuffer* GetPerObjectConstantBufferAtIndex(UINT);

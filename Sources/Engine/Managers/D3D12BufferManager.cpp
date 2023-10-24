@@ -63,7 +63,7 @@ void D3D12BufferManager::AllocateDefaultBuffer(D3D12Resource* pResource)
 }
 
 // Overflow case and Initialization problem.
-void D3D12BufferManager::AllocateGlobalConstantBuffer(D3D12_CPU_DESCRIPTOR_HANDLE& handle)
+void D3D12BufferManager::AllocateGlobalConstantBuffer()
 {
     globalConstantBuffer = std::make_unique<D3D12ConstantBuffer>(BLOCK_SIZE_TYPE_3);
     D3D12UploadBuffer** ppBuffer = UploadBufferPool[(UINT)UploadBufferType::Constant];
@@ -74,10 +74,9 @@ void D3D12BufferManager::AllocateGlobalConstantBuffer(D3D12_CPU_DESCRIPTOR_HANDL
     globalConstantBuffer->SetStartLocation((*ppBuffer)->GetStartLocation());
 
     globalConstantBuffer->CreateViewDesc();
-    device->CreateConstantBufferView(&globalConstantBuffer->GetView()->CBVDesc, handle);
 }
 
-void D3D12BufferManager::AllocatePerObjectConstantBuffers(D3D12_CPU_DESCRIPTOR_HANDLE& handle, UINT index)
+void D3D12BufferManager::AllocatePerObjectConstantBuffers(UINT index)
 {
     if (perObjectConstantBuffers[index] != nullptr)
     {
@@ -93,7 +92,6 @@ void D3D12BufferManager::AllocatePerObjectConstantBuffers(D3D12_CPU_DESCRIPTOR_H
     perObjectConstantBuffers[index]->SetStartLocation((*ppBuffer)->GetStartLocation());
 
     perObjectConstantBuffers[index]->CreateViewDesc();
-    device->CreateConstantBufferView(&perObjectConstantBuffers[index]->GetView()->CBVDesc, handle);
 
 }
 

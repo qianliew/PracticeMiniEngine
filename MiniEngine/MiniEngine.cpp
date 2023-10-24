@@ -198,17 +198,6 @@ void MiniEngine::LoadPipeline()
         ThrowIfFailed(device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsvHeap)));
 
         dsvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-
-        // Describe and create a constant buffer view (CBV) descriptor heap.
-        D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
-        cbvHeapDesc.NumDescriptors = 1;
-        cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-        ThrowIfFailed(device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&cbvHeap0)));
-        cbvHeapDesc.NumDescriptors = 2;
-        ThrowIfFailed(device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&cbvHeap1)));
-
-        cbvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     }
 
     // Create frame resources.
@@ -382,13 +371,25 @@ void MiniEngine::LoadAssets()
 
     // Create the constant buffer.
     {
-        bufferManager->AllocateGlobalConstantBuffer(cbvHeap0->GetCPUDescriptorHandleForHeapStart());
+        bufferManager->AllocateGlobalConstantBuffer();
+        descriptorHeapManager->GetCBVHandle(bufferManager->GetGlobalConstantBuffer()->GetView(),
+            CONSTANT_BUFFER_VIEW_GLOBAL, 0);
+        device->CreateConstantBufferView(&bufferManager->GetGlobalConstantBuffer()->GetView()->CBVDesc,
+            bufferManager->GetGlobalConstantBuffer()->GetView()->CPUHandle);
 
-        CD3DX12_CPU_DESCRIPTOR_HANDLE handle(cbvHeap1->GetCPUDescriptorHandleForHeapStart());
-        bufferManager->AllocatePerObjectConstantBuffers(handle, model->GetObjectID());
+        UINT id = model->GetObjectID();
+        bufferManager->AllocatePerObjectConstantBuffers(id);
+        descriptorHeapManager->GetCBVHandle(bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView(),
+            CONSTANT_BUFFER_VIEW_PEROBJECT, id);
+        device->CreateConstantBufferView(&bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView()->CBVDesc,
+            bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView()->CPUHandle);
 
-        handle.Offset(cbvDescriptorSize);
-        bufferManager->AllocatePerObjectConstantBuffers(handle, model2->GetObjectID());
+        id = model2->GetObjectID();
+        bufferManager->AllocatePerObjectConstantBuffers(id);
+        descriptorHeapManager->GetCBVHandle(bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView(),
+            CONSTANT_BUFFER_VIEW_PEROBJECT, id);
+        device->CreateConstantBufferView(&bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView()->CBVDesc,
+            bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView()->CPUHandle);
     }
 
     // Create the vertex and index buffer.
@@ -567,10 +568,7 @@ void MiniEngine::PopulateCommandList()
     cmdList->SetPipelineState(commandAllocator, pipelineState);
     cmdList->SetRootSignature(rootSignature);
 
-    ID3D12DescriptorHeap* descriptorHeaps[] = { cbvHeap0.Get() };
-    cmdList->GetCommandList()->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-    cmdList->GetCommandList()->SetGraphicsRootDescriptorTable(CONSTANT_BUFFER_VIEW_GLOBAL, cbvHeap0->GetGPUDescriptorHandleForHeapStart());
-
+    descriptorHeapManager->SetCBVs(cmdList->GetCommandList(), CONSTANT_BUFFER_VIEW_GLOBAL, 0);
     descriptorHeapManager->SetSRVs(cmdList->GetCommandList());
     descriptorHeapManager->SetSamplers(cmdList->GetCommandList());
 
@@ -596,9 +594,7 @@ void MiniEngine::PopulateCommandList()
     cmdList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     {
-        ID3D12DescriptorHeap* descriptorHeaps[] = { cbvHeap1.Get() };
-        cmdList->GetCommandList()->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-        cmdList->GetCommandList()->SetGraphicsRootDescriptorTable(CONSTANT_BUFFER_VIEW_PEROBJECT, cbvHeap1->GetGPUDescriptorHandleForHeapStart());
+        descriptorHeapManager->SetCBVs(cmdList->GetCommandList(), CONSTANT_BUFFER_VIEW_PEROBJECT, 0);
 
         cmdList->SetVertexBuffers(0, 1, &model->GetMesh()->VertexBuffer->View->VertexBufferView);
         cmdList->SetIndexBuffer(&model->GetMesh()->IndexBuffer->View->IndexBufferView);
@@ -607,9 +603,7 @@ void MiniEngine::PopulateCommandList()
     }
 
     {
-        CD3DX12_GPU_DESCRIPTOR_HANDLE handle(cbvHeap1->GetGPUDescriptorHandleForHeapStart());
-        handle.Offset(cbvDescriptorSize);
-        cmdList->GetCommandList()->SetGraphicsRootDescriptorTable(CONSTANT_BUFFER_VIEW_PEROBJECT, handle);
+        descriptorHeapManager->SetCBVs(cmdList->GetCommandList(), CONSTANT_BUFFER_VIEW_PEROBJECT, 1);
         //commandList->IASetVertexBuffers(0, 1, &model2->GetMesh()->VertexBuffer->View->VertexBufferView);
         //commandList->IASetIndexBuffer(&model2->GetMesh()->IndexBuffer->View->IndexBufferView);
 

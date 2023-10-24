@@ -50,11 +50,8 @@ private:
     ComPtr<ID3D12PipelineState> pipelineState;
     ComPtr<ID3D12DescriptorHeap> rtvHeap;
     ComPtr<ID3D12DescriptorHeap> dsvHeap;
-    ComPtr<ID3D12DescriptorHeap> cbvHeap0;
-    ComPtr<ID3D12DescriptorHeap> cbvHeap1;
     UINT rtvDescriptorSize;
     UINT dsvDescriptorSize;
-    UINT cbvDescriptorSize;
 
     unique_ptr<D3D12BufferManager> bufferManager;
     unique_ptr<D3D12DescriptorHeapManager> descriptorHeapManager;

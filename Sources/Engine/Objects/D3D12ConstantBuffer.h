@@ -14,5 +14,5 @@ public:
 	void CopyData(void const* source, size_t size);
 	void SetStartLocation(void* location);
 
-	const D3D12CBV* GetView() { return view; }
+	D3D12CBV* GetView() const { return view; }
 };
