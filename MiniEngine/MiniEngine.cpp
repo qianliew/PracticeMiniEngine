@@ -374,22 +374,19 @@ void MiniEngine::LoadAssets()
         bufferManager->AllocateGlobalConstantBuffer();
         descriptorHeapManager->GetCBVHandle(bufferManager->GetGlobalConstantBuffer()->GetView(),
             CONSTANT_BUFFER_VIEW_GLOBAL, 0);
-        device->CreateConstantBufferView(&bufferManager->GetGlobalConstantBuffer()->GetView()->CBVDesc,
-            bufferManager->GetGlobalConstantBuffer()->GetView()->CPUHandle);
+        bufferManager->GetGlobalConstantBuffer()->GetView()->CreateView(device);
 
         UINT id = model->GetObjectID();
         bufferManager->AllocatePerObjectConstantBuffers(id);
         descriptorHeapManager->GetCBVHandle(bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView(),
             CONSTANT_BUFFER_VIEW_PEROBJECT, id);
-        device->CreateConstantBufferView(&bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView()->CBVDesc,
-            bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView()->CPUHandle);
+        bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView()->CreateView(device);
 
         id = model2->GetObjectID();
         bufferManager->AllocatePerObjectConstantBuffers(id);
         descriptorHeapManager->GetCBVHandle(bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView(),
             CONSTANT_BUFFER_VIEW_PEROBJECT, id);
-        device->CreateConstantBufferView(&bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView()->CBVDesc,
-            bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView()->CPUHandle);
+        bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView()->CreateView(device);
     }
 
     // Create the vertex and index buffer.
@@ -432,11 +429,10 @@ void MiniEngine::LoadAssets()
         cmdList->CopyTextureBuffer(model->GetTexture()->TextureBuffer->GetResource(),
             tempBuffer->ResourceLocation->Resource.Get(), 0, 0, 1, &textureData);
 
+        model->GetTexture()->TextureBuffer->View->SetResource(model->GetTexture()->TextureBuffer->GetResource());
         model->GetTexture()->TextureBuffer->CreateViewDesc();
         descriptorHeapManager->GetSRVHandle(model->GetTexture()->TextureBuffer->View, 0);
-        device->CreateShaderResourceView(model->GetTexture()->TextureBuffer->GetResource(),
-            &model->GetTexture()->TextureBuffer->View->SRVDesc,
-            model->GetTexture()->TextureBuffer->View->CPUHandle);
+        model->GetTexture()->TextureBuffer->View->CreateView(device);
 
         model->GetTexture()->CreateSampler();
         descriptorHeapManager->GetSamplerHandle(model->GetTexture()->TextureSampler.get(), 0);
@@ -596,8 +592,8 @@ void MiniEngine::PopulateCommandList()
     {
         descriptorHeapManager->SetCBVs(cmdList->GetCommandList(), CONSTANT_BUFFER_VIEW_PEROBJECT, 0);
 
-        cmdList->SetVertexBuffers(0, 1, &model->GetMesh()->VertexBuffer->View->VertexBufferView);
-        cmdList->SetIndexBuffer(&model->GetMesh()->IndexBuffer->View->IndexBufferView);
+        cmdList->SetVertexBuffers(0, 1, &model->GetMesh()->VertexBuffer->VertexBufferView);
+        cmdList->SetIndexBuffer(&model->GetMesh()->IndexBuffer->IndexBufferView);
 
         cmdList->DrawIndexedInstanced(model->GetMesh()->GetIndicesNum());
     }

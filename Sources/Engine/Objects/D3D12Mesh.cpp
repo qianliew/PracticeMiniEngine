@@ -97,11 +97,11 @@ void D3D12Mesh::CreateViewDesc()
 {
     // Initialize the vertex buffer view.
     VertexBuffer->CreateViewDesc();
-    VertexBuffer->View->VertexBufferView.StrideInBytes = sizeof(Vertex);
-    VertexBuffer->View->VertexBufferView.SizeInBytes = m_verticesSize;
+    VertexBuffer->VertexBufferView.StrideInBytes = sizeof(Vertex);
+    VertexBuffer->VertexBufferView.SizeInBytes = m_verticesSize;
 
     // Initialize the index buffer view.
     IndexBuffer->CreateViewDesc();
-    IndexBuffer->View->IndexBufferView.Format = DXGI_FORMAT_R16_UINT;
-    IndexBuffer->View->IndexBufferView.SizeInBytes = m_indicesSize;
+    IndexBuffer->IndexBufferView.Format = DXGI_FORMAT_R16_UINT;
+    IndexBuffer->IndexBufferView.SizeInBytes = m_indicesSize;
 }

@@ -10,5 +10,5 @@ public:
 
     void CreateViewDesc() override;
 
-    D3D12VBV* View;
+    D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
 };

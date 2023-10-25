@@ -41,14 +41,12 @@ D3D12DescriptorHeapManager::~D3D12DescriptorHeapManager()
 
 void D3D12DescriptorHeapManager::GetCBVHandle(D3D12CBV* view, UINT index, INT offset)
 {
-    view->CPUHandle = heaps[index]->GetCPUDescriptorHandleForHeapStart();
-    view->CPUHandle.Offset(offset, cbvDescriptorSize);
+    view->SetHeapHandle(heaps[index], offset, cbvDescriptorSize);
 }
 
 void D3D12DescriptorHeapManager::GetSRVHandle(D3D12SRV* view, INT offset)
 {
-    view->CPUHandle = srvHeap->GetCPUDescriptorHandleForHeapStart();
-    view->CPUHandle.Offset(offset, srvDescriptorSize);
+    view->SetHeapHandle(srvHeap, offset, srvDescriptorSize);
 }
 
 void D3D12DescriptorHeapManager::GetSamplerHandle(D3D12Sampler* const sampler, INT offset)

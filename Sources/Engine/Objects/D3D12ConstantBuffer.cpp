@@ -14,8 +14,8 @@ D3D12ConstantBuffer::~D3D12ConstantBuffer()
 
 void D3D12ConstantBuffer::CreateViewDesc()
 {
-	view->CBVDesc.BufferLocation = resourceLocation->Resource->GetGPUVirtualAddress();
-	view->CBVDesc.SizeInBytes = size;
+	view->GetDesc().BufferLocation = resourceLocation->Resource->GetGPUVirtualAddress();
+	view->GetDesc().SizeInBytes = size;
 }
 
 void D3D12ConstantBuffer::CopyData(void const* source, size_t size)

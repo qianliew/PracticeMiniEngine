@@ -10,5 +10,5 @@ public:
 
     void CreateViewDesc() override;
 
-    D3D12IBV* View;
+    D3D12_INDEX_BUFFER_VIEW IndexBufferView;
 };
