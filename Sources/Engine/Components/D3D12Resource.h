@@ -15,11 +15,31 @@ public:
 
 	void SetResourceLoaction(const D3D12ResourceLocation*);
 	void SetResourceDesc(D3D12_RESOURCE_DESC*);
-	virtual void CreateViewDesc() = 0;
+	// TODO: Check nullptr.
+	virtual void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) = 0;
 
 	inline const D3D12ResourceLocation* GetResourceLocation() const { return resourceLocation; }
 	inline const D3D12_RESOURCE_DESC* GetResourceDesc() const { return resourceDesc; }
 	inline const UINT GetSize() const { return size; }
 
 	inline ID3D12Resource* GetResource() const { return resourceLocation->Resource.Get(); }
+};
+
+template<typename TView>
+class TD3D12Resource : public D3D12Resource
+{
+protected:
+	TView view;
+
+public:
+	TD3D12Resource(UINT size)
+		:D3D12Resource(size)
+	{
+
+	}
+
+	~TD3D12Resource()
+	{
+
+	}
 };

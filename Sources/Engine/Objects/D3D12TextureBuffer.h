@@ -1,6 +1,6 @@
 #pragma once
 
-class D3D12TextureBuffer : public D3D12Resource
+class D3D12TextureBuffer : public TD3D12Resource<D3D12SRV>
 {
 private:
 
@@ -8,7 +8,5 @@ public:
 	D3D12TextureBuffer(UINT);
 	~D3D12TextureBuffer();
 
-	D3D12SRV* View;
-
-	void CreateViewDesc() override;
+	virtual void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
 };

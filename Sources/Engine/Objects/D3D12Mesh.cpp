@@ -93,15 +93,15 @@ void D3D12Mesh::CopyIndices(void* destination)
     memcpy(destination, m_indices.get(), m_indicesSize);
 }
 
-void D3D12Mesh::CreateViewDesc()
+void D3D12Mesh::CreateView()
 {
     // Initialize the vertex buffer view.
-    VertexBuffer->CreateViewDesc();
+    VertexBuffer->CreateView();
     VertexBuffer->VertexBufferView.StrideInBytes = sizeof(Vertex);
     VertexBuffer->VertexBufferView.SizeInBytes = m_verticesSize;
 
     // Initialize the index buffer view.
-    IndexBuffer->CreateViewDesc();
+    IndexBuffer->CreateView();
     IndexBuffer->IndexBufferView.Format = DXGI_FORMAT_R16_UINT;
     IndexBuffer->IndexBufferView.SizeInBytes = m_indicesSize;
 }

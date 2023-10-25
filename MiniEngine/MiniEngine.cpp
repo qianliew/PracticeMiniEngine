@@ -372,21 +372,18 @@ void MiniEngine::LoadAssets()
     // Create the constant buffer.
     {
         bufferManager->AllocateGlobalConstantBuffer();
-        descriptorHeapManager->GetCBVHandle(bufferManager->GetGlobalConstantBuffer()->GetView(),
-            CONSTANT_BUFFER_VIEW_GLOBAL, 0);
-        bufferManager->GetGlobalConstantBuffer()->GetView()->CreateView(device);
+        bufferManager->GetGlobalConstantBuffer()->CreateView(device,
+            descriptorHeapManager->GetHandle(CONSTANT_BUFFER_VIEW_GLOBAL, 0));
 
         UINT id = model->GetObjectID();
         bufferManager->AllocatePerObjectConstantBuffers(id);
-        descriptorHeapManager->GetCBVHandle(bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView(),
-            CONSTANT_BUFFER_VIEW_PEROBJECT, id);
-        bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView()->CreateView(device);
+        bufferManager->GetPerObjectConstantBufferAtIndex(id)->CreateView(device,
+            descriptorHeapManager->GetHandle(CONSTANT_BUFFER_VIEW_PEROBJECT, id));
 
         id = model2->GetObjectID();
         bufferManager->AllocatePerObjectConstantBuffers(id);
-        descriptorHeapManager->GetCBVHandle(bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView(),
-            CONSTANT_BUFFER_VIEW_PEROBJECT, id);
-        bufferManager->GetPerObjectConstantBufferAtIndex(id)->GetView()->CreateView(device);
+        bufferManager->GetPerObjectConstantBufferAtIndex(id)->CreateView(device,
+            descriptorHeapManager->GetHandle(CONSTANT_BUFFER_VIEW_PEROBJECT, id));
     }
 
     // Create the vertex and index buffer.
@@ -401,7 +398,7 @@ void MiniEngine::LoadAssets()
         bufferManager->AllocateDefaultBuffer(model->GetMesh()->IndexBuffer.get());
         tempIndexBuffer->CopyData(model->GetMesh()->GetIndicesData(), model->GetMesh()->GetIndicesSize());
 
-        model->GetMesh()->CreateViewDesc();
+        model->GetMesh()->CreateView();
         cmdList->CopyBufferRegion(model->GetMesh()->VertexBuffer->GetResource(),
             tempVertexBuffer->ResourceLocation->Resource.Get(),
             model->GetMesh()->GetVerticesSize());
@@ -415,7 +412,9 @@ void MiniEngine::LoadAssets()
         D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
 
         bufferManager->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
+        UINT id = model->GetObjectID();
         bufferManager->AllocateDefaultBuffer(model->GetTexture()->TextureBuffer.get());
+        model->GetTexture()->TextureBuffer->CreateView(device, descriptorHeapManager->GetHandle(SHADER_RESOURCE_VIEW, 0));
 
         // Init texture data.
         device.Get()->GetCopyableFootprints(model->GetTexture()->TextureBuffer->GetResourceDesc(), 0, 1, 0, nullptr,
@@ -428,11 +427,6 @@ void MiniEngine::LoadAssets()
         // Update texture data from upload buffer to gpu buffer.
         cmdList->CopyTextureBuffer(model->GetTexture()->TextureBuffer->GetResource(),
             tempBuffer->ResourceLocation->Resource.Get(), 0, 0, 1, &textureData);
-
-        model->GetTexture()->TextureBuffer->View->SetResource(model->GetTexture()->TextureBuffer->GetResource());
-        model->GetTexture()->TextureBuffer->CreateViewDesc();
-        descriptorHeapManager->GetSRVHandle(model->GetTexture()->TextureBuffer->View, 0);
-        model->GetTexture()->TextureBuffer->View->CreateView(device);
 
         model->GetTexture()->CreateSampler();
         descriptorHeapManager->GetSamplerHandle(model->GetTexture()->TextureSampler.get(), 0);
@@ -457,8 +451,8 @@ void MiniEngine::LoadAssets()
         // complete before continuing.
         WaitForPreviousFrame();
 
-        cmdList->AddTransitionResourceBarriers(model->GetTexture()->TextureBuffer->GetResource(),
-            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        //cmdList->AddTransitionResourceBarriers(model->GetTexture()->TextureBuffer->GetResource(),
+        //    D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
         cmdList->AddTransitionResourceBarriers(model->GetMesh()->VertexBuffer->GetResource(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
         cmdList->AddTransitionResourceBarriers(model->GetMesh()->IndexBuffer->GetResource(),

@@ -180,6 +180,7 @@
     <ClCompile Include="..\Sources\Engine\Components\D3D12Resource.cpp" />
     <ClCompile Include="..\Sources\Engine\Components\D3D12Sampler.cpp" />
     <ClCompile Include="..\Sources\Engine\Components\D3D12UploadBuffer.cpp" />
+    <ClCompile Include="..\Sources\Engine\Components\D3D12View.cpp" />
     <ClCompile Include="..\Sources\Engine\Components\Transform.cpp" />
     <ClCompile Include="..\Sources\Engine\Managers\D3D12BufferManager.cpp" />
     <ClCompile Include="..\Sources\Engine\Managers\D3D12DescriptorHeapManager.cpp" />
@@ -192,7 +193,6 @@
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Texture.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12TextureBuffer.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12VertexBuffer.cpp" />
-    <ClCompile Include="..\Sources\Engine\Objects\D3D12View.cpp" />
     <ClCompile Include="..\Sources\Engine\Window.cpp" />
     <ClCompile Include="..\Sources\Utilities\FBXImporter.cpp" />
     <ClCompile Include="Main.cpp" />

@@ -32,6 +32,16 @@ D3D12BufferManager::~D3D12BufferManager()
             it->second = nullptr;
         }
     }
+
+    delete globalConstantBuffer;
+    for (auto it = perObjectConstantBuffers.begin(); it != perObjectConstantBuffers.end(); it++)
+    {
+        if (it->second != nullptr)
+        {
+            delete it->second;
+            it->second = nullptr;
+        }
+    }
 }
 
 void D3D12BufferManager::AllocateUploadBuffer(D3D12UploadBuffer* &pBuffer, UploadBufferType type)
@@ -65,34 +75,29 @@ void D3D12BufferManager::AllocateDefaultBuffer(D3D12Resource* pResource)
 // Overflow case and Initialization problem.
 void D3D12BufferManager::AllocateGlobalConstantBuffer()
 {
-    globalConstantBuffer = std::make_unique<D3D12ConstantBuffer>(BLOCK_SIZE_TYPE_3);
+    globalConstantBuffer = new D3D12ConstantBuffer(BLOCK_SIZE_TYPE_3);
     D3D12UploadBuffer** ppBuffer = UploadBufferPool[(UINT)UploadBufferType::Constant];
 
     *ppBuffer = new D3D12UploadBuffer();
     (*ppBuffer)->CreateConstantBuffer(device.Get(), BLOCK_SIZE_TYPE_3);
     globalConstantBuffer->SetResourceLoaction((*ppBuffer)->ResourceLocation);
     globalConstantBuffer->SetStartLocation((*ppBuffer)->GetStartLocation());
-
-    globalConstantBuffer->CreateViewDesc();
 }
 
-void D3D12BufferManager::AllocatePerObjectConstantBuffers(UINT index)
+void D3D12BufferManager::AllocatePerObjectConstantBuffers(UINT offset)
 {
-    if (perObjectConstantBuffers[index] != nullptr)
+    if (perObjectConstantBuffers[offset] != nullptr)
     {
-        delete perObjectConstantBuffers[index];
+        delete perObjectConstantBuffers[offset];
     }
 
-    perObjectConstantBuffers[index] = new D3D12ConstantBuffer(BLOCK_SIZE_TYPE_4);
+    perObjectConstantBuffers[offset] = new D3D12ConstantBuffer(BLOCK_SIZE_TYPE_4);
     D3D12UploadBuffer** ppBuffer = UploadBufferPool[(UINT)UploadBufferType::Constant];
 
     *ppBuffer = new D3D12UploadBuffer();
     (*ppBuffer)->CreateConstantBuffer(device.Get(), BLOCK_SIZE_TYPE_4);
-    perObjectConstantBuffers[index]->SetResourceLoaction((*ppBuffer)->ResourceLocation);
-    perObjectConstantBuffers[index]->SetStartLocation((*ppBuffer)->GetStartLocation());
-
-    perObjectConstantBuffers[index]->CreateViewDesc();
-
+    perObjectConstantBuffers[offset]->SetResourceLoaction((*ppBuffer)->ResourceLocation);
+    perObjectConstantBuffers[offset]->SetStartLocation((*ppBuffer)->GetStartLocation());
 }
 
 D3D12ConstantBuffer* D3D12BufferManager::GetPerObjectConstantBufferAtIndex(UINT index)

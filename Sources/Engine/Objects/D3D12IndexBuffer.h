@@ -8,7 +8,8 @@ public:
     D3D12IndexBuffer(UINT);
     ~D3D12IndexBuffer();
 
-    void CreateViewDesc() override;
+    void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
+    void CreateView();
 
     D3D12_INDEX_BUFFER_VIEW IndexBufferView;
 };

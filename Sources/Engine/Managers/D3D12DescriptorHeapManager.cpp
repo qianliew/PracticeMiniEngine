@@ -8,30 +8,31 @@ D3D12DescriptorHeapManager::D3D12DescriptorHeapManager(ComPtr<ID3D12Device> &dev
     cbvHeapDesc.NumDescriptors = 1;
     cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    ThrowIfFailed(device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&heaps[CONSTANT_BUFFER_VIEW_GLOBAL])));
+    ThrowIfFailed(device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&heapTable[CONSTANT_BUFFER_VIEW_GLOBAL])));
 
     cbvHeapDesc.NumDescriptors = 10;
-    ThrowIfFailed(device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&heaps[CONSTANT_BUFFER_VIEW_PEROBJECT])));
+    ThrowIfFailed(device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&heapTable[CONSTANT_BUFFER_VIEW_PEROBJECT])));
 
-    cbvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    sizeTable[CONSTANT_BUFFER_VIEW_GLOBAL] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    sizeTable[CONSTANT_BUFFER_VIEW_PEROBJECT] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     // Describe and create a shader resource view (SRV) descriptor heap.
     D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
     srvHeapDesc.NumDescriptors = 1;
     srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    ThrowIfFailed(device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&srvHeap)));
+    ThrowIfFailed(device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&heapTable[SHADER_RESOURCE_VIEW])));
 
-    srvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    sizeTable[SHADER_RESOURCE_VIEW] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     // Describe and create a sampler descriptor heap.
     D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
     samplerHeapDesc.NumDescriptors = 1;
     samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
     samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    ThrowIfFailed(device->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&samplerHeap)));
+    ThrowIfFailed(device->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&heapTable[SAMPLER])));
 
-    samplerDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    sizeTable[SAMPLER] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
 
 D3D12DescriptorHeapManager::~D3D12DescriptorHeapManager()
@@ -39,28 +40,26 @@ D3D12DescriptorHeapManager::~D3D12DescriptorHeapManager()
 
 }
 
-void D3D12DescriptorHeapManager::GetCBVHandle(D3D12CBV* view, UINT index, INT offset)
+D3D12_CPU_DESCRIPTOR_HANDLE D3D12DescriptorHeapManager::GetHandle(UINT index, INT offset)
 {
-    view->SetHeapHandle(heaps[index], offset, cbvDescriptorSize);
-}
+    CD3DX12_CPU_DESCRIPTOR_HANDLE handle(heapTable[index]->GetCPUDescriptorHandleForHeapStart());
+    handle.Offset(offset, sizeTable[index]);
 
-void D3D12DescriptorHeapManager::GetSRVHandle(D3D12SRV* view, INT offset)
-{
-    view->SetHeapHandle(srvHeap, offset, srvDescriptorSize);
+    return handle;
 }
 
 void D3D12DescriptorHeapManager::GetSamplerHandle(D3D12Sampler* const sampler, INT offset)
 {
-    sampler->CPUHandle = samplerHeap->GetCPUDescriptorHandleForHeapStart();
-    sampler->CPUHandle.Offset(offset, samplerDescriptorSize);
+    sampler->CPUHandle = heapTable[SAMPLER]->GetCPUDescriptorHandleForHeapStart();
+    sampler->CPUHandle.Offset(offset, sizeTable[SAMPLER]);
 }
 
 void D3D12DescriptorHeapManager::SetCBVs(ComPtr<ID3D12GraphicsCommandList>& commandList, UINT index, INT offset)
 {
-    ID3D12DescriptorHeap* heap[] = { heaps[index].Get() };
+    ID3D12DescriptorHeap* heap[] = { heapTable[index].Get() };
     
-    CD3DX12_GPU_DESCRIPTOR_HANDLE handle(heaps[index]->GetGPUDescriptorHandleForHeapStart());
-    handle.Offset(offset, cbvDescriptorSize);
+    CD3DX12_GPU_DESCRIPTOR_HANDLE handle(heapTable[index]->GetGPUDescriptorHandleForHeapStart());
+    handle.Offset(offset, sizeTable[index]);
 
     commandList->SetDescriptorHeaps(_countof(heap), heap);
     commandList->SetGraphicsRootDescriptorTable(index, handle);
@@ -68,14 +67,14 @@ void D3D12DescriptorHeapManager::SetCBVs(ComPtr<ID3D12GraphicsCommandList>& comm
 
 void D3D12DescriptorHeapManager::SetSRVs(ComPtr<ID3D12GraphicsCommandList>& commandList)
 {
-    ID3D12DescriptorHeap* heap[] = { srvHeap.Get() };
+    ID3D12DescriptorHeap* heap[] = { heapTable[SHADER_RESOURCE_VIEW].Get() };
     commandList->SetDescriptorHeaps(_countof(heap), heap);
-    commandList->SetGraphicsRootDescriptorTable(SHADER_RESOURCE_VIEW, srvHeap->GetGPUDescriptorHandleForHeapStart());
+    commandList->SetGraphicsRootDescriptorTable(SHADER_RESOURCE_VIEW, heapTable[SHADER_RESOURCE_VIEW]->GetGPUDescriptorHandleForHeapStart());
 }
 
 void D3D12DescriptorHeapManager::SetSamplers(ComPtr<ID3D12GraphicsCommandList>& commandList)
 {
-    ID3D12DescriptorHeap* heap[] = { samplerHeap.Get() };
+    ID3D12DescriptorHeap* heap[] = { heapTable[SAMPLER].Get() };
     commandList->SetDescriptorHeaps(_countof(heap), heap);
-    commandList->SetGraphicsRootDescriptorTable(SAMPLER, samplerHeap->GetGPUDescriptorHandleForHeapStart());
+    commandList->SetGraphicsRootDescriptorTable(SAMPLER, heapTable[SAMPLER]->GetGPUDescriptorHandleForHeapStart());
 }

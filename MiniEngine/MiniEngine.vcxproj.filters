@@ -165,7 +165,7 @@
     <ClCompile Include="..\Sources\Engine\Objects\D3D12CommandList.cpp">
       <Filter>Engine\Objects\Sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\Sources\Engine\Objects\D3D12View.cpp">
+    <ClCompile Include="..\Sources\Engine\Components\D3D12View.cpp">
       <Filter>Engine\Components\Sources</Filter>
     </ClCompile>
   </ItemGroup>

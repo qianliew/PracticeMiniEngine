@@ -5,23 +5,19 @@
 #define SHADER_RESOURCE_VIEW 2
 #define SAMPLER 3
 
+#define UNDEFINED 100
+
 class D3D12DescriptorHeapManager
 {
 private:
-	UINT cbvDescriptorSize;
-	UINT srvDescriptorSize;
-	UINT samplerDescriptorSize;
-
-	std::map<UINT, ComPtr<ID3D12DescriptorHeap>> heaps;
-	ComPtr<ID3D12DescriptorHeap> srvHeap;
-	ComPtr<ID3D12DescriptorHeap> samplerHeap;
+	std::map<UINT, ComPtr<ID3D12DescriptorHeap>> heapTable;
+	std::map<UINT, UINT> sizeTable;
 
 public:
 	D3D12DescriptorHeapManager(ComPtr<ID3D12Device>& device);
 	~D3D12DescriptorHeapManager();
 
-	void GetCBVHandle(D3D12CBV*, UINT index, INT offset);
-	void GetSRVHandle(D3D12SRV*, INT offset);
+	D3D12_CPU_DESCRIPTOR_HANDLE GetHandle(UINT index, INT offset);
 	void GetSamplerHandle(D3D12Sampler* const, INT offset);
 
 	void SetCBVs(ComPtr<ID3D12GraphicsCommandList>&, UINT index, INT offset);
