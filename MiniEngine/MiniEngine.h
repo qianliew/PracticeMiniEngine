@@ -44,10 +44,7 @@ private:
     UINT rtvDescriptorSize;
     UINT dsvDescriptorSize;
 
-    unique_ptr<D3D12BufferManager> bufferManager;
-    unique_ptr<D3D12DescriptorHeapManager> descriptorHeapManager;
     unique_ptr<FBXImporter> fbxImporter;
-
     unique_ptr<D3D12CommandList> cmdList;
 
     // Synchronization objects.

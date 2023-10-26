@@ -47,8 +47,6 @@ void MiniEngine::LoadPipeline()
     pDevice->CreateDevice(swapChainDesc);
     frameIndex = pDevice->GetSwapChain()->GetCurrentBackBufferIndex();
 
-    descriptorHeapManager = std::make_unique<D3D12DescriptorHeapManager>(pDevice->GetDevice());
-
     // Create descriptor heaps.
     {
         // Describe and create a render target view (RTV) descriptor heap.
@@ -123,7 +121,9 @@ void MiniEngine::LoadAssets()
 {
     // Create scene objects.
     {
-        bufferManager = std::make_unique<D3D12BufferManager>(pDevice->GetDevice());
+        pDevice->CreateDescriptorHeapManager();
+        pDevice->CreateBufferManager();
+
         camera = std::make_shared<D3D12Camera>(0, static_cast<FLOAT>(width), static_cast<FLOAT>(height));
         camera->SetViewport(static_cast<FLOAT>(width), static_cast<FLOAT>(height));
         camera->SetScissorRect(static_cast<LONG>(width), static_cast<LONG>(height));
@@ -241,31 +241,31 @@ void MiniEngine::LoadAssets()
 
     // Create the constant buffer.
     {
-        bufferManager->AllocateGlobalConstantBuffer();
-        bufferManager->GetGlobalConstantBuffer()->CreateView(pDevice->GetDevice(),
-            descriptorHeapManager->GetHandle(CONSTANT_BUFFER_VIEW_GLOBAL, 0));
+        pDevice->GetBufferManager()->AllocateGlobalConstantBuffer();
+        pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CreateView(pDevice->GetDevice(),
+            pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_GLOBAL, 0));
 
         UINT id = model->GetObjectID();
-        bufferManager->AllocatePerObjectConstantBuffers(id);
-        bufferManager->GetPerObjectConstantBufferAtIndex(id)->CreateView(pDevice->GetDevice(),
-            descriptorHeapManager->GetHandle(CONSTANT_BUFFER_VIEW_PEROBJECT, id));
+        pDevice->GetBufferManager()->AllocatePerObjectConstantBuffers(id);
+        pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->CreateView(pDevice->GetDevice(),
+            pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_PEROBJECT, id));
 
         id = model2->GetObjectID();
-        bufferManager->AllocatePerObjectConstantBuffers(id);
-        bufferManager->GetPerObjectConstantBufferAtIndex(id)->CreateView(pDevice->GetDevice(),
-            descriptorHeapManager->GetHandle(CONSTANT_BUFFER_VIEW_PEROBJECT, id));
+        pDevice->GetBufferManager()->AllocatePerObjectConstantBuffers(id);
+        pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->CreateView(pDevice->GetDevice(),
+            pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_PEROBJECT, id));
     }
 
     // Create the vertex and index buffer.
     {
         D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
-        bufferManager->AllocateUploadBuffer(tempVertexBuffer, UploadBufferType::Vertex);
-        bufferManager->AllocateDefaultBuffer(model->GetMesh()->VertexBuffer.get());
+        pDevice->GetBufferManager()->AllocateUploadBuffer(tempVertexBuffer, UploadBufferType::Vertex);
+        pDevice->GetBufferManager()->AllocateDefaultBuffer(model->GetMesh()->VertexBuffer.get());
         tempVertexBuffer->CopyData(model->GetMesh()->GetVerticesData(), model->GetMesh()->GetVerticesSize());
 
         D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer();
-        bufferManager->AllocateUploadBuffer(tempIndexBuffer, UploadBufferType::Index);
-        bufferManager->AllocateDefaultBuffer(model->GetMesh()->IndexBuffer.get());
+        pDevice->GetBufferManager()->AllocateUploadBuffer(tempIndexBuffer, UploadBufferType::Index);
+        pDevice->GetBufferManager()->AllocateDefaultBuffer(model->GetMesh()->IndexBuffer.get());
         tempIndexBuffer->CopyData(model->GetMesh()->GetIndicesData(), model->GetMesh()->GetIndicesSize());
 
         model->GetMesh()->CreateView();
@@ -281,10 +281,11 @@ void MiniEngine::LoadAssets()
     {
         D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
 
-        bufferManager->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
+        pDevice->GetBufferManager()->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
         UINT id = model->GetObjectID();
-        bufferManager->AllocateDefaultBuffer(model->GetTexture()->TextureBuffer.get());
-        model->GetTexture()->TextureBuffer->CreateView(pDevice->GetDevice(), descriptorHeapManager->GetHandle(SHADER_RESOURCE_VIEW, 0));
+        pDevice->GetBufferManager()->AllocateDefaultBuffer(model->GetTexture()->TextureBuffer.get());
+        model->GetTexture()->TextureBuffer->CreateView(pDevice->GetDevice(),
+            pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW, 0));
 
         // Init texture data.
         pDevice->GetDevice()->GetCopyableFootprints(model->GetTexture()->TextureBuffer->GetResourceDesc(), 0, 1, 0, nullptr,
@@ -299,7 +300,7 @@ void MiniEngine::LoadAssets()
             tempBuffer->ResourceLocation->Resource.Get(), 0, 0, 1, &textureData);
 
         model->GetTexture()->CreateSampler();
-        descriptorHeapManager->GetSamplerHandle(model->GetTexture()->TextureSampler.get(), 0);
+        pDevice->GetDescriptorHeapManager()->GetSamplerHandle(model->GetTexture()->TextureSampler.get(), 0);
         pDevice->GetDevice()->CreateSampler(&model->GetTexture()->TextureSampler->SamplerDesc,
             model->GetTexture()->TextureSampler->CPUHandle);
     }
@@ -381,15 +382,15 @@ void MiniEngine::OnUpdate()
     // Update scene objects.
     CameraConstant cameraConstant = camera->GetCameraConstant();
     XMStoreFloat4x4(&cameraConstant.WorldToProjectionMatrix, camera->GetVPMatrix());
-    bufferManager->GetGlobalConstantBuffer()->CopyData(&cameraConstant, sizeof(CameraConstant));
+    pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CopyData(&cameraConstant, sizeof(CameraConstant));
 
     model->SetObjectToWorldMatrix();
     TransformConstant transformConstant = model->GetTransformConstant();
-    bufferManager->GetPerObjectConstantBufferAtIndex(model->GetObjectID())->CopyData(&transformConstant, sizeof(TransformConstant));
+    pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(model->GetObjectID())->CopyData(&transformConstant, sizeof(TransformConstant));
 
     model2->SetObjectToWorldMatrix();
     TransformConstant transformConstant2 = model2->GetTransformConstant();
-    bufferManager->GetPerObjectConstantBufferAtIndex(model2->GetObjectID())->CopyData(&transformConstant2, sizeof(TransformConstant));
+    pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(model2->GetObjectID())->CopyData(&transformConstant2, sizeof(TransformConstant));
 }
 
 // Render the scene.
@@ -428,9 +429,9 @@ void MiniEngine::PopulateCommandList()
     cmdList->SetPipelineState(commandAllocator, pipelineState);
     cmdList->SetRootSignature(rootSignature);
 
-    descriptorHeapManager->SetCBVs(cmdList->GetCommandList(), CONSTANT_BUFFER_VIEW_GLOBAL, 0);
-    descriptorHeapManager->SetSRVs(cmdList->GetCommandList());
-    descriptorHeapManager->SetSamplers(cmdList->GetCommandList());
+    pDevice->GetDescriptorHeapManager()->SetCBVs(cmdList->GetCommandList(), CONSTANT_BUFFER_VIEW_GLOBAL, 0);
+    pDevice->GetDescriptorHeapManager()->SetSRVs(cmdList->GetCommandList());
+    pDevice->GetDescriptorHeapManager()->SetSamplers(cmdList->GetCommandList());
 
     // Set camera relating state.
     cmdList->SetViewports(camera->GetViewport());
@@ -454,7 +455,7 @@ void MiniEngine::PopulateCommandList()
     cmdList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     {
-        descriptorHeapManager->SetCBVs(cmdList->GetCommandList(), CONSTANT_BUFFER_VIEW_PEROBJECT, 0);
+        pDevice->GetDescriptorHeapManager()->SetCBVs(cmdList->GetCommandList(), CONSTANT_BUFFER_VIEW_PEROBJECT, 0);
 
         cmdList->SetVertexBuffers(0, 1, &model->GetMesh()->VertexBuffer->VertexBufferView);
         cmdList->SetIndexBuffer(&model->GetMesh()->IndexBuffer->IndexBufferView);
@@ -463,7 +464,7 @@ void MiniEngine::PopulateCommandList()
     }
 
     {
-        descriptorHeapManager->SetCBVs(cmdList->GetCommandList(), CONSTANT_BUFFER_VIEW_PEROBJECT, 1);
+        pDevice->GetDescriptorHeapManager()->SetCBVs(cmdList->GetCommandList(), CONSTANT_BUFFER_VIEW_PEROBJECT, 1);
         //commandList->IASetVertexBuffers(0, 1, &model2->GetMesh()->VertexBuffer->View->VertexBufferView);
         //commandList->IASetIndexBuffer(&model2->GetMesh()->IndexBuffer->View->IndexBufferView);
 

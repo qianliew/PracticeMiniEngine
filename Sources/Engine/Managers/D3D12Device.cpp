@@ -146,3 +146,13 @@ void D3D12Device::GetHardwareAdapter(
 
     *ppAdapter = adapter.Detach();
 }
+
+void D3D12Device::CreateDescriptorHeapManager()
+{
+    pDescriptorHeapManager = new D3D12DescriptorHeapManager(pDevice);
+}
+
+void D3D12Device::CreateBufferManager()
+{
+    pBufferManager = new D3D12BufferManager(pDevice);
+}
