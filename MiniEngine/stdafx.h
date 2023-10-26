@@ -34,5 +34,6 @@
 
 #include "Transform.h"
 
+#include "D3D12Device.h"
 #include "D3D12BufferManager.h"
 #include "D3D12DescriptorHeapManager.h"

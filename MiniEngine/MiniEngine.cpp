@@ -6,8 +6,7 @@ using namespace Microsoft::WRL;
 MiniEngine::MiniEngine(UINT width, UINT height, std::wstring name) :
     Window(width, height, name),
     frameIndex(0),
-    rtvDescriptorSize(0),
-    useWarpDevice(false)
+    rtvDescriptorSize(0)
 {
     WCHAR path[512];
     GetAssetsPath(path, _countof(path));
@@ -24,74 +23,6 @@ std::wstring MiniEngine::GetAssetFullPath(LPCWSTR assetName)
     return assetsPath + assetName;
 }
 
-// Helper function for acquiring the first available hardware adapter that supports Direct3D 12.
-// If no such adapter can be found, *ppAdapter will be set to nullptr.
-_Use_decl_annotations_
-void MiniEngine::GetHardwareAdapter(
-    IDXGIFactory1* pFactory,
-    IDXGIAdapter1** ppAdapter,
-    bool requestHighPerformanceAdapter)
-{
-    *ppAdapter = nullptr;
-
-    ComPtr<IDXGIAdapter1> adapter;
-
-    ComPtr<IDXGIFactory6> factory6;
-    if (SUCCEEDED(pFactory->QueryInterface(IID_PPV_ARGS(&factory6))))
-    {
-        for (
-            UINT adapterIndex = 0;
-            SUCCEEDED(factory6->EnumAdapterByGpuPreference(
-                adapterIndex,
-                requestHighPerformanceAdapter == true ? DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE : DXGI_GPU_PREFERENCE_UNSPECIFIED,
-                IID_PPV_ARGS(&adapter)));
-            ++adapterIndex)
-        {
-            DXGI_ADAPTER_DESC1 desc;
-            adapter->GetDesc1(&desc);
-
-            if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
-            {
-                // Don't select the Basic Render Driver adapter.
-                // If you want a software adapter, pass in "/warp" on the command line.
-                continue;
-            }
-
-            // Check to see whether the adapter supports Direct3D 12, but don't create the
-            // actual device yet.
-            if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr)))
-            {
-                break;
-            }
-        }
-    }
-
-    if (adapter.Get() == nullptr)
-    {
-        for (UINT adapterIndex = 0; SUCCEEDED(pFactory->EnumAdapters1(adapterIndex, &adapter)); ++adapterIndex)
-        {
-            DXGI_ADAPTER_DESC1 desc;
-            adapter->GetDesc1(&desc);
-
-            if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
-            {
-                // Don't select the Basic Render Driver adapter.
-                // If you want a software adapter, pass in "/warp" on the command line.
-                continue;
-            }
-
-            // Check to see whether the adapter supports Direct3D 12, but don't create the
-            // actual device yet.
-            if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr)))
-            {
-                break;
-            }
-        }
-    }
-
-    *ppAdapter = adapter.Detach();
-}
-
 void MiniEngine::OnInit()
 {
     LoadPipeline();
@@ -101,55 +32,7 @@ void MiniEngine::OnInit()
 // Load the rendering pipeline dependencies.
 void MiniEngine::LoadPipeline()
 {
-    UINT dxgiFactoryFlags = 0;
-
-#if defined(_DEBUG)
-    // Enable the debug layer (requires the Graphics Tools "optional feature").
-    // NOTE: Enabling the debug layer after device creation will invalidate the active device.
-    {
-        ComPtr<ID3D12Debug> debugController;
-        if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
-        {
-            debugController->EnableDebugLayer();
-
-            // Enable additional debug layers.
-            dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
-        }
-    }
-#endif
-
-    ComPtr<IDXGIFactory4> factory;
-    ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory)));
-
-    if (useWarpDevice)
-    {
-        ComPtr<IDXGIAdapter> warpAdapter;
-        ThrowIfFailed(factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)));
-
-        ThrowIfFailed(D3D12CreateDevice(
-            warpAdapter.Get(),
-            D3D_FEATURE_LEVEL_11_0,
-            IID_PPV_ARGS(&device)
-        ));
-    }
-    else
-    {
-        ComPtr<IDXGIAdapter1> hardwareAdapter;
-        GetHardwareAdapter(factory.Get(), &hardwareAdapter);
-
-        ThrowIfFailed(D3D12CreateDevice(
-            hardwareAdapter.Get(),
-            D3D_FEATURE_LEVEL_11_0,
-            IID_PPV_ARGS(&device)
-        ));
-    }
-
-    // Describe and create the command queue.
-    D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-    queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-    queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-
-    ThrowIfFailed(device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue)));
+    pDevice = std::make_unique<D3D12Device>();
 
     // Describe and create the swap chain.
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
@@ -161,23 +44,10 @@ void MiniEngine::LoadPipeline()
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     swapChainDesc.SampleDesc.Count = 1;
 
-    ComPtr<IDXGISwapChain1> swapChain1;
-    ThrowIfFailed(factory->CreateSwapChainForHwnd(
-        commandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
-        Win32Application::GetHwnd(),
-        &swapChainDesc,
-        nullptr,
-        nullptr,
-        &swapChain1
-    ));
+    pDevice->CreateDevice(swapChainDesc);
+    frameIndex = pDevice->GetSwapChain()->GetCurrentBackBufferIndex();
 
-    // This sample does not support fullscreen transitions.
-    ThrowIfFailed(factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
-
-    ThrowIfFailed(swapChain1.As(&swapChain));
-    frameIndex = swapChain->GetCurrentBackBufferIndex();
-
-    descriptorHeapManager = std::make_unique<D3D12DescriptorHeapManager>(device);
+    descriptorHeapManager = std::make_unique<D3D12DescriptorHeapManager>(pDevice->GetDevice());
 
     // Create descriptor heaps.
     {
@@ -186,18 +56,18 @@ void MiniEngine::LoadPipeline()
         rtvHeapDesc.NumDescriptors = FrameCount;
         rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
         rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-        ThrowIfFailed(device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap)));
+        ThrowIfFailed(pDevice->GetDevice()->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap)));
 
-        rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        rtvDescriptorSize = pDevice->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
         // Describe and create a depth stencil view (DSV) descriptor heap.
         D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
         dsvHeapDesc.NumDescriptors = FrameCount;
         dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
         dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-        ThrowIfFailed(device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsvHeap)));
+        ThrowIfFailed(pDevice->GetDevice()->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsvHeap)));
 
-        dsvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+        dsvDescriptorSize = pDevice->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
     }
 
     // Create frame resources.
@@ -207,8 +77,8 @@ void MiniEngine::LoadPipeline()
         // Create a RTV for each frame.
         for (UINT n = 0; n < FrameCount; n++)
         {
-            ThrowIfFailed(swapChain->GetBuffer(n, IID_PPV_ARGS(&renderTargets[n])));
-            device->CreateRenderTargetView(renderTargets[n].Get(), nullptr, rtvHandle);
+            ThrowIfFailed(pDevice->GetSwapChain()->GetBuffer(n, IID_PPV_ARGS(&renderTargets[n])));
+            pDevice->GetDevice()->CreateRenderTargetView(renderTargets[n].Get(), nullptr, rtvHandle);
             rtvHandle.Offset(1, rtvDescriptorSize);
         }
 
@@ -227,7 +97,7 @@ void MiniEngine::LoadPipeline()
         // Create a SDV for each frame.
         for (UINT n = 0; n < FrameCount; n++)
         {
-            device->CreateCommittedResource(
+            pDevice->GetDevice()->CreateCommittedResource(
                 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
                 D3D12_HEAP_FLAG_NONE,
                 &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
@@ -236,16 +106,16 @@ void MiniEngine::LoadPipeline()
                 IID_PPV_ARGS(&depthStencils[n])
             );
 
-            device->CreateDepthStencilView(depthStencils[n].Get(), &depthStencilDesc, dsvHandle);
+            pDevice->GetDevice()->CreateDepthStencilView(depthStencils[n].Get(), &depthStencilDesc, dsvHandle);
             dsvHandle.Offset(1, dsvDescriptorSize);
         }
     }
 
     // Create the command allocator.
-    ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator)));
+    ThrowIfFailed(pDevice->GetDevice()->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator)));
 
     // Create the command list.
-    cmdList = make_unique<D3D12CommandList>(device, commandAllocator);
+    cmdList = make_unique<D3D12CommandList>(pDevice->GetDevice(), commandAllocator);
 }
 
 // Load the sample assets.
@@ -253,7 +123,7 @@ void MiniEngine::LoadAssets()
 {
     // Create scene objects.
     {
-        bufferManager = std::make_unique<D3D12BufferManager>(device);
+        bufferManager = std::make_unique<D3D12BufferManager>(pDevice->GetDevice());
         camera = std::make_shared<D3D12Camera>(0, static_cast<FLOAT>(width), static_cast<FLOAT>(height));
         camera->SetViewport(static_cast<FLOAT>(width), static_cast<FLOAT>(height));
         camera->SetScissorRect(static_cast<LONG>(width), static_cast<LONG>(height));
@@ -320,7 +190,7 @@ void MiniEngine::LoadAssets()
             D3D_ROOT_SIGNATURE_VERSION_1,
             signature.GetAddressOf(),
             error.GetAddressOf()));
-        ThrowIfFailed(device->CreateRootSignature(0,
+        ThrowIfFailed(pDevice->GetDevice()->CreateRootSignature(0,
             signature->GetBufferPointer(),
             signature->GetBufferSize(),
             IID_PPV_ARGS(&rootSignature)));
@@ -366,23 +236,23 @@ void MiniEngine::LoadAssets()
         psoDesc.NumRenderTargets = 1;
         psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
         psoDesc.SampleDesc.Count = 1;
-        ThrowIfFailed(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
+        ThrowIfFailed(pDevice->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
     }
 
     // Create the constant buffer.
     {
         bufferManager->AllocateGlobalConstantBuffer();
-        bufferManager->GetGlobalConstantBuffer()->CreateView(device,
+        bufferManager->GetGlobalConstantBuffer()->CreateView(pDevice->GetDevice(),
             descriptorHeapManager->GetHandle(CONSTANT_BUFFER_VIEW_GLOBAL, 0));
 
         UINT id = model->GetObjectID();
         bufferManager->AllocatePerObjectConstantBuffers(id);
-        bufferManager->GetPerObjectConstantBufferAtIndex(id)->CreateView(device,
+        bufferManager->GetPerObjectConstantBufferAtIndex(id)->CreateView(pDevice->GetDevice(),
             descriptorHeapManager->GetHandle(CONSTANT_BUFFER_VIEW_PEROBJECT, id));
 
         id = model2->GetObjectID();
         bufferManager->AllocatePerObjectConstantBuffers(id);
-        bufferManager->GetPerObjectConstantBufferAtIndex(id)->CreateView(device,
+        bufferManager->GetPerObjectConstantBufferAtIndex(id)->CreateView(pDevice->GetDevice(),
             descriptorHeapManager->GetHandle(CONSTANT_BUFFER_VIEW_PEROBJECT, id));
     }
 
@@ -414,10 +284,10 @@ void MiniEngine::LoadAssets()
         bufferManager->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
         UINT id = model->GetObjectID();
         bufferManager->AllocateDefaultBuffer(model->GetTexture()->TextureBuffer.get());
-        model->GetTexture()->TextureBuffer->CreateView(device, descriptorHeapManager->GetHandle(SHADER_RESOURCE_VIEW, 0));
+        model->GetTexture()->TextureBuffer->CreateView(pDevice->GetDevice(), descriptorHeapManager->GetHandle(SHADER_RESOURCE_VIEW, 0));
 
         // Init texture data.
-        device.Get()->GetCopyableFootprints(model->GetTexture()->TextureBuffer->GetResourceDesc(), 0, 1, 0, nullptr,
+        pDevice->GetDevice()->GetCopyableFootprints(model->GetTexture()->TextureBuffer->GetResourceDesc(), 0, 1, 0, nullptr,
             model->GetTexture()->GetTextureHeight(), model->GetTexture()->GetTextureBytesPerRow(), nullptr);
         D3D12_SUBRESOURCE_DATA textureData = {};
         textureData.pData = model->GetTexture()->GetTextureData();
@@ -430,13 +300,13 @@ void MiniEngine::LoadAssets()
 
         model->GetTexture()->CreateSampler();
         descriptorHeapManager->GetSamplerHandle(model->GetTexture()->TextureSampler.get(), 0);
-        device->CreateSampler(&model->GetTexture()->TextureSampler->SamplerDesc,
+        pDevice->GetDevice()->CreateSampler(&model->GetTexture()->TextureSampler->SamplerDesc,
             model->GetTexture()->TextureSampler->CPUHandle);
     }
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
     {
-        ThrowIfFailed(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
+        ThrowIfFailed(pDevice->GetDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
         fenceValue = 1;
 
         // Create an event handle to use for frame synchronization.
@@ -529,7 +399,7 @@ void MiniEngine::OnRender()
     PopulateCommandList();
 
     // Present the frame.
-    ThrowIfFailed(swapChain->Present(1, 0));
+    ThrowIfFailed(pDevice->GetSwapChain()->Present(1, 0));
 
     WaitForPreviousFrame();
 }
@@ -628,7 +498,7 @@ void MiniEngine::WaitForPreviousFrame()
         WaitForSingleObject(fenceEvent, INFINITE);
     }
 
-    frameIndex = swapChain->GetCurrentBackBufferIndex();
+    frameIndex = pDevice->GetSwapChain()->GetCurrentBackBufferIndex();
 }
 
 void MiniEngine::ExecuteCommandList()
@@ -637,13 +507,13 @@ void MiniEngine::ExecuteCommandList()
 
     // Execute the command list.
     ID3D12CommandList* ppCommandLists[] = { cmdList->GetCommandList().Get() };
-    commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+    pDevice->GetCommandQueue()->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 }
 
 UINT64 MiniEngine::UpdateFence()
 {
     const UINT64 value = fenceValue;
-    ThrowIfFailed(commandQueue->Signal(fence.Get(), value));
+    ThrowIfFailed(pDevice->GetCommandQueue()->Signal(fence.Get(), value));
     fenceValue++;
 
     return value;

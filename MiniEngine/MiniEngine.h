@@ -26,26 +26,17 @@ public:
 
     std::wstring GetAssetFullPath(LPCWSTR assetName);
 
-    void GetHardwareAdapter(
-        _In_ IDXGIFactory1* pFactory,
-        _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter,
-        bool requestHighPerformanceAdapter = false);
-
 private:
     // Root assets path.
     std::wstring assetsPath;
-    // Adapter info.
-    bool useWarpDevice;
 
     static const UINT FrameCount = 2;
 
     // Pipeline objects.
-    ComPtr<IDXGISwapChain3> swapChain;
-    ComPtr<ID3D12Device> device;
+    unique_ptr<D3D12Device> pDevice;
     ComPtr<ID3D12Resource> renderTargets[FrameCount];
     ComPtr<ID3D12Resource> depthStencils[FrameCount];
     ComPtr<ID3D12CommandAllocator> commandAllocator;
-    ComPtr<ID3D12CommandQueue> commandQueue;
     ComPtr<ID3D12RootSignature> rootSignature;
     ComPtr<ID3D12PipelineState> pipelineState;
     ComPtr<ID3D12DescriptorHeap> rtvHeap;

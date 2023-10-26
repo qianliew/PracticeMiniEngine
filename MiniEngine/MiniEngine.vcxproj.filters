@@ -103,6 +103,9 @@
     <ClInclude Include="..\Sources\Engine\Objects\D3D12CommandList.h">
       <Filter>Engine\Objects\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Managers\D3D12Device.h">
+      <Filter>Engine\Managers\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Camera.cpp">
@@ -167,6 +170,9 @@
     </ClCompile>
     <ClCompile Include="..\Sources\Engine\Components\D3D12View.cpp">
       <Filter>Engine\Components\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Managers\D3D12Device.cpp">
+      <Filter>Engine\Managers\Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -158,6 +158,7 @@
     <ClInclude Include="..\Sources\Engine\d3dx12.h" />
     <ClInclude Include="..\Sources\Engine\Managers\D3D12BufferManager.h" />
     <ClInclude Include="..\Sources\Engine\Managers\D3D12DescriptorHeapManager.h" />
+    <ClInclude Include="..\Sources\Engine\Managers\D3D12Device.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12Camera.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12CommandList.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12ConstantBuffer.h" />
@@ -184,6 +185,7 @@
     <ClCompile Include="..\Sources\Engine\Components\Transform.cpp" />
     <ClCompile Include="..\Sources\Engine\Managers\D3D12BufferManager.cpp" />
     <ClCompile Include="..\Sources\Engine\Managers\D3D12DescriptorHeapManager.cpp" />
+    <ClCompile Include="..\Sources\Engine\Managers\D3D12Device.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Camera.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12CommandList.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12ConstantBuffer.cpp" />
