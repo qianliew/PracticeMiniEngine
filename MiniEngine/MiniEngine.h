@@ -1,10 +1,7 @@
 #pragma once
 
 #include "Window.h"
-#include "FBXImporter.h"
-#include "D3D12CommandList.h"
-#include "D3D12Camera.h"
-#include "D3D12Model.h"
+#include "DrawObjecstPass.h"
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
@@ -33,7 +30,7 @@ private:
     static const UINT FrameCount = 2;
 
     // Pipeline objects.
-    unique_ptr<D3D12Device> pDevice;
+    shared_ptr<D3D12Device> pDevice;
     ComPtr<ID3D12Resource> renderTargets[FrameCount];
     ComPtr<ID3D12Resource> depthStencils[FrameCount];
     ComPtr<ID3D12CommandAllocator> commandAllocator;
@@ -44,8 +41,8 @@ private:
     UINT rtvDescriptorSize;
     UINT dsvDescriptorSize;
 
-    unique_ptr<FBXImporter> fbxImporter;
-    unique_ptr<D3D12CommandList> cmdList;
+    D3D12CommandList* pCommandList;
+    shared_ptr<DrawObjectsPass> pDrawObjectPass;
 
     // Synchronization objects.
     UINT frameIndex;
@@ -54,12 +51,7 @@ private:
     UINT64 fenceValue;
 
     // Scene objects
-    std::vector<shared_ptr<D3D12Model>> models;
-    shared_ptr<D3D12Camera> camera;
-    shared_ptr<D3D12Model> model;
-    shared_ptr<D3D12Model> model2;
-
-    UINT id = 0;
+    shared_ptr<SceneManager> pSceneManager;
 
     void LoadPipeline();
     void LoadAssets();

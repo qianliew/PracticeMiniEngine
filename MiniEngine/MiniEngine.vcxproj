@@ -118,7 +118,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\Plugins\FBXSDK\include;$(ProjectDir)..\Sources\Engine;$(ProjectDir)..\Sources\Engine\Components;$(ProjectDir)..\Sources\Engine\Managers;$(ProjectDir)..\Sources\Engine\Objects;$(ProjectDir)..\Sources\Utilities;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\Plugins\FBXSDK\include;$(ProjectDir)..\Sources\Engine;$(ProjectDir)..\Sources\Engine\Components;$(ProjectDir)..\Sources\Engine\Managers;$(ProjectDir)..\Sources\Engine\Objects;$(ProjectDir)..\Sources\Engine\Rendering;$(ProjectDir)..\Sources\Utilities;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -159,6 +159,7 @@
     <ClInclude Include="..\Sources\Engine\Managers\D3D12BufferManager.h" />
     <ClInclude Include="..\Sources\Engine\Managers\D3D12DescriptorHeapManager.h" />
     <ClInclude Include="..\Sources\Engine\Managers\D3D12Device.h" />
+    <ClInclude Include="..\Sources\Engine\Managers\SceneManager.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12Camera.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12CommandList.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12ConstantBuffer.h" />
@@ -168,6 +169,8 @@
     <ClInclude Include="..\Sources\Engine\Objects\D3D12Texture.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12TextureBuffer.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12VertexBuffer.h" />
+    <ClInclude Include="..\Sources\Engine\Rendering\AbstractRenderPass.h" />
+    <ClInclude Include="..\Sources\Engine\Rendering\DrawObjecstPass.h" />
     <ClInclude Include="..\Sources\Engine\Window.h" />
     <ClInclude Include="..\Sources\Utilities\FBXImporter.h" />
     <ClInclude Include="..\Sources\Utilities\PathHelper.h" />
@@ -186,6 +189,7 @@
     <ClCompile Include="..\Sources\Engine\Managers\D3D12BufferManager.cpp" />
     <ClCompile Include="..\Sources\Engine\Managers\D3D12DescriptorHeapManager.cpp" />
     <ClCompile Include="..\Sources\Engine\Managers\D3D12Device.cpp" />
+    <ClCompile Include="..\Sources\Engine\Managers\SceneManager.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Camera.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12CommandList.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12ConstantBuffer.cpp" />
@@ -195,6 +199,8 @@
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Texture.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12TextureBuffer.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12VertexBuffer.cpp" />
+    <ClCompile Include="..\Sources\Engine\Rendering\AbstractRenderPass.cpp" />
+    <ClCompile Include="..\Sources\Engine\Rendering\DrawObjectsPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Window.cpp" />
     <ClCompile Include="..\Sources\Utilities\FBXImporter.cpp" />
     <ClCompile Include="Main.cpp" />

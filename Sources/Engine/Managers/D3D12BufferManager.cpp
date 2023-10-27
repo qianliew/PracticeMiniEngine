@@ -9,18 +9,27 @@
 D3D12BufferManager::D3D12BufferManager(ComPtr<ID3D12Device>& device) :
     device(device)
 {
-
+    for (UINT i = (UINT)UploadBufferType::Constant; i < (UINT)UploadBufferType::Count; i++)
+    {
+        D3D12UploadBuffer** ppBuffer = UploadBufferPool[i];
+        while (*ppBuffer != nullptr)
+        {
+            *ppBuffer = nullptr;
+            ppBuffer++;
+        }
+    }
 }
 
 D3D12BufferManager::~D3D12BufferManager()
 {
-    for (UINT i = 0; i < (UINT)UploadBufferType::Count; i++)
+    for (UINT i = (UINT)UploadBufferType::Constant; i < (UINT)UploadBufferType::Count; i++)
     {
         D3D12UploadBuffer** ppBuffer = UploadBufferPool[i];
         while (*ppBuffer != nullptr)
         {
             delete* ppBuffer;
             *ppBuffer = nullptr;
+            ppBuffer++;
         }
     }
 
@@ -48,8 +57,13 @@ void D3D12BufferManager::AllocateUploadBuffer(D3D12UploadBuffer* &pBuffer, Uploa
 {
     D3D12UploadBuffer** ppBuffer = UploadBufferPool[(UINT)type];
 
-    for (UINT i = 0; *ppBuffer == nullptr && i < MAX_UPLOAD_BUFFER_COUNT; i++, ppBuffer++)
+    for (UINT i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++, ppBuffer++)
     {
+        if (*ppBuffer != nullptr)
+        {
+            continue;
+        }
+
         *ppBuffer = new D3D12UploadBuffer();
         (*ppBuffer)->CreateBuffer(device.Get(),
             type == UploadBufferType::Texture ? BLOCK_SIZE_TYPE_1

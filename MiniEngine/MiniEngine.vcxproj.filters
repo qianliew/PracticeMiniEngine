@@ -34,6 +34,15 @@
     <Filter Include="Utilities">
       <UniqueIdentifier>{537e72d2-e946-410d-a9ed-405ffc11081f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Rendering">
+      <UniqueIdentifier>{6c2f9d4c-0d61-46fc-b7cb-3858a319ebe3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Rendering\Headers">
+      <UniqueIdentifier>{7fb67f0c-c317-4fc0-9b3d-e4efab507ddb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Rendering\Sources">
+      <UniqueIdentifier>{2d2db69b-ba37-49e4-9f4e-9bfdd859a8c3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Sources\Engine\Objects\D3D12Camera.h">
@@ -106,6 +115,15 @@
     <ClInclude Include="..\Sources\Engine\Managers\D3D12Device.h">
       <Filter>Engine\Managers\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Managers\SceneManager.h">
+      <Filter>Engine\Managers\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Rendering\DrawObjecstPass.h">
+      <Filter>Engine\Rendering\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Rendering\AbstractRenderPass.h">
+      <Filter>Engine\Rendering\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Camera.cpp">
@@ -173,6 +191,15 @@
     </ClCompile>
     <ClCompile Include="..\Sources\Engine\Managers\D3D12Device.cpp">
       <Filter>Engine\Managers\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Managers\SceneManager.cpp">
+      <Filter>Engine\Managers\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Rendering\DrawObjectsPass.cpp">
+      <Filter>Engine\Rendering\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Rendering\AbstractRenderPass.cpp">
+      <Filter>Engine\Rendering\Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

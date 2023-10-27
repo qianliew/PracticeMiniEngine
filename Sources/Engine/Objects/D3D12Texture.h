@@ -13,6 +13,9 @@ private:
 	std::unique_ptr<BYTE*> m_data;
 
 public:
+	D3D12Texture();
+	~D3D12Texture();
+
 	UINT* GetTextureWidth();
 	UINT* GetTextureHeight();
 	UINT* GetTextureSize();

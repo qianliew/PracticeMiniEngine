@@ -15,6 +15,7 @@ MiniEngine::MiniEngine(UINT width, UINT height, std::wstring name) :
 
 MiniEngine::~MiniEngine()
 {
+    delete pCommandList;
 }
 
 // Helper function for resolving the full path of assets.
@@ -32,7 +33,7 @@ void MiniEngine::OnInit()
 // Load the rendering pipeline dependencies.
 void MiniEngine::LoadPipeline()
 {
-    pDevice = std::make_unique<D3D12Device>();
+    pDevice = std::make_shared<D3D12Device>();
 
     // Describe and create the swap chain.
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
@@ -113,7 +114,7 @@ void MiniEngine::LoadPipeline()
     ThrowIfFailed(pDevice->GetDevice()->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator)));
 
     // Create the command list.
-    cmdList = make_unique<D3D12CommandList>(pDevice->GetDevice(), commandAllocator);
+    pCommandList = new D3D12CommandList(pDevice->GetDevice(), commandAllocator);
 }
 
 // Load the sample assets.
@@ -124,23 +125,13 @@ void MiniEngine::LoadAssets()
         pDevice->CreateDescriptorHeapManager();
         pDevice->CreateBufferManager();
 
-        camera = std::make_shared<D3D12Camera>(0, static_cast<FLOAT>(width), static_cast<FLOAT>(height));
-        camera->SetViewport(static_cast<FLOAT>(width), static_cast<FLOAT>(height));
-        camera->SetScissorRect(static_cast<LONG>(width), static_cast<LONG>(height));
+        pSceneManager = make_shared<SceneManager>(pDevice);
+        pSceneManager->InitFBXImporter();
+        pSceneManager->LoadScene();
+        pSceneManager->CreateCamera(width, height);
 
-        fbxImporter = std::make_unique<FBXImporter>();
-        fbxImporter->InitializeSdkObjects();
-
-        model = std::make_shared<D3D12Model>(id++, (char*)"cube.fbx", (char*)"test.png");
-        model->LoadModel(fbxImporter);
-        model->MoveAlongX(10.0f);
-        model->MoveAlongZ(5.0f);
-
-        model2 = std::make_shared<D3D12Model>(id++, (char*)"cube.fbx", (char*)"test.png");
-        model2->LoadModel(fbxImporter);
-        model2->MoveAlongY(2.0f);
-
-        models.push_back(model);
+        pDrawObjectPass = make_shared<DrawObjectsPass>(pDevice, pSceneManager);
+        pDrawObjectPass->Setup(pCommandList);
     }
 
     // Create an empty root signature.
@@ -239,72 +230,6 @@ void MiniEngine::LoadAssets()
         ThrowIfFailed(pDevice->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
     }
 
-    // Create the constant buffer.
-    {
-        pDevice->GetBufferManager()->AllocateGlobalConstantBuffer();
-        pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CreateView(pDevice->GetDevice(),
-            pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_GLOBAL, 0));
-
-        UINT id = model->GetObjectID();
-        pDevice->GetBufferManager()->AllocatePerObjectConstantBuffers(id);
-        pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->CreateView(pDevice->GetDevice(),
-            pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_PEROBJECT, id));
-
-        id = model2->GetObjectID();
-        pDevice->GetBufferManager()->AllocatePerObjectConstantBuffers(id);
-        pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->CreateView(pDevice->GetDevice(),
-            pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_PEROBJECT, id));
-    }
-
-    // Create the vertex and index buffer.
-    {
-        D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
-        pDevice->GetBufferManager()->AllocateUploadBuffer(tempVertexBuffer, UploadBufferType::Vertex);
-        pDevice->GetBufferManager()->AllocateDefaultBuffer(model->GetMesh()->VertexBuffer.get());
-        tempVertexBuffer->CopyData(model->GetMesh()->GetVerticesData(), model->GetMesh()->GetVerticesSize());
-
-        D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer();
-        pDevice->GetBufferManager()->AllocateUploadBuffer(tempIndexBuffer, UploadBufferType::Index);
-        pDevice->GetBufferManager()->AllocateDefaultBuffer(model->GetMesh()->IndexBuffer.get());
-        tempIndexBuffer->CopyData(model->GetMesh()->GetIndicesData(), model->GetMesh()->GetIndicesSize());
-
-        model->GetMesh()->CreateView();
-        cmdList->CopyBufferRegion(model->GetMesh()->VertexBuffer->GetResource(),
-            tempVertexBuffer->ResourceLocation->Resource.Get(),
-            model->GetMesh()->GetVerticesSize());
-        cmdList->CopyBufferRegion(model->GetMesh()->IndexBuffer->GetResource(),
-            tempIndexBuffer->ResourceLocation->Resource.Get(),
-            model->GetMesh()->GetIndicesSize());
-    }
-
-    // Load textures.
-    {
-        D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
-
-        pDevice->GetBufferManager()->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
-        UINT id = model->GetObjectID();
-        pDevice->GetBufferManager()->AllocateDefaultBuffer(model->GetTexture()->TextureBuffer.get());
-        model->GetTexture()->TextureBuffer->CreateView(pDevice->GetDevice(),
-            pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW, 0));
-
-        // Init texture data.
-        pDevice->GetDevice()->GetCopyableFootprints(model->GetTexture()->TextureBuffer->GetResourceDesc(), 0, 1, 0, nullptr,
-            model->GetTexture()->GetTextureHeight(), model->GetTexture()->GetTextureBytesPerRow(), nullptr);
-        D3D12_SUBRESOURCE_DATA textureData = {};
-        textureData.pData = model->GetTexture()->GetTextureData();
-        textureData.RowPitch = *model->GetTexture()->GetTextureBytesPerRow();
-        textureData.SlicePitch = *model->GetTexture()->GetTextureBytesPerRow() * *model->GetTexture()->GetTextureHeight();
-
-        // Update texture data from upload buffer to gpu buffer.
-        cmdList->CopyTextureBuffer(model->GetTexture()->TextureBuffer->GetResource(),
-            tempBuffer->ResourceLocation->Resource.Get(), 0, 0, 1, &textureData);
-
-        model->GetTexture()->CreateSampler();
-        pDevice->GetDescriptorHeapManager()->GetSamplerHandle(model->GetTexture()->TextureSampler.get(), 0);
-        pDevice->GetDevice()->CreateSampler(&model->GetTexture()->TextureSampler->SamplerDesc,
-            model->GetTexture()->TextureSampler->CPUHandle);
-    }
-
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
     {
         ThrowIfFailed(pDevice->GetDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
@@ -321,14 +246,7 @@ void MiniEngine::LoadAssets()
         // list in our main loop but for now, we just want to wait for setup to 
         // complete before continuing.
         WaitForPreviousFrame();
-
-        //cmdList->AddTransitionResourceBarriers(model->GetTexture()->TextureBuffer->GetResource(),
-        //    D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        cmdList->AddTransitionResourceBarriers(model->GetMesh()->VertexBuffer->GetResource(),
-            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-        cmdList->AddTransitionResourceBarriers(model->GetMesh()->IndexBuffer->GetResource(),
-            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
-        cmdList->FlushResourceBarriers();
+        pCommandList->FlushResourceBarriers();
 
         ExecuteCommandList();
         UpdateFence();
@@ -340,33 +258,33 @@ void MiniEngine::OnKeyDown(UINT8 key)
     switch (key)
     {
     case 'A':
-        camera->MoveAlongX(1);
+        pSceneManager->GetCamera()->MoveAlongX(1);
         break;
     case 'D':
-        camera->MoveAlongX(-1);
+        pSceneManager->GetCamera()->MoveAlongX(-1);
         break;
     case 'W':
-        camera->MoveAlongZ(1);
+        pSceneManager->GetCamera()->MoveAlongZ(1);
         break;
     case 'S':
-        camera->MoveAlongZ(-1);
+        pSceneManager->GetCamera()->MoveAlongZ(-1);
         break;
 
     case 'Q':
-        camera->RotateAlongY(1);
+        pSceneManager->GetCamera()->RotateAlongY(1);
         break;
     case 'E':
-        camera->RotateAlongY(-1);
+        pSceneManager->GetCamera()->RotateAlongY(-1);
         break;
     case 'Z':
-        camera->RotateAlongX(1);
+        pSceneManager->GetCamera()->RotateAlongX(1);
         break;
     case 'X':
-        camera->RotateAlongX(-1);
+        pSceneManager->GetCamera()->RotateAlongX(-1);
         break;
 
     case 'C':
-        camera->ResetTransform();
+        pSceneManager->GetCamera()->ResetTransform();
         break;
     }
 }
@@ -380,17 +298,8 @@ void MiniEngine::OnKeyUp(UINT8 key)
 void MiniEngine::OnUpdate()
 {
     // Update scene objects.
-    CameraConstant cameraConstant = camera->GetCameraConstant();
-    XMStoreFloat4x4(&cameraConstant.WorldToProjectionMatrix, camera->GetVPMatrix());
-    pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CopyData(&cameraConstant, sizeof(CameraConstant));
-
-    model->SetObjectToWorldMatrix();
-    TransformConstant transformConstant = model->GetTransformConstant();
-    pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(model->GetObjectID())->CopyData(&transformConstant, sizeof(TransformConstant));
-
-    model2->SetObjectToWorldMatrix();
-    TransformConstant transformConstant2 = model2->GetTransformConstant();
-    pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(model2->GetObjectID())->CopyData(&transformConstant2, sizeof(TransformConstant));
+    pSceneManager->UpdateTransforms();
+    pSceneManager->UpdateCamera();
 }
 
 // Render the scene.
@@ -407,8 +316,6 @@ void MiniEngine::OnRender()
 
 void MiniEngine::OnDestroy()
 {
-    model->GetTexture()->ReleaseTexture();
-
     // Ensure that the GPU is no longer referencing resources that are about to be
     // cleaned up by the destructor.
     WaitForPreviousFrame();
@@ -426,58 +333,41 @@ void MiniEngine::PopulateCommandList()
     // However, when ExecuteCommandList() is called on a particular command 
     // list, that command list can then be reset at any time and must be before 
     // re-recording.
-    cmdList->SetPipelineState(commandAllocator, pipelineState);
-    cmdList->SetRootSignature(rootSignature);
+    pCommandList->SetPipelineState(commandAllocator, pipelineState);
+    pCommandList->SetRootSignature(rootSignature);
 
-    pDevice->GetDescriptorHeapManager()->SetCBVs(cmdList->GetCommandList(), CONSTANT_BUFFER_VIEW_GLOBAL, 0);
-    pDevice->GetDescriptorHeapManager()->SetSRVs(cmdList->GetCommandList());
-    pDevice->GetDescriptorHeapManager()->SetSamplers(cmdList->GetCommandList());
+    pDevice->GetDescriptorHeapManager()->SetCBVs(pCommandList->GetCommandList(), CONSTANT_BUFFER_VIEW_GLOBAL, 0);
+    pDevice->GetDescriptorHeapManager()->SetSRVs(pCommandList->GetCommandList());
+    pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList());
 
     // Set camera relating state.
-    cmdList->SetViewports(camera->GetViewport());
-    cmdList->SetScissorRects(camera->GetScissorRect());
+    pCommandList->SetViewports(pSceneManager->GetCamera()->GetViewport());
+    pCommandList->SetScissorRects(pSceneManager->GetCamera()->GetScissorRect());
 
     // Indicate that the back buffer will be used as a render target.
-    cmdList->AddTransitionResourceBarriers(renderTargets[frameIndex].Get(),
+    pCommandList->AddTransitionResourceBarriers(renderTargets[frameIndex].Get(),
         D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    cmdList->AddTransitionResourceBarriers(depthStencils[frameIndex].Get(),
+    pCommandList->AddTransitionResourceBarriers(depthStencils[frameIndex].Get(),
         D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-    cmdList->FlushResourceBarriers();
+    pCommandList->FlushResourceBarriers();
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
     CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsvHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, dsvDescriptorSize);
-    cmdList->SetRenderTargets(1, &rtvHandle, &dsvHandle);
+    pCommandList->SetRenderTargets(1, &rtvHandle, &dsvHandle);
 
     // Record commands.
     const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-    cmdList->ClearColor(rtvHandle, clearColor);
-    cmdList->ClearDepth(dsvHandle);
-    cmdList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    pCommandList->ClearColor(rtvHandle, clearColor);
+    pCommandList->ClearDepth(dsvHandle);
 
-    {
-        pDevice->GetDescriptorHeapManager()->SetCBVs(cmdList->GetCommandList(), CONSTANT_BUFFER_VIEW_PEROBJECT, 0);
-
-        cmdList->SetVertexBuffers(0, 1, &model->GetMesh()->VertexBuffer->VertexBufferView);
-        cmdList->SetIndexBuffer(&model->GetMesh()->IndexBuffer->IndexBufferView);
-
-        cmdList->DrawIndexedInstanced(model->GetMesh()->GetIndicesNum());
-    }
-
-    {
-        pDevice->GetDescriptorHeapManager()->SetCBVs(cmdList->GetCommandList(), CONSTANT_BUFFER_VIEW_PEROBJECT, 1);
-        //commandList->IASetVertexBuffers(0, 1, &model2->GetMesh()->VertexBuffer->View->VertexBufferView);
-        //commandList->IASetIndexBuffer(&model2->GetMesh()->IndexBuffer->View->IndexBufferView);
-
-        //commandList->DrawIndexedInstanced(model2->GetMesh()->GetIndicesNum(), 1, 0, 0, 0);
-        cmdList->DrawIndexedInstanced(model->GetMesh()->GetIndicesNum());
-    }
+    pDrawObjectPass->Execute(pCommandList);
 
     // Indicate that the back buffer will now be used to present.
-    cmdList->AddTransitionResourceBarriers(renderTargets[frameIndex].Get(),
+    pCommandList->AddTransitionResourceBarriers(renderTargets[frameIndex].Get(),
         D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-    cmdList->AddTransitionResourceBarriers(depthStencils[frameIndex].Get(),
+    pCommandList->AddTransitionResourceBarriers(depthStencils[frameIndex].Get(),
         D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON);
-    cmdList->FlushResourceBarriers();
+    pCommandList->FlushResourceBarriers();
 
     ExecuteCommandList();
 }
@@ -504,10 +394,10 @@ void MiniEngine::WaitForPreviousFrame()
 
 void MiniEngine::ExecuteCommandList()
 {
-    ThrowIfFailed(cmdList->GetCommandList()->Close());
+    ThrowIfFailed(pCommandList->GetCommandList()->Close());
 
     // Execute the command list.
-    ID3D12CommandList* ppCommandLists[] = { cmdList->GetCommandList().Get() };
+    ID3D12CommandList* ppCommandLists[] = { pCommandList->GetCommandList().Get() };
     pDevice->GetCommandQueue()->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 }
 
