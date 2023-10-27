@@ -36,10 +36,6 @@ private:
     ComPtr<ID3D12CommandAllocator> commandAllocator;
     ComPtr<ID3D12RootSignature> rootSignature;
     ComPtr<ID3D12PipelineState> pipelineState;
-    ComPtr<ID3D12DescriptorHeap> rtvHeap;
-    ComPtr<ID3D12DescriptorHeap> dsvHeap;
-    UINT rtvDescriptorSize;
-    UINT dsvDescriptorSize;
 
     D3D12CommandList* pCommandList;
     shared_ptr<DrawObjectsPass> pDrawObjectPass;

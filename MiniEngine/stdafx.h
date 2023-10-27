@@ -23,6 +23,7 @@
 #include <map>
 #include <unordered_map>
 
+#include "Macros.h"
 #include "PathHelper.h"
 
 #include "D3D12Buffer.h"

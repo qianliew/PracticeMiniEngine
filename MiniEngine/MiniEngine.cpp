@@ -5,8 +5,7 @@ using namespace Microsoft::WRL;
 
 MiniEngine::MiniEngine(UINT width, UINT height, std::wstring name) :
     Window(width, height, name),
-    frameIndex(0),
-    rtvDescriptorSize(0)
+    frameIndex(0)
 {
     WCHAR path[512];
     GetAssetsPath(path, _countof(path));
@@ -47,38 +46,17 @@ void MiniEngine::LoadPipeline()
 
     pDevice->CreateDevice(swapChainDesc);
     frameIndex = pDevice->GetSwapChain()->GetCurrentBackBufferIndex();
-
-    // Create descriptor heaps.
-    {
-        // Describe and create a render target view (RTV) descriptor heap.
-        D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-        rtvHeapDesc.NumDescriptors = FrameCount;
-        rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-        rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-        ThrowIfFailed(pDevice->GetDevice()->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap)));
-
-        rtvDescriptorSize = pDevice->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-
-        // Describe and create a depth stencil view (DSV) descriptor heap.
-        D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
-        dsvHeapDesc.NumDescriptors = FrameCount;
-        dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-        dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-        ThrowIfFailed(pDevice->GetDevice()->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsvHeap)));
-
-        dsvDescriptorSize = pDevice->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-    }
+    pDevice->CreateDescriptorHeapManager();
+    pDevice->CreateBufferManager();
 
     // Create frame resources.
     {
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
-
         // Create a RTV for each frame.
         for (UINT n = 0; n < FrameCount; n++)
         {
             ThrowIfFailed(pDevice->GetSwapChain()->GetBuffer(n, IID_PPV_ARGS(&renderTargets[n])));
-            pDevice->GetDevice()->CreateRenderTargetView(renderTargets[n].Get(), nullptr, rtvHandle);
-            rtvHandle.Offset(1, rtvDescriptorSize);
+            pDevice->GetDevice()->CreateRenderTargetView(renderTargets[n].Get(), nullptr,
+                pDevice->GetDescriptorHeapManager()->GetRTVHandle(n));
         }
 
         D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
@@ -90,8 +68,6 @@ void MiniEngine::LoadPipeline()
         depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
         depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
         depthOptimizedClearValue.DepthStencil.Stencil = 0;
-
-        CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsvHeap->GetCPUDescriptorHandleForHeapStart());
 
         // Create a SDV for each frame.
         for (UINT n = 0; n < FrameCount; n++)
@@ -105,8 +81,8 @@ void MiniEngine::LoadPipeline()
                 IID_PPV_ARGS(&depthStencils[n])
             );
 
-            pDevice->GetDevice()->CreateDepthStencilView(depthStencils[n].Get(), &depthStencilDesc, dsvHandle);
-            dsvHandle.Offset(1, dsvDescriptorSize);
+            pDevice->GetDevice()->CreateDepthStencilView(depthStencils[n].Get(), &depthStencilDesc,
+                pDevice->GetDescriptorHeapManager()->GetDSVHandle(n));
         }
     }
 
@@ -122,9 +98,6 @@ void MiniEngine::LoadAssets()
 {
     // Create scene objects.
     {
-        pDevice->CreateDescriptorHeapManager();
-        pDevice->CreateBufferManager();
-
         pSceneManager = make_shared<SceneManager>(pDevice);
         pSceneManager->InitFBXImporter();
         pSceneManager->LoadScene();
@@ -351,8 +324,8 @@ void MiniEngine::PopulateCommandList()
         D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
     pCommandList->FlushResourceBarriers();
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
-    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsvHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, dsvDescriptorSize);
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = pDevice->GetDescriptorHeapManager()->GetRTVHandle(frameIndex);
+    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = pDevice->GetDescriptorHeapManager()->GetDSVHandle(frameIndex);
     pCommandList->SetRenderTargets(1, &rtvHandle, &dsvHandle);
 
     // Record commands.

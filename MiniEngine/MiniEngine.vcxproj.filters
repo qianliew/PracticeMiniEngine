@@ -124,6 +124,9 @@
     <ClInclude Include="..\Sources\Engine\Rendering\AbstractRenderPass.h">
       <Filter>Engine\Rendering\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\Sources\Utilities\Macros.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Camera.cpp">

@@ -173,6 +173,7 @@
     <ClInclude Include="..\Sources\Engine\Rendering\DrawObjecstPass.h" />
     <ClInclude Include="..\Sources\Engine\Window.h" />
     <ClInclude Include="..\Sources\Utilities\FBXImporter.h" />
+    <ClInclude Include="..\Sources\Utilities\Macros.h" />
     <ClInclude Include="..\Sources\Utilities\PathHelper.h" />
     <ClInclude Include="MiniEngine.h" />
     <ClInclude Include="stdafx.h" />
