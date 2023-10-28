@@ -24,11 +24,6 @@ void DrawObjectsPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
     pCommandList->SetViewports(pSceneManager->GetCamera()->GetViewport());
     pCommandList->SetScissorRects(pSceneManager->GetCamera()->GetScissorRect());
 
-    // Indicate that the back buffer will be used as a render target.
-    //pCommandList->AddTransitionResourceBarriers(renderTargets[frameIndex].Get(),
-    //    D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    //pCommandList->FlushResourceBarriers();
-
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = pDevice->GetDescriptorHeapManager()->GetRTVHandle(frameIndex);
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = pDevice->GetDescriptorHeapManager()->GetDSVHandle(0);
     pCommandList->SetRenderTargets(1, &rtvHandle, &dsvHandle);

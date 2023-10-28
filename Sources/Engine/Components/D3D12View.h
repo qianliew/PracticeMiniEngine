@@ -57,6 +57,18 @@ public:
 	void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
 };
 
+class D3D12RTV final : public TD3D12View<D3D12RTV, D3D12_RENDER_TARGET_VIEW_DESC>
+{
+public:
+	D3D12RTV(const D3D12_RENDER_TARGET_VIEW_DESC& inDesc)
+		: TD3D12View(inDesc)
+	{
+
+	}
+
+	void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
+};
+
 class D3D12DSV final : public TD3D12View<D3D12DSV, D3D12_DEPTH_STENCIL_VIEW_DESC>
 {
 public:

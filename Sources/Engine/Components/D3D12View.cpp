@@ -11,6 +11,11 @@ void D3D12SRV::CreateView(const ComPtr<ID3D12Device>& pDevice, const D3D12_CPU_D
     pDevice->CreateShaderResourceView(pResource, &Desc, handle);
 }
 
+void D3D12RTV::CreateView(const ComPtr<ID3D12Device>& pDevice, const D3D12_CPU_DESCRIPTOR_HANDLE& handle)
+{
+    pDevice->CreateRenderTargetView(pResource, &Desc, handle);
+}
+
 void D3D12DSV::CreateView(const ComPtr<ID3D12Device>& pDevice, const D3D12_CPU_DESCRIPTOR_HANDLE& handle)
 {
     pDevice->CreateDepthStencilView(pResource, &Desc, handle);

@@ -85,6 +85,15 @@ void D3D12Texture::CreateTexture(D3D12TextureType type)
         desc.Flags = D3D12_RESOURCE_FLAG_NONE;
         TextureBuffer = std::make_unique<D3D12TextureBuffer>(desc);
     }
+    else if (type == D3D12TextureType::RenderTarget)
+    {
+        desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+        desc.DepthOrArraySize = 1;
+        desc.MipLevels = 1;
+        desc.SampleDesc.Count = 1;
+        desc.SampleDesc.Quality = 0;
+    }
     else if (type == D3D12TextureType::DepthStencil)
     {
         desc.Format = DXGI_FORMAT_D32_FLOAT;

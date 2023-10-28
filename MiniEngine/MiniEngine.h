@@ -46,6 +46,7 @@ private:
 
     // Scene objects
     shared_ptr<SceneManager> pSceneManager;
+    D3D12Texture* pDepthStencil;
 
     void LoadPipeline();
     void LoadAssets();

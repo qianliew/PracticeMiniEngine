@@ -27,6 +27,30 @@ void D3D12TextureBuffer::CreateView(const ComPtr<ID3D12Device>& device, const D3
     view->CreateView(device, handle);
 }
 
+D3D12RenderTargetBuffer::D3D12RenderTargetBuffer(const D3D12_RESOURCE_DESC& desc) :
+    TD3D12Resource(desc)
+{
+
+}
+
+D3D12RenderTargetBuffer::~D3D12RenderTargetBuffer()
+{
+
+}
+
+void D3D12RenderTargetBuffer::CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle)
+{
+    D3D12_RENDER_TARGET_VIEW_DESC desc;
+    desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+    desc.Texture2D.MipSlice = 0;
+    desc.Texture2D.PlaneSlice = 0;
+
+    view = new D3D12RTV(desc);
+    view->SetResource(resourceLocation.Resource.Get());
+    view->CreateView(device, handle);
+}
+
 D3D12DepthStencilBuffer::D3D12DepthStencilBuffer(const D3D12_RESOURCE_DESC& desc) :
     TD3D12Resource(desc)
 {
@@ -37,7 +61,6 @@ D3D12DepthStencilBuffer::~D3D12DepthStencilBuffer()
 {
 
 }
-
 
 void D3D12DepthStencilBuffer::CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle)
 {
