@@ -13,7 +13,7 @@ D3D12Device::~D3D12Device()
     pDevice->Release();
 }
 
-void D3D12Device::CreateDevice(DXGI_SWAP_CHAIN_DESC1& desc)
+void D3D12Device::CreateDevice()
 {
     UINT dxgiFactoryFlags = 0;
 
@@ -63,20 +63,6 @@ void D3D12Device::CreateDevice(DXGI_SWAP_CHAIN_DESC1& desc)
     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
     ThrowIfFailed(pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&pCommandQueue)));
-
-    ComPtr<IDXGISwapChain1> swapChain1;
-    ThrowIfFailed(pFactory->CreateSwapChainForHwnd(
-        pCommandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
-        Win32Application::GetHwnd(),
-        &desc,
-        nullptr,
-        nullptr,
-        &swapChain1
-    ));
-
-    // This sample does not support fullscreen transitions.
-    ThrowIfFailed(pFactory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
-    ThrowIfFailed(swapChain1.As(&pSwapChain));
 }
 
 // Helper function for acquiring the first available hardware adapter that supports Direct3D 12.

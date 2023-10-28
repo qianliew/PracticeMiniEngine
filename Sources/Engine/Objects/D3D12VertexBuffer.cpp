@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "D3D12VertexBuffer.h"
 
-D3D12VertexBuffer::D3D12VertexBuffer(UINT size) :
-    D3D12Resource(size)
+D3D12VertexBuffer::D3D12VertexBuffer(const D3D12_RESOURCE_DESC& desc) :
+    D3D12Resource(desc)
 {
 
 }

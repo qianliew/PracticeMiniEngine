@@ -27,12 +27,10 @@ private:
     // Root assets path.
     std::wstring assetsPath;
 
-    static const UINT FrameCount = 2;
-
     // Pipeline objects.
     shared_ptr<D3D12Device> pDevice;
-    ComPtr<ID3D12Resource> renderTargets[FrameCount];
-    ComPtr<ID3D12Resource> depthStencils[FrameCount];
+    ComPtr<IDXGISwapChain3> pSwapChain;
+    ComPtr<ID3D12Resource> renderTargets[FRAME_COUNT];
     ComPtr<ID3D12CommandAllocator> commandAllocator;
     ComPtr<ID3D12RootSignature> rootSignature;
     ComPtr<ID3D12PipelineState> pipelineState;

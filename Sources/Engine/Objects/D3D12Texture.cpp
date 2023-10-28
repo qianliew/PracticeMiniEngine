@@ -1,7 +1,18 @@
 #include "stdafx.h"
 #include "D3D12Texture.h"
 
-D3D12Texture::D3D12Texture()
+D3D12Texture::D3D12Texture() :
+    D3D12Texture(0, 0)
+{
+
+}
+
+D3D12Texture::D3D12Texture(UINT inWidth, UINT inHeght) :
+    width(inWidth),
+    height(inHeght),
+    size(0),
+    bytesPerRow(0),
+    dxgiFormat(DXGI_FORMAT_R8G8B8A8_UNORM)
 {
 
 }
@@ -9,31 +20,6 @@ D3D12Texture::D3D12Texture()
 D3D12Texture::~D3D12Texture()
 {
     ReleaseTexture();
-}
-
-UINT* D3D12Texture::GetTextureWidth()
-{
-    return &m_width;
-}
-
-UINT* D3D12Texture::GetTextureHeight()
-{
-    return &m_height;
-}
-
-UINT* D3D12Texture::GetTextureSize()
-{
-    return &m_size;
-}
-
-UINT64* D3D12Texture::GetTextureBytesPerRow()
-{
-    return &m_bytesPerRow;
-}
-
-BYTE* D3D12Texture::GetTextureData()
-{
-    return *m_data.get();
 }
 
 void D3D12Texture::LoadTexture(LPCWSTR texturePath)
@@ -53,7 +39,7 @@ void D3D12Texture::LoadTexture(LPCWSTR texturePath)
 
     ThrowIfFailed(pFactory->CreateDecoderFromFilename(texturePath, NULL, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &pDecoder));
     ThrowIfFailed(pDecoder->GetFrame(0, &pFrameDecode));
-    ThrowIfFailed(pFrameDecode->GetSize(&m_width, &m_height));
+    ThrowIfFailed(pFrameDecode->GetSize(&width, &height));
 
     WICPixelFormatGUID pixelFormat;
     ThrowIfFailed(pFrameDecode->GetPixelFormat(&pixelFormat));
@@ -64,36 +50,60 @@ void D3D12Texture::LoadTexture(LPCWSTR texturePath)
     ThrowIfFailed(pConverter->CanConvert(pixelFormat, convertToPixelFormat, &canConvert));
     ThrowIfFailed(pConverter->Initialize(pFrameDecode, convertToPixelFormat, WICBitmapDitherTypeErrorDiffusion, 0, 0, WICBitmapPaletteTypeCustom));
 
-    m_bytesPerRow = (m_width * 32) / 8;
-    m_size = m_bytesPerRow * m_height;
+    bytesPerRow = (width * 32) / 8;
+    size = bytesPerRow * height;
 
-    m_data = std::make_unique<BYTE*>();
-    *m_data.get() = (BYTE*)malloc(m_size);
-    m_dxgiFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+    pData = new BYTE();
+    pData = (BYTE*)malloc(size);
+    dxgiFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-    ThrowIfFailed(pConverter->CopyPixels(0, m_bytesPerRow, m_size, *m_data.get()));
+    ThrowIfFailed(pConverter->CopyPixels(0, bytesPerRow, size, pData));
+}
 
-    // Create texture desc.
+void D3D12Texture::CreateTexture(D3D12TextureType type)
+{
     if (TextureBuffer != nullptr)
     {
         TextureBuffer.release();
     }
 
-    TextureBuffer = std::make_unique<D3D12TextureBuffer>(m_size);
-    D3D12_RESOURCE_DESC* desc = new D3D12_RESOURCE_DESC();
-    desc->Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    desc->Alignment = 0;
-    desc->Width = m_width;
-    desc->Height = m_height;
-    desc->DepthOrArraySize = 1;
-    desc->MipLevels = 1;
-    desc->Format = m_dxgiFormat;
-    desc->SampleDesc.Count = 1;
-    desc->SampleDesc.Quality = 0;
-    desc->Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    desc->Flags = D3D12_RESOURCE_FLAG_NONE;
+    // Create texture desc.
+    D3D12_RESOURCE_DESC desc;
+    desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    desc.Alignment = 0;
+    desc.Width = width;
+    desc.Height = height;
+    desc.DepthOrArraySize = 1;
+    desc.MipLevels = 1;
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
+    desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 
-    TextureBuffer->SetResourceDesc(desc);
+    if (type == D3D12TextureType::ShaderResource)
+    {
+        desc.Format = dxgiFormat;
+        desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+        TextureBuffer = std::make_unique<D3D12TextureBuffer>(desc);
+    }
+    else if (type == D3D12TextureType::DepthStencil)
+    {
+        desc.Format = DXGI_FORMAT_D32_FLOAT;
+        desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+        desc.DepthOrArraySize = 1;
+        desc.MipLevels = 1;
+        desc.SampleDesc.Count = 1;
+        desc.SampleDesc.Quality = 0;
+        TextureBuffer = std::make_unique<D3D12DepthStencilBuffer>(desc);
+    }
+}
+
+void D3D12Texture::ReleaseTexture()
+{
+    if (TextureBuffer != nullptr)
+    {
+        TextureBuffer.release();
+    }
+    delete pData;
 }
 
 void D3D12Texture::CreateSampler()
@@ -113,11 +123,4 @@ void D3D12Texture::CreateSampler()
     TextureSampler->SamplerDesc.BorderColor[3] = 1;
     TextureSampler->SamplerDesc.MinLOD = 0.0f;
     TextureSampler->SamplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
-}
-
-void D3D12Texture::ReleaseTexture()
-{
-    if (m_data == nullptr) return;
-
-    m_data.release();
 }

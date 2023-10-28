@@ -1,8 +1,9 @@
 #include "stdafx.h"
 #include "D3D12ConstantBuffer.h"
 
-D3D12ConstantBuffer::D3D12ConstantBuffer(UINT size) :
-	TD3D12Resource(GET_CONSTANT_BUFFER_SIZE(size))
+D3D12ConstantBuffer::D3D12ConstantBuffer(const D3D12_RESOURCE_DESC& desc, UINT inSize) :
+	TD3D12Resource(desc),
+	size(GET_CONSTANT_BUFFER_SIZE(inSize))
 {
 
 }

@@ -1,31 +1,36 @@
 #pragma once
 #include "D3D12TextureBuffer.h"
 
+enum class D3D12TextureType
+{
+	ShaderResource = 0,
+	RenderTarget = 1,
+	DepthStencil = 2,
+};
+
 class D3D12Texture
 {
 private:
-	UINT m_width;
-	UINT m_height;
-	UINT m_size;
-	UINT64 m_bytesPerRow;
-	DXGI_FORMAT m_dxgiFormat;
+	UINT width;
+	UINT height;
+	UINT64 size;
+	UINT64 bytesPerRow;
+	DXGI_FORMAT dxgiFormat;
 
-	std::unique_ptr<BYTE*> m_data;
+	BYTE* pData;
 
 public:
 	D3D12Texture();
+	D3D12Texture(UINT inWidth, UINT inHeght);
 	~D3D12Texture();
 
-	UINT* GetTextureWidth();
-	UINT* GetTextureHeight();
-	UINT* GetTextureSize();
-	UINT64* GetTextureBytesPerRow();
-	BYTE* GetTextureData();
+	inline const BYTE* GetTextureData() { return pData; }
 
 	void LoadTexture(LPCWSTR texturePath);
+	void CreateTexture(D3D12TextureType);
 	void ReleaseTexture();
 	void CreateSampler();
 
-	std::unique_ptr<D3D12TextureBuffer> TextureBuffer;
+	std::unique_ptr<D3D12Resource> TextureBuffer;
 	std::unique_ptr<D3D12Sampler> TextureSampler;
 };

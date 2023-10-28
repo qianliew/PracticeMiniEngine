@@ -24,4 +24,5 @@ void D3D12Model::LoadModel(unique_ptr<FBXImporter>& importer)
     delete ptr;
 
     texture->LoadTexture(wtext);
+    texture->CreateTexture(D3D12TextureType::ShaderResource);
 }

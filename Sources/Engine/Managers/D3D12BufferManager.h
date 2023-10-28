@@ -27,7 +27,10 @@ public:
 	~D3D12BufferManager();
 
 	void AllocateUploadBuffer(D3D12UploadBuffer* &pBuffer, UploadBufferType type);
-	void AllocateDefaultBuffer(D3D12Resource* pResource);
+	void AllocateDefaultBuffer(
+		D3D12Resource* pResource,
+		D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COPY_DEST,
+		const D3D12_CLEAR_VALUE* clearValue = nullptr);
 
 	void AllocateGlobalConstantBuffer();
 	void AllocatePerObjectConstantBuffers(UINT offset);

@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "D3D12IndexBuffer.h"
 
-D3D12IndexBuffer::D3D12IndexBuffer(UINT size) :
-    D3D12Resource(size)
+D3D12IndexBuffer::D3D12IndexBuffer(const D3D12_RESOURCE_DESC& desc) :
+    D3D12Resource(desc)
 {
 
 }

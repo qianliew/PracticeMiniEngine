@@ -23,7 +23,6 @@ private:
     CD3DX12_RECT* pScissorRect;
 
     CameraConstant cameraConstant;
-    shared_ptr<D3D12ConstantBuffer> cameraConstantBuffer;
 
     FLOAT width;
     FLOAT height;
@@ -34,7 +33,6 @@ private:
 
 public:
     D3D12Camera(UINT id, FLOAT width, FLOAT height);
-
     ~D3D12Camera();
 
     virtual void ResetTransform() override;
@@ -42,10 +40,11 @@ public:
     void SetViewport(const FLOAT width, const FLOAT height);
     void SetScissorRect(const LONG width, const LONG height);
 
-    const D3D12_VIEWPORT* GetViewport() const { return pViewport; }
-    const D3D12_RECT* GetScissorRect() const { return pScissorRect; }
-    CameraConstant& GetCameraConstant() { return cameraConstant; }
-    const shared_ptr<D3D12ConstantBuffer> GetCameraConstantBuffer() const { return cameraConstantBuffer; }
+    inline const FLOAT GetCameraWidth() const { return width; }
+    inline const FLOAT GetCameraHeight() const { return height; }
+    inline const D3D12_VIEWPORT* GetViewport() const { return pViewport; }
+    inline const D3D12_RECT* GetScissorRect() const { return pScissorRect; }
+    inline CameraConstant& GetCameraConstant() { return cameraConstant; }
 
     const XMMATRIX GetVPMatrix();
 };

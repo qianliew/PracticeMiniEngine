@@ -1,22 +1,17 @@
 #include "stdafx.h"
 #include "D3D12View.h"
 
-void D3D12CBV::CreateView(const ComPtr<ID3D12Device>& device)
+void D3D12CBV::CreateView(const ComPtr<ID3D12Device>& pDevice)
 {
-    device->CreateConstantBufferView(&Desc, CPUHandle);
+    pDevice->CreateConstantBufferView(&Desc, CPUHandle);
 }
 
-void D3D12SRV::CreateView(const ComPtr<ID3D12Device>& device)
+void D3D12SRV::CreateView(const ComPtr<ID3D12Device>& pDevice)
 {
-    device->CreateShaderResourceView(resource, &Desc, CPUHandle);
+    pDevice->CreateShaderResourceView(pResource, &Desc, CPUHandle);
 }
 
-void D3D12CBV::SetResource(ID3D12Resource* pResource)
+void D3D12DSV::CreateView(const ComPtr<ID3D12Device>& pDevice)
 {
-
-}
-
-void D3D12SRV::SetResource(ID3D12Resource* pResource)
-{
-    resource = pResource;
+    pDevice->CreateDepthStencilView(pResource, &Desc, CPUHandle);
 }

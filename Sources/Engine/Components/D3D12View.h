@@ -4,13 +4,13 @@ class D3D12View
 {
 protected:
 	D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle;
+	ID3D12Resource* pResource;
 
 public:
 	virtual void SetResource(ID3D12Resource* pResource) = 0;
 	virtual void CreateView(const ComPtr<ID3D12Device>& device) = 0;
 
 	inline void SetCPUHandle(const D3D12_CPU_DESCRIPTOR_HANDLE& handle) { CPUHandle = handle; }
-	// const D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const { return CPUHandle; }
 };
 
 template<typename TParent, typename TDesc>
@@ -21,22 +21,24 @@ protected:
 
 public:
 
-	TDesc& GetDesc() { return Desc; }
+	inline TDesc& GetDesc() { return Desc; }
+	inline void SetResource(ID3D12Resource* inResource) override { pResource = inResource; }
 };
 
-class D3D12CBV : public TD3D12View<D3D12CBV, D3D12_CONSTANT_BUFFER_VIEW_DESC>
+class D3D12CBV final : public TD3D12View<D3D12CBV, D3D12_CONSTANT_BUFFER_VIEW_DESC>
 {
 public:
 	void CreateView(const ComPtr<ID3D12Device>& device) override;
-	void SetResource(ID3D12Resource* pResource) override;
 };
 
-class D3D12SRV : public TD3D12View<D3D12SRV, D3D12_SHADER_RESOURCE_VIEW_DESC>
+class D3D12SRV final : public TD3D12View<D3D12SRV, D3D12_SHADER_RESOURCE_VIEW_DESC>
 {
-private:
-	ID3D12Resource* resource;
-
 public:
 	void CreateView(const ComPtr<ID3D12Device>& device) override;
-	void SetResource(ID3D12Resource* pResource) override;
+};
+
+class D3D12DSV final : public TD3D12View<D3D12DSV, D3D12_DEPTH_STENCIL_VIEW_DESC>
+{
+public:
+	void CreateView(const ComPtr<ID3D12Device>& device) override;
 };

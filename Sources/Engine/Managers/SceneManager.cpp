@@ -111,12 +111,13 @@ void SceneManager::CreateAndBindObjectBuffer(D3D12CommandList*& pCommandList)
             pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW, 0));
 
         // Init texture data.
-        pDevice->GetDevice()->GetCopyableFootprints(model->GetTexture()->TextureBuffer->GetResourceDesc(), 0, 1, 0, nullptr,
-            model->GetTexture()->GetTextureHeight(), model->GetTexture()->GetTextureBytesPerRow(), nullptr);
+        UINT64 rowSizeInBytes, totalBytes;
+        pDevice->GetDevice()->GetCopyableFootprints(&model->GetTexture()->TextureBuffer->GetResourceDesc(),
+            0, 1, 0, nullptr, nullptr, &rowSizeInBytes, &totalBytes);
         D3D12_SUBRESOURCE_DATA textureData = {};
         textureData.pData = model->GetTexture()->GetTextureData();
-        textureData.RowPitch = *model->GetTexture()->GetTextureBytesPerRow();
-        textureData.SlicePitch = *model->GetTexture()->GetTextureBytesPerRow() * *model->GetTexture()->GetTextureHeight();
+        textureData.RowPitch = rowSizeInBytes;
+        textureData.SlicePitch = totalBytes;
 
         // Update texture data from upload buffer to gpu buffer.
         pCommandList->CopyTextureBuffer(model->GetTexture()->TextureBuffer->GetResource(),

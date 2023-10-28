@@ -74,13 +74,16 @@ void D3D12BufferManager::AllocateUploadBuffer(D3D12UploadBuffer* &pBuffer, Uploa
     }
 }
 
-void D3D12BufferManager::AllocateDefaultBuffer(D3D12Resource* pResource)
+void D3D12BufferManager::AllocateDefaultBuffer(
+    D3D12Resource* pResource,
+    D3D12_RESOURCE_STATES state,
+    const D3D12_CLEAR_VALUE* clearValue)
 {
     if (pResource->GetResourceLocation() == nullptr 
         || DefaultBufferPool.find(pResource->GetResourceLocation()) == DefaultBufferPool.end())
     {
         D3D12DefaultBuffer* pbuffer = new D3D12DefaultBuffer();
-        pbuffer->CreateBuffer(device.Get(), pResource->GetResourceDesc());
+        pbuffer->CreateBuffer(device.Get(), &pResource->GetResourceDesc(), state, clearValue);
         DefaultBufferPool.insert(std::make_pair(pResource->GetResourceLocation(), pbuffer));
         pResource->SetResourceLoaction(pbuffer->ResourceLocation);
     }
@@ -89,7 +92,8 @@ void D3D12BufferManager::AllocateDefaultBuffer(D3D12Resource* pResource)
 // Overflow case and Initialization problem.
 void D3D12BufferManager::AllocateGlobalConstantBuffer()
 {
-    globalConstantBuffer = new D3D12ConstantBuffer(BLOCK_SIZE_TYPE_3);
+    D3D12_RESOURCE_DESC desc;
+    globalConstantBuffer = new D3D12ConstantBuffer(desc, BLOCK_SIZE_TYPE_3);
     D3D12UploadBuffer** ppBuffer = UploadBufferPool[(UINT)UploadBufferType::Constant];
 
     *ppBuffer = new D3D12UploadBuffer();
@@ -105,7 +109,8 @@ void D3D12BufferManager::AllocatePerObjectConstantBuffers(UINT offset)
         delete perObjectConstantBuffers[offset];
     }
 
-    perObjectConstantBuffers[offset] = new D3D12ConstantBuffer(BLOCK_SIZE_TYPE_4);
+    D3D12_RESOURCE_DESC desc;
+    perObjectConstantBuffers[offset] = new D3D12ConstantBuffer(desc, BLOCK_SIZE_TYPE_4);
     D3D12UploadBuffer** ppBuffer = UploadBufferPool[(UINT)UploadBufferType::Constant];
 
     *ppBuffer = new D3D12UploadBuffer();

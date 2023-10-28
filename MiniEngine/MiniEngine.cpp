@@ -33,10 +33,11 @@ void MiniEngine::OnInit()
 void MiniEngine::LoadPipeline()
 {
     pDevice = std::make_shared<D3D12Device>();
+    pDevice->CreateDevice();
 
     // Describe and create the swap chain.
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-    swapChainDesc.BufferCount = FrameCount;
+    swapChainDesc.BufferCount = FRAME_COUNT;
     swapChainDesc.Width = width;
     swapChainDesc.Height = height;
     swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -44,46 +45,31 @@ void MiniEngine::LoadPipeline()
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     swapChainDesc.SampleDesc.Count = 1;
 
-    pDevice->CreateDevice(swapChainDesc);
-    frameIndex = pDevice->GetSwapChain()->GetCurrentBackBufferIndex();
+    ComPtr<IDXGISwapChain1> swapChain1;
+    ThrowIfFailed(pDevice->GetFactory()->CreateSwapChainForHwnd(
+        pDevice->GetCommandQueue().Get(),        // Swap chain needs the queue so that it can force a flush on it.
+        Win32Application::GetHwnd(),
+        &swapChainDesc,
+        nullptr,
+        nullptr,
+        &swapChain1
+    ));
+
+    // This sample does not support fullscreen transitions.
+    ThrowIfFailed(pDevice->GetFactory()->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
+    ThrowIfFailed(swapChain1.As(&pSwapChain));
+    frameIndex = pSwapChain->GetCurrentBackBufferIndex();
+
     pDevice->CreateDescriptorHeapManager();
     pDevice->CreateBufferManager();
 
     // Create frame resources.
+    // Create a RTV for each frame.
+    for (UINT n = 0; n < FRAME_COUNT; n++)
     {
-        // Create a RTV for each frame.
-        for (UINT n = 0; n < FrameCount; n++)
-        {
-            ThrowIfFailed(pDevice->GetSwapChain()->GetBuffer(n, IID_PPV_ARGS(&renderTargets[n])));
-            pDevice->GetDevice()->CreateRenderTargetView(renderTargets[n].Get(), nullptr,
-                pDevice->GetDescriptorHeapManager()->GetRTVHandle(n));
-        }
-
-        D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
-        depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
-        depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-        depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
-
-        D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
-        depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
-        depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
-        depthOptimizedClearValue.DepthStencil.Stencil = 0;
-
-        // Create a SDV for each frame.
-        for (UINT n = 0; n < FrameCount; n++)
-        {
-            pDevice->GetDevice()->CreateCommittedResource(
-                &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-                D3D12_HEAP_FLAG_NONE,
-                &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
-                D3D12_RESOURCE_STATE_COMMON,
-                &depthOptimizedClearValue,
-                IID_PPV_ARGS(&depthStencils[n])
-            );
-
-            pDevice->GetDevice()->CreateDepthStencilView(depthStencils[n].Get(), &depthStencilDesc,
-                pDevice->GetDescriptorHeapManager()->GetDSVHandle(n));
-        }
+        ThrowIfFailed(pSwapChain->GetBuffer(n, IID_PPV_ARGS(&renderTargets[n])));
+        pDevice->GetDevice()->CreateRenderTargetView(renderTargets[n].Get(), nullptr,
+            pDevice->GetDescriptorHeapManager()->GetRTVHandle(n));
     }
 
     // Create the command allocator.
@@ -282,7 +268,7 @@ void MiniEngine::OnRender()
     PopulateCommandList();
 
     // Present the frame.
-    ThrowIfFailed(pDevice->GetSwapChain()->Present(1, 0));
+    ThrowIfFailed(pSwapChain->Present(1, 0));
 
     WaitForPreviousFrame();
 }
@@ -309,37 +295,16 @@ void MiniEngine::PopulateCommandList()
     pCommandList->SetPipelineState(commandAllocator, pipelineState);
     pCommandList->SetRootSignature(rootSignature);
 
-    pDevice->GetDescriptorHeapManager()->SetCBVs(pCommandList->GetCommandList(), CONSTANT_BUFFER_VIEW_GLOBAL, 0);
-    pDevice->GetDescriptorHeapManager()->SetSRVs(pCommandList->GetCommandList());
-    pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList());
-
-    // Set camera relating state.
-    pCommandList->SetViewports(pSceneManager->GetCamera()->GetViewport());
-    pCommandList->SetScissorRects(pSceneManager->GetCamera()->GetScissorRect());
-
     // Indicate that the back buffer will be used as a render target.
     pCommandList->AddTransitionResourceBarriers(renderTargets[frameIndex].Get(),
         D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    pCommandList->AddTransitionResourceBarriers(depthStencils[frameIndex].Get(),
-        D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
     pCommandList->FlushResourceBarriers();
 
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = pDevice->GetDescriptorHeapManager()->GetRTVHandle(frameIndex);
-    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = pDevice->GetDescriptorHeapManager()->GetDSVHandle(frameIndex);
-    pCommandList->SetRenderTargets(1, &rtvHandle, &dsvHandle);
-
-    // Record commands.
-    const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-    pCommandList->ClearColor(rtvHandle, clearColor);
-    pCommandList->ClearDepth(dsvHandle);
-
-    pDrawObjectPass->Execute(pCommandList);
+    pDrawObjectPass->Execute(pCommandList, frameIndex);
 
     // Indicate that the back buffer will now be used to present.
     pCommandList->AddTransitionResourceBarriers(renderTargets[frameIndex].Get(),
         D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-    pCommandList->AddTransitionResourceBarriers(depthStencils[frameIndex].Get(),
-        D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON);
     pCommandList->FlushResourceBarriers();
 
     ExecuteCommandList();
@@ -362,7 +327,7 @@ void MiniEngine::WaitForPreviousFrame()
         WaitForSingleObject(fenceEvent, INFINITE);
     }
 
-    frameIndex = pDevice->GetSwapChain()->GetCurrentBackBufferIndex();
+    frameIndex = pSwapChain->GetCurrentBackBufferIndex();
 }
 
 void MiniEngine::ExecuteCommandList()
