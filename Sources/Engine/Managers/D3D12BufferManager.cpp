@@ -79,12 +79,12 @@ void D3D12BufferManager::AllocateDefaultBuffer(
     D3D12_RESOURCE_STATES state,
     const D3D12_CLEAR_VALUE* clearValue)
 {
-    if (pResource->GetResourceLocation() == nullptr 
-        || DefaultBufferPool.find(pResource->GetResourceLocation()) == DefaultBufferPool.end())
+    if (pResource->GetResource() == nullptr 
+        || DefaultBufferPool.find(pResource->GetResource()) == DefaultBufferPool.end())
     {
         D3D12DefaultBuffer* pbuffer = new D3D12DefaultBuffer();
         pbuffer->CreateBuffer(device.Get(), &pResource->GetResourceDesc(), state, clearValue);
-        DefaultBufferPool.insert(std::make_pair(pResource->GetResourceLocation(), pbuffer));
+        DefaultBufferPool.insert(std::make_pair(pResource->GetResource(), pbuffer));
         pResource->SetResourceLoaction(pbuffer->ResourceLocation);
     }
 }

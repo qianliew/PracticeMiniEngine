@@ -91,10 +91,10 @@ void SceneManager::CreateAndBindObjectBuffer(D3D12CommandList*& pCommandList)
 
         model->GetMesh()->CreateView();
         pCommandList->CopyBufferRegion(model->GetMesh()->VertexBuffer->GetResource(),
-            tempVertexBuffer->ResourceLocation->Resource.Get(),
+            tempVertexBuffer->ResourceLocation.Resource.Get(),
             model->GetMesh()->GetVerticesSize());
         pCommandList->CopyBufferRegion(model->GetMesh()->IndexBuffer->GetResource(),
-            tempIndexBuffer->ResourceLocation->Resource.Get(),
+            tempIndexBuffer->ResourceLocation.Resource.Get(),
             model->GetMesh()->GetIndicesSize());
 
         // Setup transition barriers.
@@ -121,7 +121,7 @@ void SceneManager::CreateAndBindObjectBuffer(D3D12CommandList*& pCommandList)
 
         // Update texture data from upload buffer to gpu buffer.
         pCommandList->CopyTextureBuffer(model->GetTexture()->TextureBuffer->GetResource(),
-            tempBuffer->ResourceLocation->Resource.Get(), 0, 0, 1, &textureData);
+            tempBuffer->ResourceLocation.Resource.Get(), 0, 0, 1, &textureData);
 
         model->GetTexture()->CreateSampler();
         pDevice->GetDescriptorHeapManager()->GetSamplerHandle(model->GetTexture()->TextureSampler.get(), 0);

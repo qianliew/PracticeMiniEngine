@@ -12,10 +12,10 @@ protected:
 	UINT bufferSize;
 
 public:
-	D3D12ResourceLocation* ResourceLocation;
+	D3D12ResourceLocation ResourceLocation;
 	D3D12Buffer();
 	virtual ~D3D12Buffer();
 
-	void* GetStartLocation();
-	UINT GetBufferSize();
+	inline void* GetStartLocation() { return startLocation; }
+	inline const UINT GetBufferSize() const { return bufferSize; }
 };

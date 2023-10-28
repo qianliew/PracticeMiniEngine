@@ -11,10 +11,10 @@ void D3D12UploadBuffer::CreateBuffer(ID3D12Device* device, UINT size)
 		&CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(ResourceLocation->Resource.GetAddressOf())));
+		IID_PPV_ARGS(ResourceLocation.Resource.GetAddressOf())));
 
 	CD3DX12_RANGE readRange(0, 0);
-	ThrowIfFailed(ResourceLocation->Resource->Map(0, &readRange, reinterpret_cast<void**>(&startLocation)));
+	ThrowIfFailed(ResourceLocation.Resource->Map(0, &readRange, reinterpret_cast<void**>(&startLocation)));
 }
 
 void D3D12UploadBuffer::CreateConstantBuffer(ID3D12Device* device, UINT size)
@@ -27,10 +27,10 @@ void D3D12UploadBuffer::CreateConstantBuffer(ID3D12Device* device, UINT size)
 		&CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(ResourceLocation->Resource.GetAddressOf())));
+		IID_PPV_ARGS(ResourceLocation.Resource.GetAddressOf())));
 
 	CD3DX12_RANGE readRange(0, 0);
-	ThrowIfFailed(ResourceLocation->Resource->Map(0, &readRange, reinterpret_cast<void**>(&startLocation)));
+	ThrowIfFailed(ResourceLocation.Resource->Map(0, &readRange, reinterpret_cast<void**>(&startLocation)));
 }
 
 void D3D12UploadBuffer::CopyData(void const* source)
