@@ -21,19 +21,13 @@ public:
     void OnKeyDown(UINT8 /*key*/);
     void OnKeyUp(UINT8 /*key*/);
 
-    std::wstring GetAssetFullPath(LPCWSTR assetName);
-
 private:
-    // Root assets path.
-    std::wstring assetsPath;
-
     // Pipeline objects.
     shared_ptr<D3D12Device> pDevice;
     ComPtr<IDXGISwapChain3> pSwapChain;
     ComPtr<ID3D12Resource> renderTargets[FRAME_COUNT];
     ComPtr<ID3D12CommandAllocator> commandAllocator;
     ComPtr<ID3D12RootSignature> rootSignature;
-    ComPtr<ID3D12PipelineState> pipelineState;
 
     D3D12CommandList* pCommandList;
     shared_ptr<DrawObjectsPass> pDrawObjectPass;
