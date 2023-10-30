@@ -30,8 +30,10 @@ PSInput VSMain(VSInput input)
 {
     PSInput result;
 
+    input.position /= 100;
+    input.position.z = 0;
     input.position.w = 1;
-    result.position = mul(mul(ObjectToWorldMatrix, WorldToProjectionMatrix), input.position);
+    result.position = input.position;
     result.texCoord = input.texCoord;
     result.color = input.color;
 

@@ -16,6 +16,7 @@ private:
 
 public:
     D3D12Model(UINT id, char*, char*);
+    ~D3D12Model();
 
     void LoadModel(unique_ptr<FBXImporter>&);
     const shared_ptr<D3D12Mesh> GetMesh() const { return mesh; }

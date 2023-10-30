@@ -11,6 +11,11 @@ D3D12Model::D3D12Model(UINT id, char* meshPath, char* texturePath) :
     pTexturePath = texturePath;
 }
 
+D3D12Model::~D3D12Model()
+{
+
+}
+
 void D3D12Model::LoadModel(unique_ptr<FBXImporter>& importer)
 {
     if (importer->ImportFBX(pMeshPath))

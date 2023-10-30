@@ -1,12 +1,28 @@
 #include "stdafx.h"
 #include "D3D12Mesh.h"
 
+D3D12Mesh::D3D12Mesh()
+{
+
+}
+
+D3D12Mesh::~D3D12Mesh()
+{
+    delete m_vertices;
+    delete m_indices;
+
+    m_vertices = nullptr;
+    m_indices = nullptr;
+}
+
 void D3D12Mesh::SetVertices(Vertex* triangleVertices, UINT size)
 {
     m_verticesSize = size;
-    m_vertices.release();
-    m_vertices = std::make_unique<Vertex*>((Vertex*)malloc(size));
-    memcpy(*(m_vertices.get()), triangleVertices, m_verticesSize);
+    m_vertices = (Vertex*)malloc(size);
+    if (m_vertices != nullptr)
+    {
+        memcpy(m_vertices, triangleVertices, m_verticesSize);
+    }
 
     D3D12_RESOURCE_DESC desc;
     desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -32,9 +48,11 @@ void D3D12Mesh::SetIndices(UINT16* triangleIndices, UINT size)
 {
     m_indicesSize = size;
     m_indicesNum = size / sizeof(UINT16);
-    m_indices.release();
-    m_indices = std::make_unique<UINT16*>((UINT16*)malloc(size));
-    memcpy(*(m_indices.get()), triangleIndices, m_indicesSize);
+    m_indices = (UINT16*)malloc(size);
+    if (m_indices != nullptr)
+    {
+        memcpy(m_indices, triangleIndices, m_indicesSize);
+    }
 
     D3D12_RESOURCE_DESC desc;
     desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -73,22 +91,22 @@ UINT D3D12Mesh::GetIndicesNum()
 
 void const* D3D12Mesh::GetVerticesData()
 {
-    return *(m_vertices.get());
+    return m_vertices;
 }
 
 void const* D3D12Mesh::GetIndicesData()
 {
-    return *(m_indices.get());
+    return m_indices;
 }
 
 void D3D12Mesh::CopyVertices(void* destination)
 {
-    memcpy(destination, m_vertices.get(), m_verticesSize);
+    memcpy(destination, m_vertices, m_verticesSize);
 }
 
 void D3D12Mesh::CopyIndices(void* destination)
 {
-    memcpy(destination, m_indices.get(), m_indicesSize);
+    memcpy(destination, m_indices, m_indicesSize);
 }
 
 void D3D12Mesh::CreateView()

@@ -11,6 +11,7 @@ private:
 
 	std::vector<D3D12Model*> pObjects;
 	D3D12Camera* pCamera;
+	D3D12Model* pFullScreenMesh;
 
 	UINT objectID;
 

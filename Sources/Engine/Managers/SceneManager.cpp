@@ -23,18 +23,25 @@ void SceneManager::InitFBXImporter()
 
 void SceneManager::LoadScene()
 {
-    D3D12Model* model = new D3D12Model(objectID++, (char*)"cube.fbx", (char*)"test.png");
-    model->LoadModel(pFBXImporter);
-    model->MoveAlongX(10.0f);
-    model->MoveAlongZ(5.0f);
+    //D3D12Model* model = new D3D12Model(objectID++, (char*)"cube.fbx", (char*)"test.png");
+    //model->LoadModel(pFBXImporter);
+    //model->MoveAlongX(10.0f);
+    //model->MoveAlongZ(5.0f);
 
-    AddObject(model);
+    //AddObject(model);
 
-    model = new D3D12Model(objectID++, (char*)"cube.fbx", (char*)"test.png");
-    model->LoadModel(pFBXImporter);
-    model->MoveAlongY(2.0f);
+    //model = new D3D12Model(objectID++, (char*)"cube.fbx", (char*)"test.png");
+    //model->LoadModel(pFBXImporter);
+    //model->MoveAlongY(2.0f);
 
-    AddObject(model);
+    //AddObject(model);
+
+    pFullScreenMesh = new D3D12Model(objectID++, (char*)"plane.fbx", (char*)"test.png");
+    pFullScreenMesh->LoadModel(pFBXImporter);
+    pFullScreenMesh->MoveAlongX(10.0f);
+    pFullScreenMesh->MoveAlongZ(5.0f);
+
+    AddObject(pFullScreenMesh);
 }
 
 void SceneManager::UnloadScene()

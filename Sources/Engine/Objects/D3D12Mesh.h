@@ -15,13 +15,16 @@ class D3D12Mesh
 {
 private:
 	XMVECTOR m_position;
-    std::unique_ptr<Vertex*> m_vertices;
-    std::unique_ptr<UINT16*> m_indices;
+    Vertex* m_vertices;
+    UINT16* m_indices;
     UINT m_verticesSize;
     UINT m_indicesSize;
     UINT m_indicesNum;
 
 public:
+    D3D12Mesh();
+    ~D3D12Mesh();
+
     void SetVertices(Vertex* triangleVertices, UINT size);
     void SetIndices(UINT16* triangleIndices, UINT size);
     UINT GetVerticesSize();

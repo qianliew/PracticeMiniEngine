@@ -347,5 +347,8 @@ void FBXImporter::LoadMesh(FbxNode* pNode, const std::shared_ptr<D3D12Mesh>& mes
 
         mesh->SetIndices(pIndex, indicesSize);
         mesh->SetVertices(pVertex, verticesSize);
+
+        delete pIndex;
+        delete pVertex;
     }
 }
