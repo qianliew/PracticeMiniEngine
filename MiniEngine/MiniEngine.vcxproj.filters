@@ -127,6 +127,9 @@
     <ClInclude Include="..\Sources\Utilities\Macros.h">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Rendering\BlitPass.h">
+      <Filter>Engine\Rendering\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Camera.cpp">
@@ -202,6 +205,9 @@
       <Filter>Engine\Rendering\Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\Sources\Engine\Rendering\AbstractRenderPass.cpp">
+      <Filter>Engine\Rendering\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Rendering\BlitPass.cpp">
       <Filter>Engine\Rendering\Sources</Filter>
     </ClCompile>
   </ItemGroup>

@@ -31,6 +31,6 @@ public:
 	void ReleaseTexture();
 	void CreateSampler();
 
-	std::unique_ptr<D3D12Resource> TextureBuffer;
+	D3D12Resource* TextureBuffer;
 	std::unique_ptr<D3D12Sampler> TextureSampler;
 };

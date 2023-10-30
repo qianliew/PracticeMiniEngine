@@ -14,12 +14,12 @@ struct Vertex
 class D3D12Mesh
 {
 private:
-	XMVECTOR m_position;
-    Vertex* m_vertices;
-    UINT16* m_indices;
-    UINT m_verticesSize;
-    UINT m_indicesSize;
-    UINT m_indicesNum;
+	XMVECTOR position;
+    Vertex* pVertices;
+    UINT16* pIndices;
+    UINT verticesSize;
+    UINT indicesSize;
+    UINT indicesNum;
 
 public:
     D3D12Mesh();

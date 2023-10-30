@@ -2,6 +2,7 @@
 
 #include "Window.h"
 #include "DrawObjecstPass.h"
+#include "BlitPass.h"
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
@@ -31,6 +32,7 @@ private:
 
     D3D12CommandList* pCommandList;
     shared_ptr<DrawObjectsPass> pDrawObjectPass;
+    shared_ptr<BlitPass> pBlitPass;
 
     // Synchronization objects.
     UINT frameIndex;
@@ -40,6 +42,7 @@ private:
 
     // Scene objects
     shared_ptr<SceneManager> pSceneManager;
+    D3D12Texture* pRenderTarget;
     D3D12Texture* pDepthStencil;
 
     void LoadPipeline();

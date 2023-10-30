@@ -1,7 +1,7 @@
 #include "stdafx.h"
-#include "DrawObjecstPass.h"
+#include "BlitPass.h"
 
-DrawObjectsPass::DrawObjectsPass(
+BlitPass::BlitPass(
     shared_ptr<D3D12Device>& device,
     shared_ptr<SceneManager>& sceneManager) :
     AbstractRenderPass(device, sceneManager)
@@ -9,9 +9,9 @@ DrawObjectsPass::DrawObjectsPass(
 
 }
 
-void DrawObjectsPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
+void BlitPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
 {
-    pSceneManager->CreateAndBindObjectBuffer(pCommandList);
+    pSceneManager->CreateAndBindFullScreenMeshBuffer(pCommandList);
 
     // Create the pipeline state, which includes compiling and loading shaders.
     {
@@ -25,8 +25,8 @@ void DrawObjectsPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSi
         UINT compileFlags = 0;
 #endif
 
-        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders.hlsl").c_str(), nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
-        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders.hlsl").c_str(), nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"Blit.hlsl").c_str(), nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"Blit.hlsl").c_str(), nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
 
         // Define the vertex input layout.
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -38,8 +38,8 @@ void DrawObjectsPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSi
 
         // Describe and create the graphics pipeline state object (PSO).
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-        psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-        psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+        psoDesc.DepthStencilState.DepthEnable = FALSE;
+        psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
         psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
         psoDesc.pRootSignature = pRootSignature.Get();
         psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
@@ -55,26 +55,22 @@ void DrawObjectsPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSi
         psoDesc.SampleDesc.Count = 1;
         ThrowIfFailed(pDevice->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pPipelineState)));
     }
+
 }
 
-void DrawObjectsPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
+void BlitPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
 {
     pCommandList->SetPipelineState(pPipelineState);
-    pDevice->GetDescriptorHeapManager()->SetCBVs(pCommandList->GetCommandList(), CONSTANT_BUFFER_VIEW_GLOBAL, 0);
-    pDevice->GetDescriptorHeapManager()->SetSRVs(pCommandList->GetCommandList(), 0);
-    pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList());
 
     // Set camera relating state.
     pCommandList->SetViewports(pSceneManager->GetCamera()->GetViewport());
     pCommandList->SetScissorRects(pSceneManager->GetCamera()->GetScissorRect());
 
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = pDevice->GetDescriptorHeapManager()->GetRTVHandle(2);
-    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = pDevice->GetDescriptorHeapManager()->GetDSVHandle(0);
-    pCommandList->SetRenderTargets(1, &rtvHandle, &dsvHandle);
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = pDevice->GetDescriptorHeapManager()->GetRTVHandle(frameIndex);
+    pCommandList->SetRenderTargets(1, &rtvHandle, nullptr);
 
     const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
     pCommandList->ClearColor(rtvHandle, clearColor);
-    pCommandList->ClearDepth(dsvHandle);
 
-    pSceneManager->DrawObjects(pCommandList);
+    pSceneManager->DrawFullScreenMesh(pCommandList);
 }

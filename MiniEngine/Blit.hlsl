@@ -9,7 +9,7 @@ cbuffer PerObjectConstants : register(b1)
     float4x4 WorldToProjectionMatrix;
 };
 
-Texture2D t1 : register(t0);
+Texture2D t1 : register(t1);
 SamplerState s1 : register(s0);
 
 struct VSInput

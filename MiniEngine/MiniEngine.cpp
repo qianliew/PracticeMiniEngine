@@ -82,7 +82,7 @@ void MiniEngine::LoadAssets()
         cbvDescriptorTableRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, 0);
 
         CD3DX12_DESCRIPTOR_RANGE srvDescriptorTableRanges[1];
-        srvDescriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
+        srvDescriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, 0);
 
         CD3DX12_DESCRIPTOR_RANGE samplerDescriptorTableRanges[1];
         samplerDescriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, 0);
@@ -138,6 +138,10 @@ void MiniEngine::LoadAssets()
         pDrawObjectPass = make_shared<DrawObjectsPass>(pDevice, pSceneManager);
         pDrawObjectPass->Setup(pCommandList, rootSignature);
 
+        pBlitPass = make_shared<BlitPass>(pDevice, pSceneManager);
+        pBlitPass->Setup(pCommandList, rootSignature);
+
+        // Create a depth stencil buffer.
         pDepthStencil = new D3D12Texture(
             pSceneManager->GetCamera()->GetCameraWidth(),
             pSceneManager->GetCamera()->GetCameraHeight());
@@ -149,10 +153,28 @@ void MiniEngine::LoadAssets()
         depthOptimizedClearValue.DepthStencil.Stencil = 0;
 
         pDevice->GetBufferManager()->AllocateDefaultBuffer(
-            pDepthStencil->TextureBuffer.get(),
+            pDepthStencil->TextureBuffer,
             D3D12_RESOURCE_STATE_DEPTH_WRITE,
             &depthOptimizedClearValue);
         pDepthStencil->TextureBuffer->CreateView(pDevice->GetDevice(), pDevice->GetDescriptorHeapManager()->GetDSVHandle(0));
+
+        // Create a render target buffer.
+        pRenderTarget = new D3D12Texture(
+            pSceneManager->GetCamera()->GetCameraWidth(),
+            pSceneManager->GetCamera()->GetCameraHeight());
+        pRenderTarget->CreateTexture(D3D12TextureType::RenderTarget);
+
+        D3D12_CLEAR_VALUE renderTargetClearValue = {};
+        renderTargetClearValue.Color[0] = 0.0f;
+        renderTargetClearValue.Color[1] = 0.2f;
+        renderTargetClearValue.Color[2] = 0.4f;
+        renderTargetClearValue.Color[3] = 1.0f;
+        renderTargetClearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        pDevice->GetBufferManager()->AllocateDefaultBuffer(
+            pRenderTarget->TextureBuffer,
+            D3D12_RESOURCE_STATE_RENDER_TARGET,
+            &renderTargetClearValue);
+        pRenderTarget->TextureBuffer->CreateView(pDevice->GetDevice(), pDevice->GetDescriptorHeapManager()->GetRTVHandle(2));
     }
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
@@ -267,6 +289,22 @@ void MiniEngine::PopulateCommandList()
     pCommandList->FlushResourceBarriers();
 
     pDrawObjectPass->Execute(pCommandList, frameIndex);
+
+    pRenderTarget->CreateTexture(D3D12TextureType::ShaderResource);
+    pRenderTarget->TextureBuffer->CreateView(pDevice->GetDevice(),
+        pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW, 1));
+    pCommandList->AddTransitionResourceBarriers(pRenderTarget->TextureBuffer->GetResource(),
+        D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    pCommandList->FlushResourceBarriers();
+
+    pBlitPass->Execute(pCommandList, frameIndex);
+
+    pRenderTarget->CreateTexture(D3D12TextureType::RenderTarget);
+    pRenderTarget->TextureBuffer->CreateView(pDevice->GetDevice(),
+        pDevice->GetDescriptorHeapManager()->GetRTVHandle(2));
+    pCommandList->AddTransitionResourceBarriers(pRenderTarget->TextureBuffer->GetResource(),
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    pCommandList->FlushResourceBarriers();
 
     // Indicate that the back buffer will now be used to present.
     pCommandList->AddTransitionResourceBarriers(renderTargets[frameIndex].Get(),

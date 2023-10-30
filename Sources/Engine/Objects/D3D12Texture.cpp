@@ -14,7 +14,7 @@ D3D12Texture::D3D12Texture(UINT inWidth, UINT inHeght) :
     bytesPerRow(0),
     dxgiFormat(DXGI_FORMAT_R8G8B8A8_UNORM)
 {
-
+    TextureBuffer = nullptr;
 }
 
 D3D12Texture::~D3D12Texture()
@@ -62,10 +62,7 @@ void D3D12Texture::LoadTexture(LPCWSTR texturePath)
 
 void D3D12Texture::CreateTexture(D3D12TextureType type)
 {
-    if (TextureBuffer != nullptr)
-    {
-        TextureBuffer.release();
-    }
+    D3D12Resource* oldBuffer = TextureBuffer;
 
     // Create texture desc.
     D3D12_RESOURCE_DESC desc;
@@ -83,7 +80,7 @@ void D3D12Texture::CreateTexture(D3D12TextureType type)
     {
         desc.Format = dxgiFormat;
         desc.Flags = D3D12_RESOURCE_FLAG_NONE;
-        TextureBuffer = std::make_unique<D3D12TextureBuffer>(desc);
+        TextureBuffer = new D3D12TextureBuffer(desc);
     }
     else if (type == D3D12TextureType::RenderTarget)
     {
@@ -93,6 +90,7 @@ void D3D12Texture::CreateTexture(D3D12TextureType type)
         desc.MipLevels = 1;
         desc.SampleDesc.Count = 1;
         desc.SampleDesc.Quality = 0;
+        TextureBuffer = new D3D12RenderTargetBuffer(desc);
     }
     else if (type == D3D12TextureType::DepthStencil)
     {
@@ -102,16 +100,19 @@ void D3D12Texture::CreateTexture(D3D12TextureType type)
         desc.MipLevels = 1;
         desc.SampleDesc.Count = 1;
         desc.SampleDesc.Quality = 0;
-        TextureBuffer = std::make_unique<D3D12DepthStencilBuffer>(desc);
+        TextureBuffer = new D3D12DepthStencilBuffer(desc);
+    }
+
+    if (oldBuffer != nullptr)
+    {
+        TextureBuffer->SetResourceLoaction(oldBuffer->GetResourceLocation());
+        delete oldBuffer;
     }
 }
 
 void D3D12Texture::ReleaseTexture()
 {
-    if (TextureBuffer != nullptr)
-    {
-        TextureBuffer.release();
-    }
+    delete TextureBuffer;
     delete pData;
 }
 

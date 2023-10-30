@@ -170,6 +170,7 @@
     <ClInclude Include="..\Sources\Engine\Objects\D3D12TextureBuffer.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12VertexBuffer.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\AbstractRenderPass.h" />
+    <ClInclude Include="..\Sources\Engine\Rendering\BlitPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\DrawObjecstPass.h" />
     <ClInclude Include="..\Sources\Engine\Window.h" />
     <ClInclude Include="..\Sources\Utilities\FBXImporter.h" />
@@ -201,6 +202,7 @@
     <ClCompile Include="..\Sources\Engine\Objects\D3D12TextureBuffer.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12VertexBuffer.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\AbstractRenderPass.cpp" />
+    <ClCompile Include="..\Sources\Engine\Rendering\BlitPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\DrawObjectsPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Window.cpp" />
     <ClCompile Include="..\Sources\Utilities\FBXImporter.cpp" />

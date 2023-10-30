@@ -23,24 +23,23 @@ void SceneManager::InitFBXImporter()
 
 void SceneManager::LoadScene()
 {
-    //D3D12Model* model = new D3D12Model(objectID++, (char*)"cube.fbx", (char*)"test.png");
-    //model->LoadModel(pFBXImporter);
-    //model->MoveAlongX(10.0f);
-    //model->MoveAlongZ(5.0f);
+    D3D12Model* model = new D3D12Model(objectID++, (char*)"cube.fbx", (char*)"test.png");
+    model->LoadModel(pFBXImporter);
+    model->MoveAlongX(10.0f);
+    model->MoveAlongZ(5.0f);
 
-    //AddObject(model);
+    AddObject(model);
 
-    //model = new D3D12Model(objectID++, (char*)"cube.fbx", (char*)"test.png");
-    //model->LoadModel(pFBXImporter);
-    //model->MoveAlongY(2.0f);
+    model = new D3D12Model(objectID++, (char*)"cube.fbx", (char*)"test.png");
+    model->LoadModel(pFBXImporter);
+    model->MoveAlongY(2.0f);
 
-    //AddObject(model);
+    AddObject(model);
 
     pFullScreenMesh = new D3D12Model(objectID++, (char*)"plane.fbx", (char*)"test.png");
     pFullScreenMesh->LoadModel(pFBXImporter);
     pFullScreenMesh->MoveAlongX(10.0f);
     pFullScreenMesh->MoveAlongZ(5.0f);
-
     AddObject(pFullScreenMesh);
 }
 
@@ -113,7 +112,7 @@ void SceneManager::CreateAndBindObjectBuffer(D3D12CommandList*& pCommandList)
 
         // Create the texture buffer.
         pDevice->GetBufferManager()->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
-        pDevice->GetBufferManager()->AllocateDefaultBuffer(model->GetTexture()->TextureBuffer.get());
+        pDevice->GetBufferManager()->AllocateDefaultBuffer(model->GetTexture()->TextureBuffer);
         model->GetTexture()->TextureBuffer->CreateView(pDevice->GetDevice(),
             pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW, 0));
 
@@ -153,6 +152,51 @@ void SceneManager::DrawObjects(D3D12CommandList*& pCommandList)
         pCommandList->SetIndexBuffer(&model->GetMesh()->IndexBuffer->IndexBufferView);
         pCommandList->DrawIndexedInstanced(model->GetMesh()->GetIndicesNum());
     }
+}
+
+void SceneManager::CreateAndBindFullScreenMeshBuffer(D3D12CommandList*& pCommandList)
+{
+    // Create the constant buffer.
+    UINT id = pFullScreenMesh->GetObjectID();
+    pDevice->GetBufferManager()->AllocatePerObjectConstantBuffers(id);
+    pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->CreateView(pDevice->GetDevice(),
+        pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_PEROBJECT, id));
+
+    // Create the vertex and index buffer.
+    D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateUploadBuffer(tempVertexBuffer, UploadBufferType::Vertex);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(pFullScreenMesh->GetMesh()->VertexBuffer.get());
+    tempVertexBuffer->CopyData(pFullScreenMesh->GetMesh()->GetVerticesData(), pFullScreenMesh->GetMesh()->GetVerticesSize());
+
+    D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateUploadBuffer(tempIndexBuffer, UploadBufferType::Index);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(pFullScreenMesh->GetMesh()->IndexBuffer.get());
+    tempIndexBuffer->CopyData(pFullScreenMesh->GetMesh()->GetIndicesData(), pFullScreenMesh->GetMesh()->GetIndicesSize());
+
+    pFullScreenMesh->GetMesh()->CreateView();
+    pCommandList->CopyBufferRegion(pFullScreenMesh->GetMesh()->VertexBuffer->GetResource(),
+        tempVertexBuffer->ResourceLocation.Resource.Get(),
+        pFullScreenMesh->GetMesh()->GetVerticesSize());
+    pCommandList->CopyBufferRegion(pFullScreenMesh->GetMesh()->IndexBuffer->GetResource(),
+        tempIndexBuffer->ResourceLocation.Resource.Get(),
+        pFullScreenMesh->GetMesh()->GetIndicesSize());
+
+    // Setup transition barriers.
+    pCommandList->AddTransitionResourceBarriers(pFullScreenMesh->GetMesh()->VertexBuffer->GetResource(),
+        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+    pCommandList->AddTransitionResourceBarriers(pFullScreenMesh->GetMesh()->IndexBuffer->GetResource(),
+        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+    D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
+}
+
+void SceneManager::DrawFullScreenMesh(D3D12CommandList*& pCommandList)
+{
+    pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    pDevice->GetDescriptorHeapManager()->SetCBVs(pCommandList->GetCommandList(),
+        CONSTANT_BUFFER_VIEW_PEROBJECT, pFullScreenMesh->GetObjectID());
+    pCommandList->SetVertexBuffers(0, 1, &pFullScreenMesh->GetMesh()->VertexBuffer->VertexBufferView);
+    pCommandList->SetIndexBuffer(&pFullScreenMesh->GetMesh()->IndexBuffer->IndexBufferView);
+    pCommandList->DrawIndexedInstanced(pFullScreenMesh->GetMesh()->GetIndicesNum());
 }
 
 void SceneManager::UpdateTransforms()

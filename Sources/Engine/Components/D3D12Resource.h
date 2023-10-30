@@ -18,6 +18,7 @@ public:
 	virtual void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) = 0;
 
 	inline const D3D12_RESOURCE_DESC GetResourceDesc() const { return resourceDesc; }
+	inline D3D12ResourceLocation GetResourceLocation() const { return resourceLocation; }
 	inline ID3D12Resource* GetResource() const { return resourceLocation.Resource.Get(); }
 };
 

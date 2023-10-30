@@ -30,6 +30,6 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDSVHandle(INT offset);
 
 	void SetCBVs(ComPtr<ID3D12GraphicsCommandList>&, UINT index, INT offset);
-	void SetSRVs(ComPtr<ID3D12GraphicsCommandList>&);
+	void SetSRVs(ComPtr<ID3D12GraphicsCommandList>&, INT offset);
 	void SetSamplers(ComPtr<ID3D12GraphicsCommandList>&);
 };
