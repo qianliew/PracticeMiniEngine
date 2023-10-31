@@ -266,3 +266,16 @@ inline std::wstring GetAssetFullPath(LPCWSTR assetName)
 {
     return AssetsPath + assetName;
 }
+
+constexpr LPCWSTR AssetRootPath = L"..\\Assets\\";
+constexpr LPCWSTR ShaderRootPath = L"..\\Assets\\Shaders\\";
+
+inline std::wstring GetAssetPath(LPCWSTR assetName)
+{
+    return AssetRootPath + (std::wstring)assetName;
+}
+
+inline std::wstring GetShaderPath(LPCWSTR assetName)
+{
+    return ShaderRootPath + (std::wstring)assetName;
+}

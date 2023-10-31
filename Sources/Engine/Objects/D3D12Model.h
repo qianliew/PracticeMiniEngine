@@ -3,19 +3,17 @@
 #include "D3D12Mesh.h"
 #include "D3D12Texture.h"
 
-using namespace std;
-
 class D3D12Model : public Transform
 {
 private:
     shared_ptr<D3D12Mesh> mesh;
     shared_ptr<D3D12Texture> texture;
 
-    char* pMeshPath;
-    char* pTexturePath;
+    LPCWSTR pMeshPath;
+    LPCWSTR pTexturePath;
 
 public:
-    D3D12Model(UINT id, char*, char*);
+    D3D12Model(UINT id, LPCWSTR, LPCWSTR);
     ~D3D12Model();
 
     void LoadModel(unique_ptr<FBXImporter>&);

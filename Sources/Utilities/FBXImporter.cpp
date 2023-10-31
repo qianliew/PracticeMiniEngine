@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "FBXImporter.h"
+#include <stdlib.h>
 
 #ifdef IOS_REF
 #undef  IOS_REF
@@ -47,9 +48,13 @@ void FBXImporter::InitializeSdkObjects()
     }
 }
 
-bool FBXImporter::ImportFBX(char* path)
+bool FBXImporter::ImportFBX(std::wstring path)
 {
-    FbxString lfilePath(path);
+    char filePath[100];
+    size_t count = 0;
+    wcstombs_s(&count, filePath, 100, path.c_str(), path.length());
+
+    FbxString lfilePath(filePath);
 	if (lfilePath.IsEmpty())
 	{
         return false;

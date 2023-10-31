@@ -43,6 +43,12 @@
     <Filter Include="Engine\Rendering\Sources">
       <UniqueIdentifier>{2d2db69b-ba37-49e4-9f4e-9bfdd859a8c3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Assets">
+      <UniqueIdentifier>{06cb7976-8fa8-4f6d-9cd4-bc4939127781}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Assets\Shaders">
+      <UniqueIdentifier>{8f362c68-41da-4d59-bf76-472b0a259cc8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Sources\Engine\Objects\D3D12Camera.h">
@@ -212,7 +218,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="shaders.hlsl" />
-    <CustomBuild Include="Blit.hlsl" />
+    <CustomBuild Include="..\Assets\Shaders\Blit.hlsl">
+      <Filter>Assets\Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\Assets\Shaders\Unlit.hlsl">
+      <Filter>Assets\Shaders</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>
