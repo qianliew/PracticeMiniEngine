@@ -131,6 +131,9 @@ void D3D12Texture::CreateSampler()
     TextureSampler->SamplerDesc.MipLODBias = 0;
     TextureSampler->SamplerDesc.MaxAnisotropy = 0;
     TextureSampler->SamplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    TextureSampler->SamplerDesc.BorderColor[0] = 0.0f;
+    TextureSampler->SamplerDesc.BorderColor[1] = 0.2f;
+    TextureSampler->SamplerDesc.BorderColor[2] = 0.4f;
     TextureSampler->SamplerDesc.BorderColor[3] = 1;
     TextureSampler->SamplerDesc.MinLOD = 0.0f;
     TextureSampler->SamplerDesc.MaxLOD = D3D12_FLOAT32_MAX;

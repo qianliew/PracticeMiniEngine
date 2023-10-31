@@ -26,5 +26,5 @@ void Model::LoadModel(unique_ptr<FBXImporter>& importer)
 
 void Model::AddTexture(UINT id)
 {
-    pMaterial->TextureList.push_back(id);
+    pMaterial->AddTexture(id);
 }

@@ -29,6 +29,11 @@ public:
         commandList->SetGraphicsRootSignature(rootSignature.Get());
     }
 
+    inline void SetRootConstantBufferView(UINT index, D3D12_GPU_VIRTUAL_ADDRESS location)
+    {
+        commandList->SetGraphicsRootConstantBufferView(index, location);
+    }
+
     inline void SetViewports(const D3D12_VIEWPORT* pViewports, UINT NumViewports = 1)
     {
         commandList->RSSetViewports(NumViewports, pViewports);

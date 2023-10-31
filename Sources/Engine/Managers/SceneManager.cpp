@@ -3,7 +3,8 @@
 
 SceneManager::SceneManager(shared_ptr<D3D12Device>& device) :
     pDevice(device),
-    objectID(0)
+    objectID(0),
+    textureID(0)
 {
 
 }
@@ -100,6 +101,7 @@ void SceneManager::LoadScene(D3D12CommandList*& pCommandList)
 void SceneManager::UnloadScene()
 {
     objectID = 0;
+    textureID = 0;
 
     for (auto it = pObjects.begin(); it != pObjects.end(); it++)
     {
@@ -131,16 +133,17 @@ void SceneManager::DrawObjects(D3D12CommandList*& pCommandList)
     for (UINT i = 0; i < pObjects.size(); i++)
     {
         Model* model = pObjects[i];
+        UINT id = pObjects[i]->GetObjectID();
 
         // Set the per object views.
-        pDevice->GetDescriptorHeapManager()->SetCBVs(pCommandList->GetCommandList(),
-            CONSTANT_BUFFER_VIEW_PEROBJECT, pObjects[i]->GetObjectID());
+        pCommandList->SetRootConstantBufferView(CONSTANT_BUFFER_VIEW_PEROBJECT,
+            pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->GetResource()->GetGPUVirtualAddress());
 
         // Set the material relating views.
         pDevice->GetDescriptorHeapManager()->SetSRVs(pCommandList->GetCommandList(),
-            model->GetMaterial()->TextureList[0]);
+            model->GetMaterial()->GetTextureIDAt(0));
         pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList(),
-            model->GetMaterial()->TextureList[0]);
+            model->GetMaterial()->GetTextureIDAt(0));
 
         // Set buffers and draw the instance.
         pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -153,8 +156,7 @@ void SceneManager::DrawObjects(D3D12CommandList*& pCommandList)
 void SceneManager::DrawFullScreenMesh(D3D12CommandList*& pCommandList)
 {
     pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    pDevice->GetDescriptorHeapManager()->SetCBVs(pCommandList->GetCommandList(),
-        CONSTANT_BUFFER_VIEW_PEROBJECT, pFullScreenMesh->GetObjectID());
+
     pCommandList->SetVertexBuffers(0, 1, &pFullScreenMesh->GetMesh()->VertexBuffer->VertexBufferView);
     pCommandList->SetIndexBuffer(&pFullScreenMesh->GetMesh()->IndexBuffer->IndexBufferView);
     pCommandList->DrawIndexedInstanced(pFullScreenMesh->GetMesh()->GetIndicesNum());

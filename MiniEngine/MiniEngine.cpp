@@ -77,40 +77,20 @@ void MiniEngine::LoadAssets()
 {
     // Create an empty root signature.
     {
-        CD3DX12_DESCRIPTOR_RANGE cbvDescriptorTableRanges[2];
-        cbvDescriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0);
-        cbvDescriptorTableRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, 0);
-
-        CD3DX12_DESCRIPTOR_RANGE srvDescriptorTableRanges[1];
-        srvDescriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, 0);
-
-        CD3DX12_DESCRIPTOR_RANGE samplerDescriptorTableRanges[1];
-        samplerDescriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, 0);
+        CD3DX12_DESCRIPTOR_RANGE descriptorTableRanges[2];
+        descriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
+        descriptorTableRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, 0);
+        // descriptorTableRanges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0);
+        // descriptorTableRanges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, 0);
 
         CD3DX12_ROOT_PARAMETER rootParameters[4];
-        rootParameters[CONSTANT_BUFFER_VIEW_GLOBAL].InitAsDescriptorTable(1, &cbvDescriptorTableRanges[0], D3D12_SHADER_VISIBILITY_VERTEX);
-        rootParameters[CONSTANT_BUFFER_VIEW_PEROBJECT].InitAsDescriptorTable(1, &cbvDescriptorTableRanges[1], D3D12_SHADER_VISIBILITY_VERTEX);
-        rootParameters[SHADER_RESOURCE_VIEW].InitAsDescriptorTable(1, &srvDescriptorTableRanges[0], D3D12_SHADER_VISIBILITY_PIXEL);
-        rootParameters[SAMPLER].InitAsDescriptorTable(1, &samplerDescriptorTableRanges[0], D3D12_SHADER_VISIBILITY_PIXEL);
-
-        // create a static sampler
-        D3D12_STATIC_SAMPLER_DESC sampler = {};
-        sampler.Filter = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR;
-        sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-        sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-        sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-        sampler.MipLODBias = 0;
-        sampler.MaxAnisotropy = 0;
-        sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-        sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-        sampler.MinLOD = 0.0f;
-        sampler.MaxLOD = D3D12_FLOAT32_MAX;
-        sampler.ShaderRegister = 1;
-        sampler.RegisterSpace = 0;
-        sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+        rootParameters[CONSTANT_BUFFER_VIEW_GLOBAL].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+        rootParameters[CONSTANT_BUFFER_VIEW_PEROBJECT].InitAsConstantBufferView(1, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+        rootParameters[SHADER_RESOURCE_VIEW].InitAsDescriptorTable(1, &descriptorTableRanges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[SAMPLER].InitAsDescriptorTable(1, &descriptorTableRanges[1], D3D12_SHADER_VISIBILITY_PIXEL);
 
         CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 1, &sampler,
+        rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 0, nullptr,
             D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
             D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
             D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |

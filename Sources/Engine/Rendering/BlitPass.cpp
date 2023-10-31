@@ -60,6 +60,9 @@ void BlitPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
 {
     pCommandList->SetPipelineState(pPipelineState);
 
+    pDevice->GetDescriptorHeapManager()->SetSRVs(pCommandList->GetCommandList(), 1);
+    pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList(), 0);
+
     // Set camera relating state.
     pCommandList->SetViewports(pSceneManager->GetCamera()->GetViewport());
     pCommandList->SetScissorRects(pSceneManager->GetCamera()->GetScissorRect());

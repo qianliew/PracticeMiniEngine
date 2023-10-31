@@ -61,7 +61,8 @@ void DrawObjectsPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
     pCommandList->SetPipelineState(pPipelineState);
 
     // Set the global views.
-    pDevice->GetDescriptorHeapManager()->SetCBVs(pCommandList->GetCommandList(), CONSTANT_BUFFER_VIEW_GLOBAL, 0);
+    pCommandList->SetRootConstantBufferView(CONSTANT_BUFFER_VIEW_GLOBAL,
+        pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
 
     // Set camera relating states.
     pCommandList->SetViewports(pSceneManager->GetCamera()->GetViewport());
