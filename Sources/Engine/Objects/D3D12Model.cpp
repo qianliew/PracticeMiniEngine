@@ -18,11 +18,15 @@ D3D12Model::~D3D12Model()
 
 void D3D12Model::LoadModel(unique_ptr<FBXImporter>& importer)
 {
-    if (importer->ImportFBX(GetAssetPath(pMeshPath)))
+    if ((pMeshPath != nullptr)
+        && importer->ImportFBX(GetAssetPath(pMeshPath)))
     {
         importer->LoadFBX(mesh);
     }
 
-    texture->LoadTexture(GetAssetPath(pTexturePath).c_str());
-    texture->CreateTexture(D3D12TextureType::ShaderResource);
+    if (pTexturePath != nullptr)
+    {
+        texture->LoadTexture(GetAssetPath(pTexturePath).c_str());
+        texture->CreateTexture(D3D12TextureType::ShaderResource);
+    }
 }

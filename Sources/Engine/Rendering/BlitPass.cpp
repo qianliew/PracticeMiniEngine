@@ -11,8 +11,6 @@ BlitPass::BlitPass(
 
 void BlitPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
 {
-    pSceneManager->CreateAndBindFullScreenMeshBuffer(pCommandList);
-
     // Create the pipeline state, which includes compiling and loading shaders.
     {
         ComPtr<ID3DBlob> vertexShader;

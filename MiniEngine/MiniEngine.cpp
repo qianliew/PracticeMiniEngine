@@ -132,7 +132,7 @@ void MiniEngine::LoadAssets()
     {
         pSceneManager = make_shared<SceneManager>(pDevice);
         pSceneManager->InitFBXImporter();
-        pSceneManager->LoadScene();
+        pSceneManager->LoadScene(pCommandList);
         pSceneManager->CreateCamera(width, height);
 
         pDrawObjectPass = make_shared<DrawObjectsPass>(pDevice, pSceneManager);
@@ -193,7 +193,6 @@ void MiniEngine::LoadAssets()
         // list in our main loop but for now, we just want to wait for setup to 
         // complete before continuing.
         WaitForPreviousFrame();
-        pCommandList->FlushResourceBarriers();
 
         ExecuteCommandList();
         UpdateFence();

@@ -15,18 +15,20 @@ private:
 
 	UINT objectID;
 
+	// Helper functions.
+	void LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*&, D3D12Model* object);
+
 public:
 	SceneManager(shared_ptr<D3D12Device>&);
 	~SceneManager();
 
 	void InitFBXImporter();
-	void LoadScene();
+	void LoadScene(D3D12CommandList*&);
 	void UnloadScene();
 	void CreateCamera(UINT width, UINT height);
 	void AddObject(D3D12Model* object);
 	void CreateAndBindObjectBuffer(D3D12CommandList*&);
 	void DrawObjects(D3D12CommandList*&);
-	void CreateAndBindFullScreenMeshBuffer(D3D12CommandList*&);
 	void DrawFullScreenMesh(D3D12CommandList*&);
 
 	void UpdateTransforms();

@@ -1,6 +1,14 @@
 #include "stdafx.h"
 #include "D3D12UploadBuffer.h"
 
+D3D12UploadBuffer::~D3D12UploadBuffer()
+{
+	if (ResourceLocation.Resource != nullptr)
+	{
+		ResourceLocation.Resource->Unmap(0, nullptr);
+	}
+}
+
 void D3D12UploadBuffer::CreateBuffer(ID3D12Device* device, UINT size)
 {
 	bufferSize = size;

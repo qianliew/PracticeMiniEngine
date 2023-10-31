@@ -11,6 +11,9 @@ D3D12Device::D3D12Device() :
 D3D12Device::~D3D12Device()
 {
     pDevice->Release();
+
+    delete pBufferManager;
+    delete pDescriptorHeapManager;
 }
 
 void D3D12Device::CreateDevice()

@@ -9,8 +9,5 @@ D3D12Buffer::D3D12Buffer() :
 
 D3D12Buffer::~D3D12Buffer()
 {
-    if (ResourceLocation.Resource != nullptr)
-    {
-        ResourceLocation.Resource->Unmap(0, nullptr);
-    }
+
 }

@@ -21,7 +21,7 @@ void SceneManager::InitFBXImporter()
     pFBXImporter->InitializeSdkObjects();
 }
 
-void SceneManager::LoadScene()
+void SceneManager::LoadScene(D3D12CommandList*& pCommandList)
 {
     D3D12Model* model = new D3D12Model(objectID++, L"cube.fbx", L"test.png");
     model->LoadModel(pFBXImporter);
@@ -36,11 +36,24 @@ void SceneManager::LoadScene()
 
     AddObject(model);
 
-    pFullScreenMesh = new D3D12Model(objectID++, L"plane.fbx", L"test.png");
+    pFullScreenMesh = new D3D12Model(objectID++, L"plane.fbx", nullptr);
     pFullScreenMesh->LoadModel(pFBXImporter);
     pFullScreenMesh->MoveAlongX(10.0f);
     pFullScreenMesh->MoveAlongZ(5.0f);
-    AddObject(pFullScreenMesh);
+
+    // Create the global constant buffer.
+    pDevice->GetBufferManager()->AllocateGlobalConstantBuffer();
+    pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CreateView(pDevice->GetDevice(),
+        pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_GLOBAL, 0));
+
+    for (UINT i = 0; i < pObjects.size(); i++)
+    {
+        D3D12Model* object = pObjects[i];
+        LoadObjectVertexBufferAndIndexBuffer(pCommandList, object);
+    }
+    LoadObjectVertexBufferAndIndexBuffer(pCommandList, pFullScreenMesh);
+
+    pCommandList->FlushResourceBarriers();
 }
 
 void SceneManager::UnloadScene()
@@ -67,50 +80,15 @@ void SceneManager::AddObject(D3D12Model* object)
 	pObjects.push_back(object);
 }
 
-// Create and bind buffers.
+// Create buffers relating to the material and their view.
 void SceneManager::CreateAndBindObjectBuffer(D3D12CommandList*& pCommandList)
 {
-    // Create the global constant buffer.
-    pDevice->GetBufferManager()->AllocateGlobalConstantBuffer();
-    pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_GLOBAL, 0));
-
     for (UINT i = 0; i < pObjects.size(); i++)
     {
-        // Create the constant buffer.
         D3D12Model* model = pObjects[i];
-        UINT id = model->GetObjectID();
-        pDevice->GetBufferManager()->AllocatePerObjectConstantBuffers(id);
-        pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->CreateView(pDevice->GetDevice(),
-            pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_PEROBJECT, id));
-
-        // Create the vertex and index buffer.
-        D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
-        pDevice->GetBufferManager()->AllocateUploadBuffer(tempVertexBuffer, UploadBufferType::Vertex);
-        pDevice->GetBufferManager()->AllocateDefaultBuffer(model->GetMesh()->VertexBuffer.get());
-        tempVertexBuffer->CopyData(model->GetMesh()->GetVerticesData(), model->GetMesh()->GetVerticesSize());
-
-        D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer();
-        pDevice->GetBufferManager()->AllocateUploadBuffer(tempIndexBuffer, UploadBufferType::Index);
-        pDevice->GetBufferManager()->AllocateDefaultBuffer(model->GetMesh()->IndexBuffer.get());
-        tempIndexBuffer->CopyData(model->GetMesh()->GetIndicesData(), model->GetMesh()->GetIndicesSize());
-
-        model->GetMesh()->CreateView();
-        pCommandList->CopyBufferRegion(model->GetMesh()->VertexBuffer->GetResource(),
-            tempVertexBuffer->ResourceLocation.Resource.Get(),
-            model->GetMesh()->GetVerticesSize());
-        pCommandList->CopyBufferRegion(model->GetMesh()->IndexBuffer->GetResource(),
-            tempIndexBuffer->ResourceLocation.Resource.Get(),
-            model->GetMesh()->GetIndicesSize());
-
-        // Setup transition barriers.
-        pCommandList->AddTransitionResourceBarriers(model->GetMesh()->VertexBuffer->GetResource(),
-            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-        pCommandList->AddTransitionResourceBarriers(model->GetMesh()->IndexBuffer->GetResource(),
-            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
-        D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
 
         // Create the texture buffer.
+        D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
         pDevice->GetBufferManager()->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
         pDevice->GetBufferManager()->AllocateDefaultBuffer(model->GetTexture()->TextureBuffer);
         model->GetTexture()->TextureBuffer->CreateView(pDevice->GetDevice(),
@@ -137,6 +115,8 @@ void SceneManager::CreateAndBindObjectBuffer(D3D12CommandList*& pCommandList)
         pCommandList->AddTransitionResourceBarriers(model->GetTexture()->TextureBuffer->GetResource(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     }
+
+    pCommandList->FlushResourceBarriers();
 }
 
 void SceneManager::DrawObjects(D3D12CommandList*& pCommandList)
@@ -152,41 +132,6 @@ void SceneManager::DrawObjects(D3D12CommandList*& pCommandList)
         pCommandList->SetIndexBuffer(&model->GetMesh()->IndexBuffer->IndexBufferView);
         pCommandList->DrawIndexedInstanced(model->GetMesh()->GetIndicesNum());
     }
-}
-
-void SceneManager::CreateAndBindFullScreenMeshBuffer(D3D12CommandList*& pCommandList)
-{
-    // Create the constant buffer.
-    UINT id = pFullScreenMesh->GetObjectID();
-    pDevice->GetBufferManager()->AllocatePerObjectConstantBuffers(id);
-    pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_PEROBJECT, id));
-
-    // Create the vertex and index buffer.
-    D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(tempVertexBuffer, UploadBufferType::Vertex);
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(pFullScreenMesh->GetMesh()->VertexBuffer.get());
-    tempVertexBuffer->CopyData(pFullScreenMesh->GetMesh()->GetVerticesData(), pFullScreenMesh->GetMesh()->GetVerticesSize());
-
-    D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(tempIndexBuffer, UploadBufferType::Index);
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(pFullScreenMesh->GetMesh()->IndexBuffer.get());
-    tempIndexBuffer->CopyData(pFullScreenMesh->GetMesh()->GetIndicesData(), pFullScreenMesh->GetMesh()->GetIndicesSize());
-
-    pFullScreenMesh->GetMesh()->CreateView();
-    pCommandList->CopyBufferRegion(pFullScreenMesh->GetMesh()->VertexBuffer->GetResource(),
-        tempVertexBuffer->ResourceLocation.Resource.Get(),
-        pFullScreenMesh->GetMesh()->GetVerticesSize());
-    pCommandList->CopyBufferRegion(pFullScreenMesh->GetMesh()->IndexBuffer->GetResource(),
-        tempIndexBuffer->ResourceLocation.Resource.Get(),
-        pFullScreenMesh->GetMesh()->GetIndicesSize());
-
-    // Setup transition barriers.
-    pCommandList->AddTransitionResourceBarriers(pFullScreenMesh->GetMesh()->VertexBuffer->GetResource(),
-        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-    pCommandList->AddTransitionResourceBarriers(pFullScreenMesh->GetMesh()->IndexBuffer->GetResource(),
-        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
-    D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
 }
 
 void SceneManager::DrawFullScreenMesh(D3D12CommandList*& pCommandList)
@@ -215,4 +160,38 @@ void SceneManager::UpdateCamera()
     CameraConstant cameraConstant = pCamera->GetCameraConstant();
     XMStoreFloat4x4(&cameraConstant.WorldToProjectionMatrix, pCamera->GetVPMatrix());
     pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CopyData(&cameraConstant, sizeof(CameraConstant));
+}
+
+void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*& pCommandList, D3D12Model* object)
+{
+    // Create the perObject constant buffer and its view.
+    UINT id = object->GetObjectID();
+    pDevice->GetBufferManager()->AllocatePerObjectConstantBuffers(id);
+    pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->CreateView(pDevice->GetDevice(),
+        pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_PEROBJECT, id));
+
+    // Create the vertex buffer and index buffer and their view.
+    D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateUploadBuffer(tempVertexBuffer, UploadBufferType::Vertex);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(object->GetMesh()->VertexBuffer.get());
+    tempVertexBuffer->CopyData(object->GetMesh()->GetVerticesData(), object->GetMesh()->GetVerticesSize());
+
+    D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateUploadBuffer(tempIndexBuffer, UploadBufferType::Index);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(object->GetMesh()->IndexBuffer.get());
+    tempIndexBuffer->CopyData(object->GetMesh()->GetIndicesData(), object->GetMesh()->GetIndicesSize());
+
+    object->GetMesh()->CreateView();
+    pCommandList->CopyBufferRegion(object->GetMesh()->VertexBuffer->GetResource(),
+        tempVertexBuffer->ResourceLocation.Resource.Get(),
+        object->GetMesh()->GetVerticesSize());
+    pCommandList->CopyBufferRegion(object->GetMesh()->IndexBuffer->GetResource(),
+        tempIndexBuffer->ResourceLocation.Resource.Get(),
+        object->GetMesh()->GetIndicesSize());
+
+    // Setup transition barriers.
+    pCommandList->AddTransitionResourceBarriers(object->GetMesh()->VertexBuffer->GetResource(),
+        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+    pCommandList->AddTransitionResourceBarriers(object->GetMesh()->IndexBuffer->GetResource(),
+        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
 }
