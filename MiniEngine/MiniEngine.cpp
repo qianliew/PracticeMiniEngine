@@ -271,7 +271,7 @@ void MiniEngine::PopulateCommandList()
 
     pRenderTarget->CreateTexture(D3D12TextureType::ShaderResource);
     pRenderTarget->TextureBuffer->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW, 1));
+        pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW, 2));
     pCommandList->AddTransitionResourceBarriers(pRenderTarget->TextureBuffer->GetResource(),
         D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     pCommandList->FlushResourceBarriers();

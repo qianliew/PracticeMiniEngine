@@ -32,35 +32,48 @@ void SceneManager::LoadScene(D3D12CommandList*& pCommandList)
 
     pTextures[textureName] = texture;
 
-    // Create the texture buffer.
-    D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(texture->TextureBuffer);
-    texture->TextureBuffer->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW, 0));
+    LPCWSTR textureName2 = L"test2.png";
+    texture = new D3D12Texture(textureID++);
+    texture->LoadTexture(GetAssetPath(textureName2).c_str());
+    texture->CreateTexture(D3D12TextureType::ShaderResource);
 
-    // Init texture data.
-    UINT64 rowSizeInBytes, totalBytes;
-    pDevice->GetDevice()->GetCopyableFootprints(&texture->TextureBuffer->GetResourceDesc(),
-        0, 1, 0, nullptr, nullptr, &rowSizeInBytes, &totalBytes);
-    D3D12_SUBRESOURCE_DATA textureData = {};
-    textureData.pData = texture->GetTextureData();
-    textureData.RowPitch = rowSizeInBytes;
-    textureData.SlicePitch = totalBytes;
+    pTextures[textureName2] = texture;
 
-    // Update texture data from upload buffer to gpu buffer.
-    pCommandList->CopyTextureBuffer(texture->TextureBuffer->GetResource(),
-        tempBuffer->ResourceLocation.Resource.Get(), 0, 0, 1, &textureData);
+    for (auto it = pTextures.begin(); it != pTextures.end(); it++)
+    {
+        texture = it->second;
+        UINT id = texture->GetTextureID();
 
-    // Create the sampler and its view.
-    texture->CreateSampler();
-    pDevice->GetDescriptorHeapManager()->GetSamplerHandle(texture->TextureSampler.get(), 0);
-    pDevice->GetDevice()->CreateSampler(&texture->TextureSampler->SamplerDesc,
-        texture->TextureSampler->CPUHandle);
+        // Create the texture buffer.
+        D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
+        pDevice->GetBufferManager()->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
+        pDevice->GetBufferManager()->AllocateDefaultBuffer(texture->TextureBuffer);
+        texture->TextureBuffer->CreateView(pDevice->GetDevice(),
+            pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW, id));
 
-    pCommandList->AddTransitionResourceBarriers(texture->TextureBuffer->GetResource(),
-        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    pCommandList->FlushResourceBarriers();
+        // Init texture data.
+        UINT64 rowSizeInBytes, totalBytes;
+        pDevice->GetDevice()->GetCopyableFootprints(&texture->TextureBuffer->GetResourceDesc(),
+            0, 1, 0, nullptr, nullptr, &rowSizeInBytes, &totalBytes);
+        D3D12_SUBRESOURCE_DATA textureData = {};
+        textureData.pData = texture->GetTextureData();
+        textureData.RowPitch = rowSizeInBytes;
+        textureData.SlicePitch = totalBytes;
+
+        // Update texture data from upload buffer to gpu buffer.
+        pCommandList->CopyTextureBuffer(texture->TextureBuffer->GetResource(),
+            tempBuffer->ResourceLocation.Resource.Get(), 0, 0, 1, &textureData);
+
+        // Create the sampler and its view.
+        texture->CreateSampler();
+        pDevice->GetDescriptorHeapManager()->GetSamplerHandle(texture->TextureSampler.get(), id);
+        pDevice->GetDevice()->CreateSampler(&texture->TextureSampler->SamplerDesc,
+            texture->TextureSampler->CPUHandle);
+
+        pCommandList->AddTransitionResourceBarriers(texture->TextureBuffer->GetResource(),
+            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        pCommandList->FlushResourceBarriers();
+    }
 
     // Load models.
     Model* model = new Model(objectID++, L"cube.fbx");
@@ -73,7 +86,7 @@ void SceneManager::LoadScene(D3D12CommandList*& pCommandList)
 
     model = new Model(objectID++, L"cube.fbx");
     model->LoadModel(pFBXImporter);
-    model->AddTexture(pTextures[textureName]->GetTextureID());
+    model->AddTexture(pTextures[textureName2]->GetTextureID());
     model->MoveAlongY(2.0f);
 
     AddObject(model);

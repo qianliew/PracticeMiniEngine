@@ -27,7 +27,7 @@ D3D12DescriptorHeapManager::D3D12DescriptorHeapManager(ComPtr<ID3D12Device> &dev
 
     // Describe and create a sampler descriptor heap.
     D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
-    samplerHeapDesc.NumDescriptors = 2;
+    samplerHeapDesc.NumDescriptors = 10;
     samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
     samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     ThrowIfFailed(device->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&heapTable[SAMPLER])));
