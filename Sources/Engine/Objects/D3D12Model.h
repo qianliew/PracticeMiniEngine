@@ -6,17 +6,13 @@
 class D3D12Model : public Transform
 {
 private:
-    shared_ptr<D3D12Mesh> mesh;
-    shared_ptr<D3D12Texture> texture;
-
+    D3D12Mesh* pMesh;
     LPCWSTR pMeshPath;
-    LPCWSTR pTexturePath;
 
 public:
-    D3D12Model(UINT id, LPCWSTR, LPCWSTR);
+    D3D12Model(UINT id, LPCWSTR);
     ~D3D12Model();
 
     void LoadModel(unique_ptr<FBXImporter>&);
-    const shared_ptr<D3D12Mesh> GetMesh() const { return mesh; }
-    const shared_ptr<D3D12Texture> GetTexture() const { return texture; }
+    inline D3D12Mesh* GetMesh() const { return pMesh; }
 };

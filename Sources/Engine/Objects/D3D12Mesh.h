@@ -27,14 +27,15 @@ public:
 
     void SetVertices(Vertex* triangleVertices, UINT size);
     void SetIndices(UINT16* triangleIndices, UINT size);
-    UINT GetVerticesSize();
-    UINT GetIndicesSize();
-    UINT GetIndicesNum();
-    void const* GetVerticesData();
-    void const* GetIndicesData();
     void CopyVertices(void* destination);
     void CopyIndices(void* destination);
     void CreateView();
+
+    inline const UINT GetVerticesSize() const { return verticesSize; }
+    inline const UINT GetIndicesSize() { return indicesSize; }
+    inline const UINT GetIndicesNum() const { return indicesNum; }
+    inline const void* GetVerticesData() const { return pVertices; }
+    inline const void* GetIndicesData() const { return pIndices; }
 
     std::unique_ptr<D3D12VertexBuffer> VertexBuffer;
     std::unique_ptr<D3D12IndexBuffer> IndexBuffer;

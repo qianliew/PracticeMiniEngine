@@ -74,31 +74,6 @@ void D3D12Mesh::SetIndices(UINT16* triangleIndices, UINT size)
     IndexBuffer = std::make_unique<D3D12IndexBuffer>(desc);
 }
 
-UINT D3D12Mesh::GetVerticesSize()
-{
-    return verticesSize;
-}
-
-UINT D3D12Mesh::GetIndicesSize()
-{
-    return indicesSize;
-}
-
-UINT D3D12Mesh::GetIndicesNum()
-{
-    return indicesNum;
-}
-
-void const* D3D12Mesh::GetVerticesData()
-{
-    return pVertices;
-}
-
-void const* D3D12Mesh::GetIndicesData()
-{
-    return pIndices;
-}
-
 void D3D12Mesh::CopyVertices(void* destination)
 {
     memcpy(destination, pVertices, verticesSize);
