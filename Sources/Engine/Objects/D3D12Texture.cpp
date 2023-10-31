@@ -1,13 +1,14 @@
 #include "stdafx.h"
 #include "D3D12Texture.h"
 
-D3D12Texture::D3D12Texture() :
-    D3D12Texture(0, 0)
+D3D12Texture::D3D12Texture(UINT inID) :
+    D3D12Texture(inID, 0, 0)
 {
 
 }
 
-D3D12Texture::D3D12Texture(UINT inWidth, UINT inHeght) :
+D3D12Texture::D3D12Texture(UINT inID, UINT inWidth, UINT inHeght) :
+    id(inID),
     width(inWidth),
     height(inHeght),
     size(0),

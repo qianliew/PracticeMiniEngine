@@ -24,12 +24,12 @@ void SceneManager::InitFBXImporter()
 void SceneManager::LoadScene(D3D12CommandList*& pCommandList)
 {
     // Load textures first.
-    LPCWSTR fileName = L"test.png";
-    D3D12Texture* texture = new D3D12Texture();
-    texture->LoadTexture(GetAssetPath(fileName).c_str());
+    LPCWSTR textureName = L"test.png";
+    D3D12Texture* texture = new D3D12Texture(textureID++);
+    texture->LoadTexture(GetAssetPath(textureName).c_str());
     texture->CreateTexture(D3D12TextureType::ShaderResource);
 
-    pTextures[fileName] = texture;
+    pTextures[textureName] = texture;
 
     // Create the texture buffer.
     D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
@@ -62,20 +62,22 @@ void SceneManager::LoadScene(D3D12CommandList*& pCommandList)
     pCommandList->FlushResourceBarriers();
 
     // Load models.
-    D3D12Model* model = new D3D12Model(objectID++, L"cube.fbx");
+    Model* model = new Model(objectID++, L"cube.fbx");
     model->LoadModel(pFBXImporter);
+    model->AddTexture(pTextures[textureName]->GetTextureID());
     model->MoveAlongX(10.0f);
     model->MoveAlongZ(5.0f);
 
     AddObject(model);
 
-    model = new D3D12Model(objectID++, L"cube.fbx");
+    model = new Model(objectID++, L"cube.fbx");
     model->LoadModel(pFBXImporter);
+    model->AddTexture(pTextures[textureName]->GetTextureID());
     model->MoveAlongY(2.0f);
 
     AddObject(model);
 
-    pFullScreenMesh = new D3D12Model(objectID++, L"plane.fbx");
+    pFullScreenMesh = new Model(objectID++, L"plane.fbx");
     pFullScreenMesh->LoadModel(pFBXImporter);
     pFullScreenMesh->MoveAlongX(10.0f);
     pFullScreenMesh->MoveAlongZ(5.0f);
@@ -87,7 +89,7 @@ void SceneManager::LoadScene(D3D12CommandList*& pCommandList)
 
     for (UINT i = 0; i < pObjects.size(); i++)
     {
-        D3D12Model* object = pObjects[i];
+        Model* object = pObjects[i];
         LoadObjectVertexBufferAndIndexBuffer(pCommandList, object);
     }
     LoadObjectVertexBufferAndIndexBuffer(pCommandList, pFullScreenMesh);
@@ -114,12 +116,12 @@ void SceneManager::UnloadScene()
 
 void SceneManager::CreateCamera(UINT width, UINT height)
 {
-    pCamera = new D3D12Camera(0, static_cast<FLOAT>(width), static_cast<FLOAT>(height));
+    pCamera = new Camera(0, static_cast<FLOAT>(width), static_cast<FLOAT>(height));
     pCamera->SetViewport(static_cast<FLOAT>(width), static_cast<FLOAT>(height));
     pCamera->SetScissorRect(static_cast<LONG>(width), static_cast<LONG>(height));
 }
 
-void SceneManager::AddObject(D3D12Model* object)
+void SceneManager::AddObject(Model* object)
 {
 	pObjects.push_back(object);
 }
@@ -128,11 +130,20 @@ void SceneManager::DrawObjects(D3D12CommandList*& pCommandList)
 {
     for (UINT i = 0; i < pObjects.size(); i++)
     {
-        D3D12Model* model = pObjects[i];
+        Model* model = pObjects[i];
 
-        pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        // Set the per object views.
         pDevice->GetDescriptorHeapManager()->SetCBVs(pCommandList->GetCommandList(),
             CONSTANT_BUFFER_VIEW_PEROBJECT, pObjects[i]->GetObjectID());
+
+        // Set the material relating views.
+        pDevice->GetDescriptorHeapManager()->SetSRVs(pCommandList->GetCommandList(),
+            model->GetMaterial()->TextureList[0]);
+        pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList(),
+            model->GetMaterial()->TextureList[0]);
+
+        // Set buffers and draw the instance.
+        pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         pCommandList->SetVertexBuffers(0, 1, &model->GetMesh()->VertexBuffer->VertexBufferView);
         pCommandList->SetIndexBuffer(&model->GetMesh()->IndexBuffer->IndexBufferView);
         pCommandList->DrawIndexedInstanced(model->GetMesh()->GetIndicesNum());
@@ -167,7 +178,8 @@ void SceneManager::UpdateCamera()
     pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CopyData(&cameraConstant, sizeof(CameraConstant));
 }
 
-void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*& pCommandList, D3D12Model* object)
+// Helper functions.
+void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*& pCommandList, Model* object)
 {
     // Create the perObject constant buffer and its view.
     UINT id = object->GetObjectID();

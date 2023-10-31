@@ -11,6 +11,7 @@ enum class D3D12TextureType
 class D3D12Texture
 {
 private:
+	UINT id;
 	UINT width;
 	UINT height;
 	UINT64 size;
@@ -20,11 +21,12 @@ private:
 	BYTE* pData;
 
 public:
-	D3D12Texture();
-	D3D12Texture(UINT inWidth, UINT inHeght);
+	D3D12Texture(UINT inID);
+	D3D12Texture(UINT inID, UINT inWidth, UINT inHeght);
 	~D3D12Texture();
 
 	inline const BYTE* GetTextureData() { return pData; }
+	inline const UINT GetTextureID() const { return id; }
 
 	void LoadTexture(LPCWSTR texturePath);
 	void CreateTexture(D3D12TextureType);

@@ -31,5 +31,5 @@ public:
 
 	void SetCBVs(ComPtr<ID3D12GraphicsCommandList>&, UINT index, INT offset);
 	void SetSRVs(ComPtr<ID3D12GraphicsCommandList>&, INT offset);
-	void SetSamplers(ComPtr<ID3D12GraphicsCommandList>&);
+	void SetSamplers(ComPtr<ID3D12GraphicsCommandList>&, INT offset);
 };

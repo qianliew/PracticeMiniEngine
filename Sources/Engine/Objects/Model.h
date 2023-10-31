@@ -1,18 +1,21 @@
 #pragma once
 #include "FBXImporter.h"
 #include "D3D12Mesh.h"
-#include "D3D12Texture.h"
+#include "Material.h"
 
-class D3D12Model : public Transform
+class Model : public Transform
 {
 private:
     D3D12Mesh* pMesh;
+    Material* pMaterial;
     LPCWSTR pMeshPath;
 
 public:
-    D3D12Model(UINT id, LPCWSTR);
-    ~D3D12Model();
+    Model(UINT id, LPCWSTR);
+    ~Model();
 
     void LoadModel(unique_ptr<FBXImporter>&);
+    void AddTexture(UINT);
     inline D3D12Mesh* GetMesh() const { return pMesh; }
+    inline Material* GetMaterial() const { return pMaterial; }
 };

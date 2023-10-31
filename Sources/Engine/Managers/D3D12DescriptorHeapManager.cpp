@@ -18,7 +18,7 @@ D3D12DescriptorHeapManager::D3D12DescriptorHeapManager(ComPtr<ID3D12Device> &dev
 
     // Describe and create a shader resource view (SRV) descriptor heap.
     D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-    srvHeapDesc.NumDescriptors = 2;
+    srvHeapDesc.NumDescriptors = 10;
     srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     ThrowIfFailed(device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&heapTable[SHADER_RESOURCE_VIEW])));
@@ -27,7 +27,7 @@ D3D12DescriptorHeapManager::D3D12DescriptorHeapManager(ComPtr<ID3D12Device> &dev
 
     // Describe and create a sampler descriptor heap.
     D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
-    samplerHeapDesc.NumDescriptors = 1;
+    samplerHeapDesc.NumDescriptors = 10;
     samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
     samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     ThrowIfFailed(device->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&heapTable[SAMPLER])));
@@ -110,9 +110,13 @@ void D3D12DescriptorHeapManager::SetSRVs(ComPtr<ID3D12GraphicsCommandList>& comm
     commandList->SetGraphicsRootDescriptorTable(SHADER_RESOURCE_VIEW, heapTable[SHADER_RESOURCE_VIEW]->GetGPUDescriptorHandleForHeapStart());
 }
 
-void D3D12DescriptorHeapManager::SetSamplers(ComPtr<ID3D12GraphicsCommandList>& commandList)
+void D3D12DescriptorHeapManager::SetSamplers(ComPtr<ID3D12GraphicsCommandList>& commandList, INT offset)
 {
     ID3D12DescriptorHeap* heap[] = { heapTable[SAMPLER].Get() };
+
+    CD3DX12_GPU_DESCRIPTOR_HANDLE handle(heapTable[SAMPLER]->GetGPUDescriptorHandleForHeapStart());
+    handle.Offset(offset, sizeTable[SAMPLER]);
+
     commandList->SetDescriptorHeaps(_countof(heap), heap);
     commandList->SetGraphicsRootDescriptorTable(SAMPLER, heapTable[SAMPLER]->GetGPUDescriptorHandleForHeapStart());
 }

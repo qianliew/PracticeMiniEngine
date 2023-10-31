@@ -188,11 +188,11 @@ void ModelViewer::LoadAssets()
     // Create scene objects.
     {
         m_allocator = std::make_unique<D3D12BufferManager>(m_device);
-        m_camera = std::make_shared<D3D12Camera>();
+        m_camera = std::make_shared<Camera>();
         m_constant = std::make_shared<Constant>();
         m_fbxImporter = std::make_unique<FBXImporter>();
         m_fbxImporter->InitializeSdkObjects();
-        m_model = std::make_shared<D3D12Model>((char*)"cube.fbx", (char*)"test.png");
+        m_model = std::make_shared<Model>((char*)"cube.fbx", (char*)"test.png");
         m_model->LoadModel(m_fbxImporter);
     }
 

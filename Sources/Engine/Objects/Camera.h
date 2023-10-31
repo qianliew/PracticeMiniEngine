@@ -14,7 +14,7 @@ struct CameraConstant
     XMFLOAT4X4 WorldToProjectionMatrix;
 };
 
-class D3D12Camera : public Transform
+class Camera : public Transform
 {
 private:
     const XMVECTOR DefaultCameraWorldPosition = XMVectorSet(0.0f, 0.0f, -50.0f, 1.0f);
@@ -32,8 +32,8 @@ private:
     FLOAT farZ;
 
 public:
-    D3D12Camera(UINT id, FLOAT width, FLOAT height);
-    ~D3D12Camera();
+    Camera(UINT id, FLOAT width, FLOAT height);
+    ~Camera();
 
     virtual void ResetTransform() override;
 

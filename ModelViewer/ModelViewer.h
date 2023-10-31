@@ -82,8 +82,8 @@ private:
 
     // Scene objects
     shared_ptr<Constant> m_constant;
-    shared_ptr<D3D12Camera> m_camera;
-    shared_ptr<D3D12Model> m_model;
+    shared_ptr<Camera> m_camera;
+    shared_ptr<Model> m_model;
     unique_ptr<FBXImporter> m_fbxImporter;
 
     void LoadPipeline();

@@ -1,7 +1,7 @@
 #include "stdafx.h"
-#include "D3D12Camera.h"
+#include "Camera.h"
 
-D3D12Camera::D3D12Camera(UINT id, FLOAT width, FLOAT height) :
+Camera::Camera(UINT id, FLOAT width, FLOAT height) :
     Transform(id),
     width(width),
     height(height),
@@ -15,13 +15,13 @@ D3D12Camera::D3D12Camera(UINT id, FLOAT width, FLOAT height) :
     worldPosition = DefaultCameraWorldPosition;
 }
 
-D3D12Camera::~D3D12Camera()
+Camera::~Camera()
 {
     delete pViewport;
     delete pScissorRect;
 }
 
-void D3D12Camera::ResetTransform()
+void Camera::ResetTransform()
 {
     worldPosition = DefaultCameraWorldPosition;
     forwardDirction = DefaultForwardDirction;
@@ -36,19 +36,19 @@ void D3D12Camera::ResetTransform()
     SetScissorRect(static_cast<LONG>(width), static_cast<LONG>(height));
 }
 
-void D3D12Camera::SetViewport(const FLOAT width, const FLOAT height)
+void Camera::SetViewport(const FLOAT width, const FLOAT height)
 {
     pViewport->Width = width;
     pViewport->Height = height;
 }
 
-void D3D12Camera::SetScissorRect(const LONG width, const LONG height)
+void Camera::SetScissorRect(const LONG width, const LONG height)
 {
     pScissorRect->right = width;
     pScissorRect->bottom = height;
 }
 
-const XMMATRIX D3D12Camera::GetVPMatrix()
+const XMMATRIX Camera::GetVPMatrix()
 {
     // Get the view matrix.
     XMMATRIX view = XMMatrixLookAtRH(worldPosition, worldPosition + forwardDirction, upDirction);

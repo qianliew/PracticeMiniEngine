@@ -142,7 +142,7 @@ void MiniEngine::LoadAssets()
         pBlitPass->Setup(pCommandList, rootSignature);
 
         // Create a depth stencil buffer.
-        pDepthStencil = new D3D12Texture(
+        pDepthStencil = new D3D12Texture(-1,
             pSceneManager->GetCamera()->GetCameraWidth(),
             pSceneManager->GetCamera()->GetCameraHeight());
         pDepthStencil->CreateTexture(D3D12TextureType::DepthStencil);
@@ -159,7 +159,7 @@ void MiniEngine::LoadAssets()
         pDepthStencil->TextureBuffer->CreateView(pDevice->GetDevice(), pDevice->GetDescriptorHeapManager()->GetDSVHandle(0));
 
         // Create a render target buffer.
-        pRenderTarget = new D3D12Texture(
+        pRenderTarget = new D3D12Texture(1,
             pSceneManager->GetCamera()->GetCameraWidth(),
             pSceneManager->GetCamera()->GetCameraHeight());
         pRenderTarget->CreateTexture(D3D12TextureType::RenderTarget);

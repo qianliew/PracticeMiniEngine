@@ -57,19 +57,22 @@ void DrawObjectsPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSi
 
 void DrawObjectsPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
 {
+    // Set the pipeline state.
     pCommandList->SetPipelineState(pPipelineState);
-    pDevice->GetDescriptorHeapManager()->SetCBVs(pCommandList->GetCommandList(), CONSTANT_BUFFER_VIEW_GLOBAL, 0);
-    pDevice->GetDescriptorHeapManager()->SetSRVs(pCommandList->GetCommandList(), 0);
-    pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList());
 
-    // Set camera relating state.
+    // Set the global views.
+    pDevice->GetDescriptorHeapManager()->SetCBVs(pCommandList->GetCommandList(), CONSTANT_BUFFER_VIEW_GLOBAL, 0);
+
+    // Set camera relating states.
     pCommandList->SetViewports(pSceneManager->GetCamera()->GetViewport());
     pCommandList->SetScissorRects(pSceneManager->GetCamera()->GetScissorRect());
 
+    // Set the rtv and the dsv.
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = pDevice->GetDescriptorHeapManager()->GetRTVHandle(2);
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = pDevice->GetDescriptorHeapManager()->GetDSVHandle(0);
     pCommandList->SetRenderTargets(1, &rtvHandle, &dsvHandle);
 
+    // Clear the rtv and the dsv.
     const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
     pCommandList->ClearColor(rtvHandle, clearColor);
     pCommandList->ClearDepth(dsvHandle);
