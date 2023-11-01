@@ -125,9 +125,9 @@ void D3D12Texture::CreateSampler()
     }
 
     TextureSampler->SamplerDesc.Filter = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR;
-    TextureSampler->SamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-    TextureSampler->SamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-    TextureSampler->SamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    TextureSampler->SamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
+    TextureSampler->SamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
+    TextureSampler->SamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
     TextureSampler->SamplerDesc.MipLODBias = 0;
     TextureSampler->SamplerDesc.MaxAnisotropy = 0;
     TextureSampler->SamplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;

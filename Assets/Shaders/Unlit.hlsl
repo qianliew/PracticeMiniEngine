@@ -40,5 +40,5 @@ PSInput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    return t1.Sample(s1, input.texCoord % 1);
+    return t1.Sample(s1, input.texCoord);
 }
