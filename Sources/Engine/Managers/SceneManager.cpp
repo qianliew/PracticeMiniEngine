@@ -22,75 +22,54 @@ void SceneManager::InitFBXImporter()
     pFBXImporter->InitializeSdkObjects();
 }
 
-void SceneManager::LoadScene(D3D12CommandList*& pCommandList)
+void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
 {
-    // Load textures first.
-    LPCWSTR textureName = L"test.png";
-    D3D12Texture* texture = new D3D12Texture(textureID++);
-    texture->LoadTexture(GetAssetPath(textureName).c_str());
-    texture->CreateTexture(D3D12TextureType::ShaderResource);
+    LPCWSTR sceneName = L"scene";
+    std::wifstream inFile(GetAssetPath(sceneName));
 
-    pTextures[textureName] = texture;
+    // Parse textures from the scene file.
+    UINT numTextures = 0;
+    inFile >> numTextures;
 
-    LPCWSTR textureName2 = L"test2.png";
-    texture = new D3D12Texture(textureID++);
-    texture->LoadTexture(GetAssetPath(textureName2).c_str());
-    texture->CreateTexture(D3D12TextureType::ShaderResource);
-
-    pTextures[textureName2] = texture;
-
-    for (auto it = pTextures.begin(); it != pTextures.end(); it++)
+    for (int i = 0; i < numTextures; i++)
     {
-        texture = it->second;
-        UINT id = texture->GetTextureID();
+        WCHAR textureName[50];
+        inFile >> textureName;
 
-        // Create the texture buffer.
-        D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
-        pDevice->GetBufferManager()->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
-        pDevice->GetBufferManager()->AllocateDefaultBuffer(texture->TextureBuffer);
-        texture->TextureBuffer->CreateView(pDevice->GetDevice(),
-            pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW, id));
+        D3D12Texture* texture = new D3D12Texture(textureID++);
+        texture->LoadTexture(GetAssetPath(textureName).c_str());
+        texture->CreateTexture(D3D12TextureType::ShaderResource);
+        LoadTextureBufferAndSampler(pCommandList, texture);
 
-        // Init texture data.
-        UINT64 rowSizeInBytes, totalBytes;
-        pDevice->GetDevice()->GetCopyableFootprints(&texture->TextureBuffer->GetResourceDesc(),
-            0, 1, 0, nullptr, nullptr, &rowSizeInBytes, &totalBytes);
-        D3D12_SUBRESOURCE_DATA textureData = {};
-        textureData.pData = texture->GetTextureData();
-        textureData.RowPitch = rowSizeInBytes;
-        textureData.SlicePitch = totalBytes;
-
-        // Update texture data from upload buffer to gpu buffer.
-        pCommandList->CopyTextureBuffer(texture->TextureBuffer->GetResource(),
-            tempBuffer->ResourceLocation.Resource.Get(), 0, 0, 1, &textureData);
-
-        // Create the sampler and its view.
-        texture->CreateSampler();
-        pDevice->GetDescriptorHeapManager()->GetSamplerHandle(texture->TextureSampler.get(), id);
-        pDevice->GetDevice()->CreateSampler(&texture->TextureSampler->SamplerDesc,
-            texture->TextureSampler->CPUHandle);
-
-        pCommandList->AddTransitionResourceBarriers(texture->TextureBuffer->GetResource(),
-            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        pCommandList->FlushResourceBarriers();
+        pTextures[textureName] = texture;
     }
 
-    // Load models.
-    Model* model = new Model(objectID++, L"cube.fbx");
-    model->LoadModel(pFBXImporter);
-    model->AddTexture(pTextures[textureName]->GetTextureID());
-    model->MoveAlongX(10.0f);
-    model->MoveAlongZ(5.0f);
+    // Parse FBX from the scene file.
+    UINT numModels = 0;
+    inFile >> numModels;
 
-    AddObject(model);
+    for (int i = 0; i < numTextures; i++)
+    {
+        WCHAR name[50];
+        inFile >> name;
 
-    model = new Model(objectID++, L"cube.fbx");
-    model->LoadModel(pFBXImporter);
-    model->AddTexture(pTextures[textureName2]->GetTextureID());
-    model->MoveAlongY(2.0f);
+        Model* model = new Model(objectID++, name);
+        model->LoadModel(pFBXImporter);
+        model->AddTexture(i);
 
-    AddObject(model);
+        AddObject(model);
+        LoadObjectVertexBufferAndIndexBuffer(pCommandList, model);
+    }
 
+    inFile.close();
+}
+
+void SceneManager::LoadScene(D3D12CommandList*& pCommandList)
+{
+    // Parse the scene file.
+    ParseScene(pCommandList);
+
+    // Create static data.
     pFullScreenMesh = new Model(objectID++, L"plane.fbx");
     pFullScreenMesh->LoadModel(pFBXImporter);
     pFullScreenMesh->MoveAlongX(10.0f);
@@ -101,14 +80,7 @@ void SceneManager::LoadScene(D3D12CommandList*& pCommandList)
     pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_GLOBAL, 0));
 
-    for (UINT i = 0; i < pObjects.size(); i++)
-    {
-        Model* object = pObjects[i];
-        LoadObjectVertexBufferAndIndexBuffer(pCommandList, object);
-    }
     LoadObjectVertexBufferAndIndexBuffer(pCommandList, pFullScreenMesh);
-
-    pCommandList->FlushResourceBarriers();
 }
 
 void SceneManager::UnloadScene()
@@ -226,4 +198,40 @@ void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*& pComm
         D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
     pCommandList->AddTransitionResourceBarriers(object->GetMesh()->IndexBuffer->GetResource(),
         D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+    pCommandList->FlushResourceBarriers();
+}
+
+void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList*& pCommandList, D3D12Texture* texture)
+{
+    UINT id = texture->GetTextureID();
+
+    // Create the texture buffer.
+    D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(texture->TextureBuffer);
+    texture->TextureBuffer->CreateView(pDevice->GetDevice(),
+        pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW, id));
+
+    // Init texture data.
+    UINT64 rowSizeInBytes, totalBytes;
+    pDevice->GetDevice()->GetCopyableFootprints(&texture->TextureBuffer->GetResourceDesc(),
+        0, 1, 0, nullptr, nullptr, &rowSizeInBytes, &totalBytes);
+    D3D12_SUBRESOURCE_DATA textureData = {};
+    textureData.pData = texture->GetTextureData();
+    textureData.RowPitch = rowSizeInBytes;
+    textureData.SlicePitch = totalBytes;
+
+    // Update texture data from upload buffer to gpu buffer.
+    pCommandList->CopyTextureBuffer(texture->TextureBuffer->GetResource(),
+        tempBuffer->ResourceLocation.Resource.Get(), 0, 0, 1, &textureData);
+
+    // Create the sampler and its view.
+    texture->CreateSampler();
+    pDevice->GetDescriptorHeapManager()->GetSamplerHandle(texture->TextureSampler.get(), id);
+    pDevice->GetDevice()->CreateSampler(&texture->TextureSampler->SamplerDesc,
+        texture->TextureSampler->CPUHandle);
+
+    pCommandList->AddTransitionResourceBarriers(texture->TextureBuffer->GetResource(),
+        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    pCommandList->FlushResourceBarriers();
 }

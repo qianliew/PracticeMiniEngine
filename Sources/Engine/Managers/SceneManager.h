@@ -20,12 +20,14 @@ private:
 
 	// Helper functions.
 	void LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*&, Model* object);
+	void LoadTextureBufferAndSampler(D3D12CommandList*&, D3D12Texture* texture);
 
 public:
 	SceneManager(shared_ptr<D3D12Device>&);
 	~SceneManager();
 
 	void InitFBXImporter();
+	void ParseScene(D3D12CommandList*&);
 	void LoadScene(D3D12CommandList*&);
 	void UnloadScene();
 	void CreateCamera(UINT width, UINT height);

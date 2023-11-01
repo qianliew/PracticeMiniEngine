@@ -17,7 +17,7 @@ struct CameraConstant
 class Camera : public Transform
 {
 private:
-    const XMVECTOR DefaultCameraWorldPosition = XMVectorSet(0.0f, 0.0f, -50.0f, 1.0f);
+    const XMVECTOR DefaultCameraWorldPosition = XMVectorSet(0.0f, 20.0f, -50.0f, 1.0f);
 
     CD3DX12_VIEWPORT* pViewport;
     CD3DX12_RECT* pScissorRect;
