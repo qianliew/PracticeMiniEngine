@@ -38,6 +38,8 @@ public:
 	void UpdateTransforms();
 	void UpdateCamera();
 
+	void Release();
+
 	inline const std::vector<Model*>& GetObjects() const { return pObjects; }
 	inline Camera* GetCamera() const { return pCamera; }
 };

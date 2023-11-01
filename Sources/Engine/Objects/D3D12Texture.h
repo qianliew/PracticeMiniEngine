@@ -35,7 +35,8 @@ public:
 
 	void LoadTexture(std::wstring& texturePath);
 	void CreateTexture(D3D12TextureType, BOOL hasMip = FALSE);
-	void ReleaseTexture();
+	void ReleaseTextureData();
+	void ReleaseTextureBuffer();
 	void CreateSampler();
 
 	std::unique_ptr<D3D12Sampler> TextureSampler;

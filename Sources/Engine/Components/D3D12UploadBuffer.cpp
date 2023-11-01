@@ -1,6 +1,12 @@
 #include "stdafx.h"
 #include "D3D12UploadBuffer.h"
 
+D3D12UploadBuffer::D3D12UploadBuffer(BOOL inIsConstant) :
+	isConstant(inIsConstant)
+{
+
+}
+
 D3D12UploadBuffer::~D3D12UploadBuffer()
 {
 	if (ResourceLocation.Resource != nullptr)
@@ -9,7 +15,7 @@ D3D12UploadBuffer::~D3D12UploadBuffer()
 	}
 }
 
-void D3D12UploadBuffer::CreateBuffer(ID3D12Device* device, UINT size)
+void D3D12UploadBuffer::CreateBuffer(ID3D12Device* device, UINT64 size)
 {
 	bufferSize = size;
 
@@ -25,7 +31,7 @@ void D3D12UploadBuffer::CreateBuffer(ID3D12Device* device, UINT size)
 	ThrowIfFailed(ResourceLocation.Resource->Map(0, &readRange, reinterpret_cast<void**>(&startLocation)));
 }
 
-void D3D12UploadBuffer::CreateConstantBuffer(ID3D12Device* device, UINT size)
+void D3D12UploadBuffer::CreateConstantBuffer(ID3D12Device* device, UINT64 size)
 {
 	bufferSize = size;
 

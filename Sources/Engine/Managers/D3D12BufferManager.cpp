@@ -1,35 +1,23 @@
 #include "stdafx.h"
 #include "D3D12BufferManager.h"
 
-#define BLOCK_SIZE_TYPE_1 2048 * 2048 * 4
-#define BLOCK_SIZE_TYPE_2 1048576
-#define BLOCK_SIZE_TYPE_3 1024
-#define BLOCK_SIZE_TYPE_4 256
-
 D3D12BufferManager::D3D12BufferManager(ComPtr<ID3D12Device>& device) :
     device(device)
 {
-    for (UINT i = (UINT)UploadBufferType::Constant; i < (UINT)UploadBufferType::Count; i++)
+    for (int i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++)
     {
-        D3D12UploadBuffer** ppBuffer = UploadBufferPool[i];
-        while (*ppBuffer != nullptr)
-        {
-            *ppBuffer = nullptr;
-            ppBuffer++;
-        }
+        UploadBufferPool[i] = nullptr;
     }
 }
 
 D3D12BufferManager::~D3D12BufferManager()
 {
-    for (UINT i = (UINT)UploadBufferType::Constant; i < (UINT)UploadBufferType::Count; i++)
+    for (int i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++)
     {
-        D3D12UploadBuffer** ppBuffer = UploadBufferPool[i];
-        while (*ppBuffer != nullptr)
+        if (UploadBufferPool[i] != nullptr)
         {
-            delete* ppBuffer;
-            *ppBuffer = nullptr;
-            ppBuffer++;
+            delete UploadBufferPool[i];
+            UploadBufferPool[i] = nullptr;
         }
     }
 
@@ -53,9 +41,9 @@ D3D12BufferManager::~D3D12BufferManager()
     }
 }
 
-void D3D12BufferManager::AllocateUploadBuffer(D3D12UploadBuffer* &pBuffer, UploadBufferType type)
+void D3D12BufferManager::AllocateUploadBuffer(D3D12UploadBuffer* pBuffer, UINT64 size)
 {
-    D3D12UploadBuffer** ppBuffer = UploadBufferPool[(UINT)type];
+    D3D12UploadBuffer** ppBuffer = UploadBufferPool;
 
     for (UINT i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++, ppBuffer++)
     {
@@ -64,13 +52,22 @@ void D3D12BufferManager::AllocateUploadBuffer(D3D12UploadBuffer* &pBuffer, Uploa
             continue;
         }
 
-        *ppBuffer = new D3D12UploadBuffer();
-        (*ppBuffer)->CreateBuffer(device.Get(),
-            type == UploadBufferType::Texture ? BLOCK_SIZE_TYPE_1
-            : type == UploadBufferType::Vertex ? BLOCK_SIZE_TYPE_2
-            : BLOCK_SIZE_TYPE_3);
-        pBuffer = *ppBuffer;
+        *ppBuffer = pBuffer;
+        pBuffer->CreateBuffer(device.Get(), size);
         break;
+    }
+}
+
+void D3D12BufferManager::ReleaseUploadBuffer()
+{
+    for (int i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++)
+    {
+        if (UploadBufferPool[i] != nullptr
+            && !UploadBufferPool[i]->IsConstant())
+        {
+            delete UploadBufferPool[i];
+            UploadBufferPool[i] = nullptr;
+        }
     }
 }
 
@@ -93,13 +90,12 @@ void D3D12BufferManager::AllocateDefaultBuffer(
 void D3D12BufferManager::AllocateGlobalConstantBuffer()
 {
     D3D12_RESOURCE_DESC desc;
-    globalConstantBuffer = new D3D12ConstantBuffer(desc, BLOCK_SIZE_TYPE_3);
-    D3D12UploadBuffer** ppBuffer = UploadBufferPool[(UINT)UploadBufferType::Constant];
+    globalConstantBuffer = new D3D12ConstantBuffer(desc, 1024);
+    D3D12UploadBuffer* pBuffer = new D3D12UploadBuffer(TRUE);
+    AllocateUploadBuffer(pBuffer, 1024);
 
-    *ppBuffer = new D3D12UploadBuffer();
-    (*ppBuffer)->CreateConstantBuffer(device.Get(), BLOCK_SIZE_TYPE_3);
-    globalConstantBuffer->SetResourceLoaction((*ppBuffer)->ResourceLocation);
-    globalConstantBuffer->SetStartLocation((*ppBuffer)->GetStartLocation());
+    globalConstantBuffer->SetResourceLoaction(pBuffer->ResourceLocation);
+    globalConstantBuffer->SetStartLocation(pBuffer->GetStartLocation());
 }
 
 void D3D12BufferManager::AllocatePerObjectConstantBuffers(UINT offset)
@@ -110,13 +106,12 @@ void D3D12BufferManager::AllocatePerObjectConstantBuffers(UINT offset)
     }
 
     D3D12_RESOURCE_DESC desc;
-    perObjectConstantBuffers[offset] = new D3D12ConstantBuffer(desc, BLOCK_SIZE_TYPE_4);
-    D3D12UploadBuffer** ppBuffer = UploadBufferPool[(UINT)UploadBufferType::Constant];
+    perObjectConstantBuffers[offset] = new D3D12ConstantBuffer(desc, 1024);
+    D3D12UploadBuffer* pBuffer = new D3D12UploadBuffer(TRUE);
+    AllocateUploadBuffer(pBuffer, 1024);
 
-    *ppBuffer = new D3D12UploadBuffer();
-    (*ppBuffer)->CreateConstantBuffer(device.Get(), BLOCK_SIZE_TYPE_4);
-    perObjectConstantBuffers[offset]->SetResourceLoaction((*ppBuffer)->ResourceLocation);
-    perObjectConstantBuffers[offset]->SetStartLocation((*ppBuffer)->GetStartLocation());
+    perObjectConstantBuffers[offset]->SetResourceLoaction(pBuffer->ResourceLocation);
+    perObjectConstantBuffers[offset]->SetStartLocation(pBuffer->GetStartLocation());
 }
 
 D3D12ConstantBuffer* D3D12BufferManager::GetPerObjectConstantBufferAtIndex(UINT index)

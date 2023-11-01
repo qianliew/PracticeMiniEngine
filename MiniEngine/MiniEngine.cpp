@@ -171,13 +171,13 @@ void MiniEngine::LoadAssets()
             ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
         }
 
+        ExecuteCommandList();
+        UpdateFence();
+
         // Wait for the command list to execute; we are reusing the same command 
         // list in our main loop but for now, we just want to wait for setup to 
         // complete before continuing.
         WaitForPreviousFrame();
-
-        ExecuteCommandList();
-        UpdateFence();
     }
 }
 
@@ -313,6 +313,11 @@ void MiniEngine::WaitForPreviousFrame()
     }
 
     frameIndex = pSwapChain->GetCurrentBackBufferIndex();
+
+    // Release upload buffers from last frame.
+    pDevice->GetBufferManager()->ReleaseUploadBuffer();
+    // TODO: Add a event system to handle event.
+    pSceneManager->Release();
 }
 
 void MiniEngine::ExecuteCommandList()

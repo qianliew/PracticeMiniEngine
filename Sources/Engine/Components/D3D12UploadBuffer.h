@@ -6,11 +6,16 @@ class D3D12CBV;
 
 class D3D12UploadBuffer : public D3D12Buffer
 {
+private:
+	bool isConstant;
 public:
+	D3D12UploadBuffer(BOOL inIsConstant = FALSE);
 	~D3D12UploadBuffer();
 
-	void CreateBuffer(ID3D12Device* device, UINT size);
-	void CreateConstantBuffer(ID3D12Device* device, UINT size);
+	void CreateBuffer(ID3D12Device* device, UINT64 size);
+	void CreateConstantBuffer(ID3D12Device* device, UINT64 size);
 	void CopyData(void const* source);
 	void CopyData(void const* source, size_t size);
+
+	inline const BOOL IsConstant() const { return isConstant; }
 };

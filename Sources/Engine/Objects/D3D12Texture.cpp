@@ -18,7 +18,8 @@ D3D12Texture::D3D12Texture(UINT inID, UINT inWidth, UINT inHeght) :
 
 D3D12Texture::~D3D12Texture()
 {
-    ReleaseTexture();
+    ReleaseTextureData();
+    ReleaseTextureBuffer();
 }
 
 void D3D12Texture::LoadTexture(std::wstring& texturePath)
@@ -125,14 +126,18 @@ void D3D12Texture::CreateTexture(D3D12TextureType type, BOOL hasMip)
     }
 }
 
-void D3D12Texture::ReleaseTexture()
+void D3D12Texture::ReleaseTextureData()
 {
-    delete pTextureBuffer;
     for (auto it = pData.begin(); it != pData.end(); it++)
     {
         delete it->second;
     }
     pData.clear();
+}
+
+void D3D12Texture::ReleaseTextureBuffer()
+{
+    delete pTextureBuffer;
 }
 
 void D3D12Texture::CreateSampler()

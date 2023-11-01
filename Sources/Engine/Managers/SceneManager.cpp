@@ -48,7 +48,7 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
     UINT numModels = 0;
     inFile >> numModels;
 
-    for (int i = 0; i < numTextures; i++)
+    for (int i = 0; i < numModels; i++)
     {
         WCHAR fileName[32];
         inFile >> fileName;
@@ -165,6 +165,14 @@ void SceneManager::UpdateCamera()
     pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CopyData(&cameraConstant, sizeof(CameraConstant));
 }
 
+void SceneManager::Release()
+{
+    for (auto it = pTextures.begin(); it != pTextures.end(); it++)
+    {
+        it->second->ReleaseTextureData();
+    }
+}
+
 // Helper functions.
 void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*& pCommandList, Model* object)
 {
@@ -176,12 +184,12 @@ void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*& pComm
 
     // Create the vertex buffer and index buffer and their view.
     D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(tempVertexBuffer, UploadBufferType::Vertex);
+    pDevice->GetBufferManager()->AllocateUploadBuffer(tempVertexBuffer, object->GetMesh()->GetVerticesSize());
     pDevice->GetBufferManager()->AllocateDefaultBuffer(object->GetMesh()->VertexBuffer.get());
     tempVertexBuffer->CopyData(object->GetMesh()->GetVerticesData(), object->GetMesh()->GetVerticesSize());
 
     D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(tempIndexBuffer, UploadBufferType::Index);
+    pDevice->GetBufferManager()->AllocateUploadBuffer(tempIndexBuffer, object->GetMesh()->GetIndicesSize());
     pDevice->GetBufferManager()->AllocateDefaultBuffer(object->GetMesh()->IndexBuffer.get());
     tempIndexBuffer->CopyData(object->GetMesh()->GetIndicesData(), object->GetMesh()->GetIndicesSize());
 
@@ -213,9 +221,6 @@ void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList*& pCommandList, 
     // Init texture data.
     for (int i = 0; i < texture->GetMipCount(); i++)
     {
-        D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
-        pDevice->GetBufferManager()->AllocateUploadBuffer(tempBuffer, UploadBufferType::Texture);
-
         D3D12_SUBRESOURCE_DATA textureData;
         UINT64 rowSizeInBytes, totalBytes;
         pDevice->GetDevice()->GetCopyableFootprints(&texture->GetTextureBuffer()->GetResourceDesc(),
@@ -223,6 +228,9 @@ void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList*& pCommandList, 
         textureData.pData = texture->GetTextureDataAt(i);
         textureData.RowPitch = rowSizeInBytes;
         textureData.SlicePitch = totalBytes;
+
+        D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
+        pDevice->GetBufferManager()->AllocateUploadBuffer(tempBuffer, totalBytes);
 
         // Update texture data from upload buffer to gpu buffer.
         pCommandList->CopyTextureBuffer(texture->GetTextureBuffer()->GetResource(),
