@@ -133,10 +133,11 @@ void MiniEngine::LoadAssets()
         depthOptimizedClearValue.DepthStencil.Stencil = 0;
 
         pDevice->GetBufferManager()->AllocateDefaultBuffer(
-            pDepthStencil->TextureBuffer,
+            pDepthStencil->GetTextureBuffer(),
             D3D12_RESOURCE_STATE_DEPTH_WRITE,
             &depthOptimizedClearValue);
-        pDepthStencil->TextureBuffer->CreateView(pDevice->GetDevice(), pDevice->GetDescriptorHeapManager()->GetDSVHandle(0));
+        pDepthStencil->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
+            pDevice->GetDescriptorHeapManager()->GetDSVHandle(0));
 
         // Create a render target buffer.
         pRenderTarget = new D3D12Texture(1,
@@ -151,10 +152,11 @@ void MiniEngine::LoadAssets()
         renderTargetClearValue.Color[3] = 1.0f;
         renderTargetClearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
         pDevice->GetBufferManager()->AllocateDefaultBuffer(
-            pRenderTarget->TextureBuffer,
+            pRenderTarget->GetTextureBuffer(),
             D3D12_RESOURCE_STATE_RENDER_TARGET,
             &renderTargetClearValue);
-        pRenderTarget->TextureBuffer->CreateView(pDevice->GetDevice(), pDevice->GetDescriptorHeapManager()->GetRTVHandle(2));
+        pRenderTarget->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
+            pDevice->GetDescriptorHeapManager()->GetRTVHandle(2));
     }
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
@@ -270,18 +272,18 @@ void MiniEngine::PopulateCommandList()
     pDrawObjectPass->Execute(pCommandList, frameIndex);
 
     pRenderTarget->CreateTexture(D3D12TextureType::ShaderResource);
-    pRenderTarget->TextureBuffer->CreateView(pDevice->GetDevice(),
+    pRenderTarget->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW, 2));
-    pCommandList->AddTransitionResourceBarriers(pRenderTarget->TextureBuffer->GetResource(),
+    pCommandList->AddTransitionResourceBarriers(pRenderTarget->GetTextureBuffer()->GetResource(),
         D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     pCommandList->FlushResourceBarriers();
 
     pBlitPass->Execute(pCommandList, frameIndex);
 
     pRenderTarget->CreateTexture(D3D12TextureType::RenderTarget);
-    pRenderTarget->TextureBuffer->CreateView(pDevice->GetDevice(),
+    pRenderTarget->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetRTVHandle(2));
-    pCommandList->AddTransitionResourceBarriers(pRenderTarget->TextureBuffer->GetResource(),
+    pCommandList->AddTransitionResourceBarriers(pRenderTarget->GetTextureBuffer()->GetResource(),
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
     pCommandList->FlushResourceBarriers();
 

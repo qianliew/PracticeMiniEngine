@@ -19,7 +19,7 @@ void D3D12TextureBuffer::CreateView(const ComPtr<ID3D12Device>& device, const D3
     desc.Format = resourceDesc.Format;
     desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     desc.Texture2D.MostDetailedMip = 0;
-    desc.Texture2D.MipLevels = 1;
+    desc.Texture2D.MipLevels = resourceDesc.MipLevels;
     desc.Texture2D.PlaneSlice = 0;
 
     view = new D3D12SRV(desc);

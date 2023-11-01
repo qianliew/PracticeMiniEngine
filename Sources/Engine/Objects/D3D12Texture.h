@@ -14,25 +14,29 @@ private:
 	UINT id;
 	UINT width;
 	UINT height;
-	UINT64 size;
-	UINT64 bytesPerRow;
 	DXGI_FORMAT dxgiFormat;
 
-	BYTE* pData;
+	const UINT mipCount = 3;
+
+	std::map<UINT, BYTE*> pData;
+	D3D12Resource* pTextureBuffer;
+
+	std::wstring GetMipPath(std::wstring texturePath, UINT index);
 
 public:
 	D3D12Texture(UINT inID);
 	D3D12Texture(UINT inID, UINT inWidth, UINT inHeght);
 	~D3D12Texture();
 
-	inline const BYTE* GetTextureData() { return pData; }
+	inline const BYTE* GetTextureDataAt(UINT index) { return pData[index]; }
+	inline D3D12Resource* GetTextureBuffer() { return pTextureBuffer; }
 	inline const UINT GetTextureID() const { return id; }
+	inline const UINT GetMipCount() const { return mipCount; }
 
-	void LoadTexture(LPCWSTR texturePath);
-	void CreateTexture(D3D12TextureType);
+	void LoadTexture(std::wstring& texturePath);
+	void CreateTexture(D3D12TextureType, BOOL hasMip = FALSE);
 	void ReleaseTexture();
 	void CreateSampler();
 
-	D3D12Resource* TextureBuffer;
 	std::unique_ptr<D3D12Sampler> TextureSampler;
 };

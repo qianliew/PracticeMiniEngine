@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "D3D12BufferManager.h"
 
-#define BLOCK_SIZE_TYPE_1 16777216
+#define BLOCK_SIZE_TYPE_1 2048 * 2048 * 4
 #define BLOCK_SIZE_TYPE_2 1048576
 #define BLOCK_SIZE_TYPE_3 1024
 #define BLOCK_SIZE_TYPE_4 256
