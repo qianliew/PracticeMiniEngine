@@ -279,3 +279,12 @@ inline std::wstring GetShaderPath(LPCWSTR assetName)
 {
     return ShaderRootPath + (std::wstring)assetName;
 }
+
+inline std::wstring EraseSuffix(LPCWSTR assetName)
+{
+    std::wstring name = assetName;
+    size_t start = name.find_last_of(L'.');
+    name.erase(start, name.size() - start);
+
+    return name;
+}

@@ -33,7 +33,7 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
 
     for (int i = 0; i < numTextures; i++)
     {
-        WCHAR textureName[50];
+        WCHAR textureName[32];
         inFile >> textureName;
 
         D3D12Texture* texture = new D3D12Texture(textureID++);
@@ -41,7 +41,7 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
         texture->CreateTexture(D3D12TextureType::ShaderResource);
         LoadTextureBufferAndSampler(pCommandList, texture);
 
-        pTextures[textureName] = texture;
+        pTextures[EraseSuffix(textureName)] = texture;
     }
 
     // Parse FBX from the scene file.
@@ -50,12 +50,12 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
 
     for (int i = 0; i < numTextures; i++)
     {
-        WCHAR name[50];
-        inFile >> name;
+        WCHAR fileName[32];
+        inFile >> fileName;
 
-        Model* model = new Model(objectID++, name);
+        Model* model = new Model(objectID++, fileName);
         model->LoadModel(pFBXImporter);
-        model->AddTexture(i);
+        model->AddTexture(pTextures[EraseSuffix(fileName)]->GetTextureID());
 
         AddObject(model);
         LoadObjectVertexBufferAndIndexBuffer(pCommandList, model);

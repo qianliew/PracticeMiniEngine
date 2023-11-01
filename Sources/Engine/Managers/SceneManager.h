@@ -11,7 +11,7 @@ private:
 	unique_ptr<FBXImporter> pFBXImporter;
 
 	std::vector<Model*> pObjects;
-	std::map<LPCWSTR, D3D12Texture*> pTextures;
+	std::map<wstring, D3D12Texture*> pTextures;
 	Camera* pCamera;
 	Model* pFullScreenMesh;
 
