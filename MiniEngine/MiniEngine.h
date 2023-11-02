@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Window.h"
+#include "ViewManager.h"
 #include "DrawObjecstPass.h"
 #include "BlitPass.h"
 
@@ -25,12 +26,10 @@ public:
 private:
     // Pipeline objects.
     shared_ptr<D3D12Device> pDevice;
-    ComPtr<IDXGISwapChain3> pSwapChain;
-    ComPtr<ID3D12Resource> renderTargets[FRAME_COUNT];
     ComPtr<ID3D12CommandAllocator> commandAllocator;
     ComPtr<ID3D12RootSignature> rootSignature;
-
     D3D12CommandList* pCommandList;
+
     shared_ptr<DrawObjectsPass> pDrawObjectPass;
     shared_ptr<BlitPass> pBlitPass;
 
@@ -42,8 +41,7 @@ private:
 
     // Scene objects
     shared_ptr<SceneManager> pSceneManager;
-    D3D12Texture* pRenderTarget;
-    D3D12Texture* pDepthStencil;
+    shared_ptr<ViewManager> pViewManager;
 
     void LoadPipeline();
     void LoadAssets();

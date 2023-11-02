@@ -139,6 +139,9 @@
     <ClInclude Include="..\Sources\Engine\Objects\Camera.h">
       <Filter>Engine\Objects\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Managers\ViewManager.h">
+      <Filter>Engine\Managers\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Sources\Engine\Objects\D3D12IndexBuffer.cpp">
@@ -221,6 +224,9 @@
     </ClCompile>
     <ClCompile Include="..\Sources\Engine\Objects\Camera.cpp">
       <Filter>Engine\Objects\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Managers\ViewManager.cpp">
+      <Filter>Engine\Managers\Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -31,7 +31,7 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
     UINT numTextures = 0;
     inFile >> numTextures;
 
-    for (int i = 0; i < numTextures; i++)
+    for (UINT i = 0; i < numTextures; i++)
     {
         WCHAR textureName[32];
         inFile >> textureName;
@@ -48,7 +48,7 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
     UINT numModels = 0;
     inFile >> numModels;
 
-    for (int i = 0; i < numModels; i++)
+    for (UINT i = 0; i < numModels; i++)
     {
         WCHAR fileName[32];
         inFile >> fileName;

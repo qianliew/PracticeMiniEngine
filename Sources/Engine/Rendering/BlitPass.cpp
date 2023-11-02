@@ -67,7 +67,7 @@ void BlitPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
     pCommandList->SetViewports(pSceneManager->GetCamera()->GetViewport());
     pCommandList->SetScissorRects(pSceneManager->GetCamera()->GetScissorRect());
 
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = pDevice->GetDescriptorHeapManager()->GetRTVHandle(frameIndex);
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW, frameIndex);
     pCommandList->SetRenderTargets(1, &rtvHandle, nullptr);
 
     const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };

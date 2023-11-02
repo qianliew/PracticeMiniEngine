@@ -39,18 +39,18 @@ D3D12DescriptorHeapManager::D3D12DescriptorHeapManager(ComPtr<ID3D12Device> &dev
     rtvHeapDesc.NumDescriptors = FRAME_COUNT + 1;
     rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-    ThrowIfFailed(device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap)));
+    ThrowIfFailed(device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&heapTable[RENDER_TARGET_VIEW])));
 
-    rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    sizeTable[RENDER_TARGET_VIEW] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     // Describe and create a depth stencil view (DSV) descriptor heap.
     D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
     dsvHeapDesc.NumDescriptors = 1;
     dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
     dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-    ThrowIfFailed(device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsvHeap)));
+    ThrowIfFailed(device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&heapTable[DEPTH_STENCIL_VIEW])));
 
-    dsvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+    sizeTable[DEPTH_STENCIL_VIEW] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 }
 
 D3D12DescriptorHeapManager::~D3D12DescriptorHeapManager()
@@ -70,22 +70,6 @@ void D3D12DescriptorHeapManager::GetSamplerHandle(D3D12Sampler* const sampler, I
 {
     sampler->CPUHandle = heapTable[SAMPLER]->GetCPUDescriptorHandleForHeapStart();
     sampler->CPUHandle.Offset(offset, sizeTable[SAMPLER]);
-}
-
-D3D12_CPU_DESCRIPTOR_HANDLE D3D12DescriptorHeapManager::GetRTVHandle(INT offset)
-{
-    CD3DX12_CPU_DESCRIPTOR_HANDLE handle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
-    handle.Offset(offset, rtvDescriptorSize);
-
-    return handle;
-}
-
-D3D12_CPU_DESCRIPTOR_HANDLE D3D12DescriptorHeapManager::GetDSVHandle(INT offset)
-{
-    CD3DX12_CPU_DESCRIPTOR_HANDLE handle(dsvHeap->GetCPUDescriptorHandleForHeapStart());
-    handle.Offset(offset, dsvDescriptorSize);
-
-    return handle;
 }
 
 void D3D12DescriptorHeapManager::SetCBVs(ComPtr<ID3D12GraphicsCommandList>& commandList, UINT index, INT offset)

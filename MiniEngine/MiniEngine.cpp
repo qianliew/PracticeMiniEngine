@@ -13,7 +13,6 @@ MiniEngine::MiniEngine(UINT width, UINT height, std::wstring name) :
 MiniEngine::~MiniEngine()
 {
     delete pCommandList;
-    delete pDepthStencil;
 }
 
 void MiniEngine::OnInit()
@@ -25,45 +24,15 @@ void MiniEngine::OnInit()
 // Load the rendering pipeline dependencies.
 void MiniEngine::LoadPipeline()
 {
+    // Create the device.
     pDevice = std::make_shared<D3D12Device>();
     pDevice->CreateDevice();
-
-    // Describe and create the swap chain.
-    DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-    swapChainDesc.BufferCount = FRAME_COUNT;
-    swapChainDesc.Width = width;
-    swapChainDesc.Height = height;
-    swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-    swapChainDesc.SampleDesc.Count = 1;
-
-    ComPtr<IDXGISwapChain1> swapChain1;
-    ThrowIfFailed(pDevice->GetFactory()->CreateSwapChainForHwnd(
-        pDevice->GetCommandQueue().Get(),        // Swap chain needs the queue so that it can force a flush on it.
-        Win32Application::GetHwnd(),
-        &swapChainDesc,
-        nullptr,
-        nullptr,
-        &swapChain1
-    ));
-
-    // This sample does not support fullscreen transitions.
-    ThrowIfFailed(pDevice->GetFactory()->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
-    ThrowIfFailed(swapChain1.As(&pSwapChain));
-    frameIndex = pSwapChain->GetCurrentBackBufferIndex();
-
     pDevice->CreateDescriptorHeapManager();
     pDevice->CreateBufferManager();
 
-    // Create frame resources.
-    // Create a RTV for each frame.
-    for (UINT n = 0; n < FRAME_COUNT; n++)
-    {
-        ThrowIfFailed(pSwapChain->GetBuffer(n, IID_PPV_ARGS(&renderTargets[n])));
-        pDevice->GetDevice()->CreateRenderTargetView(renderTargets[n].Get(), nullptr,
-            pDevice->GetDescriptorHeapManager()->GetRTVHandle(n));
-    }
+    // Create and init the view manager.
+    pViewManager = make_shared<ViewManager>(pDevice, width, height);
+    frameIndex = pViewManager->GetSwapChain()->GetCurrentBackBufferIndex();
 
     // Create the command allocator.
     ThrowIfFailed(pDevice->GetDevice()->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator)));
@@ -110,53 +79,18 @@ void MiniEngine::LoadAssets()
 
     // Create scene objects.
     {
+        // Create and init the scene manager.
         pSceneManager = make_shared<SceneManager>(pDevice);
         pSceneManager->InitFBXImporter();
         pSceneManager->LoadScene(pCommandList);
         pSceneManager->CreateCamera(width, height);
 
+        // Create and init render passes.
         pDrawObjectPass = make_shared<DrawObjectsPass>(pDevice, pSceneManager);
         pDrawObjectPass->Setup(pCommandList, rootSignature);
 
         pBlitPass = make_shared<BlitPass>(pDevice, pSceneManager);
         pBlitPass->Setup(pCommandList, rootSignature);
-
-        // Create a depth stencil buffer.
-        pDepthStencil = new D3D12Texture(-1,
-            pSceneManager->GetCamera()->GetCameraWidth(),
-            pSceneManager->GetCamera()->GetCameraHeight());
-        pDepthStencil->CreateTexture(D3D12TextureType::DepthStencil);
-
-        D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
-        depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
-        depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
-        depthOptimizedClearValue.DepthStencil.Stencil = 0;
-
-        pDevice->GetBufferManager()->AllocateDefaultBuffer(
-            pDepthStencil->GetTextureBuffer(),
-            D3D12_RESOURCE_STATE_DEPTH_WRITE,
-            &depthOptimizedClearValue);
-        pDepthStencil->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
-            pDevice->GetDescriptorHeapManager()->GetDSVHandle(0));
-
-        // Create a render target buffer.
-        pRenderTarget = new D3D12Texture(1,
-            pSceneManager->GetCamera()->GetCameraWidth(),
-            pSceneManager->GetCamera()->GetCameraHeight());
-        pRenderTarget->CreateTexture(D3D12TextureType::RenderTarget);
-
-        D3D12_CLEAR_VALUE renderTargetClearValue = {};
-        renderTargetClearValue.Color[0] = 0.0f;
-        renderTargetClearValue.Color[1] = 0.2f;
-        renderTargetClearValue.Color[2] = 0.4f;
-        renderTargetClearValue.Color[3] = 1.0f;
-        renderTargetClearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        pDevice->GetBufferManager()->AllocateDefaultBuffer(
-            pRenderTarget->GetTextureBuffer(),
-            D3D12_RESOURCE_STATE_RENDER_TARGET,
-            &renderTargetClearValue);
-        pRenderTarget->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
-            pDevice->GetDescriptorHeapManager()->GetRTVHandle(2));
     }
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
@@ -237,7 +171,7 @@ void MiniEngine::OnRender()
     PopulateCommandList();
 
     // Present the frame.
-    ThrowIfFailed(pSwapChain->Present(1, 0));
+    ThrowIfFailed(pViewManager->GetSwapChain()->Present(1, 0));
 
     WaitForPreviousFrame();
 }
@@ -265,30 +199,18 @@ void MiniEngine::PopulateCommandList()
     pCommandList->SetRootSignature(rootSignature);
 
     // Indicate that the back buffer will be used as a render target.
-    pCommandList->AddTransitionResourceBarriers(renderTargets[frameIndex].Get(),
+    pCommandList->AddTransitionResourceBarriers(pViewManager->GetBackBufferAt(frameIndex),
         D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     pCommandList->FlushResourceBarriers();
 
     pDrawObjectPass->Execute(pCommandList, frameIndex);
 
-    pRenderTarget->CreateTexture(D3D12TextureType::ShaderResource);
-    pRenderTarget->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW, 2));
-    pCommandList->AddTransitionResourceBarriers(pRenderTarget->GetTextureBuffer()->GetResource(),
-        D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    pCommandList->FlushResourceBarriers();
-
+    pViewManager->EmplaceRenderTarget(pCommandList, D3D12TextureType::ShaderResource);
     pBlitPass->Execute(pCommandList, frameIndex);
-
-    pRenderTarget->CreateTexture(D3D12TextureType::RenderTarget);
-    pRenderTarget->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetRTVHandle(2));
-    pCommandList->AddTransitionResourceBarriers(pRenderTarget->GetTextureBuffer()->GetResource(),
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    pCommandList->FlushResourceBarriers();
+    pViewManager->EmplaceRenderTarget(pCommandList, D3D12TextureType::RenderTarget);
 
     // Indicate that the back buffer will now be used to present.
-    pCommandList->AddTransitionResourceBarriers(renderTargets[frameIndex].Get(),
+    pCommandList->AddTransitionResourceBarriers(pViewManager->GetBackBufferAt(frameIndex),
         D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
     pCommandList->FlushResourceBarriers();
 
@@ -312,7 +234,7 @@ void MiniEngine::WaitForPreviousFrame()
         WaitForSingleObject(fenceEvent, INFINITE);
     }
 
-    frameIndex = pSwapChain->GetCurrentBackBufferIndex();
+    frameIndex = pViewManager->GetSwapChain()->GetCurrentBackBufferIndex();
 
     // Release upload buffers from last frame.
     pDevice->GetBufferManager()->ReleaseUploadBuffer();

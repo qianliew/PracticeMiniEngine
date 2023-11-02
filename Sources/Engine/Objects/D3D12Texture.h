@@ -15,6 +15,7 @@ private:
 	UINT width;
 	UINT height;
 	DXGI_FORMAT dxgiFormat;
+	D3D12TextureType type;
 
 	const UINT kMipCount = 10;
 	const std::wstring kMipSuffix = L"_mip";
@@ -36,6 +37,7 @@ public:
 	inline D3D12Resource* GetTextureBuffer() { return pTextureBuffer; }
 	inline const UINT GetTextureID() const { return id; }
 	inline const UINT GetMipCount() const { return min(kMipCount, log2(width)); }
+	inline const D3D12TextureType GetType() const { return type; }
 
 	void LoadTexture(std::wstring& texturePath);
 	void CreateTexture(D3D12TextureType, BOOL hasMip = FALSE);

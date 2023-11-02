@@ -88,8 +88,9 @@ void D3D12Texture::LoadTexture(std::wstring& texturePath)
     pFactory->Release();
 }
 
-void D3D12Texture::CreateTexture(D3D12TextureType type, BOOL hasMip)
+void D3D12Texture::CreateTexture(D3D12TextureType inType, BOOL hasMip)
 {
+    type = inType;
     D3D12Resource* oldBuffer = pTextureBuffer;
 
     // Create texture desc.
