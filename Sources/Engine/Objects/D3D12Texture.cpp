@@ -39,10 +39,20 @@ void D3D12Texture::LoadTexture(std::wstring& texturePath)
 
     UINT mipWidth = 0, mipHeight = 0, bytesPerRow = 0;
     UINT64 size = 0;
-    for (int i = 0; i < mipCount; i++)
+    for (int i = 0; i < kMipCount; i++)
     {
-        ThrowIfFailed(pFactory->CreateDecoderFromFilename(GetMipPath(texturePath, i).c_str(),
-            NULL, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &pDecoder));
+        if (INVALID_FILE_ATTRIBUTES == GetFileAttributes(GetTexturePath(texturePath, i).c_str())
+            && GetLastError() == ERROR_FILE_NOT_FOUND)
+        {
+            ThrowIfFailed(pFactory->CreateDecoderFromFilename(GetDefaultTexturePath(mipWidth).c_str(),
+                NULL, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &pDecoder));
+        }
+        else
+        {
+            ThrowIfFailed(pFactory->CreateDecoderFromFilename(GetTexturePath(texturePath, i).c_str(),
+                NULL, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &pDecoder));
+        }
+
         ThrowIfFailed(pDecoder->GetFrame(0, &pFrameDecode));
         ThrowIfFailed(pFrameDecode->GetSize(&mipWidth, &mipHeight));
         if (i == 0)
@@ -71,6 +81,8 @@ void D3D12Texture::LoadTexture(std::wstring& texturePath)
         mipWidth /= 2;
         mipHeight /= 2;
         pData[i] = bytes;
+
+        if (mipWidth == 0) break;
     }
 
     pFactory->Release();
@@ -87,7 +99,7 @@ void D3D12Texture::CreateTexture(D3D12TextureType type, BOOL hasMip)
     desc.Width = width;
     desc.Height = height;
     desc.DepthOrArraySize = 1;
-    desc.MipLevels = hasMip ? mipCount : 1;
+    desc.MipLevels = hasMip ? GetMipCount() : 1;
     desc.SampleDesc.Count = 1;
     desc.SampleDesc.Quality = 0;
     desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
@@ -158,14 +170,22 @@ void D3D12Texture::CreateSampler()
     TextureSampler->SamplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 }
 
-std::wstring D3D12Texture::GetMipPath(std::wstring texturePath, UINT index)
+std::wstring D3D12Texture::GetTexturePath(std::wstring texturePath, UINT mipIndex)
 {
-    if (index != 0)
+    if (mipIndex != 0)
     {
-        std::wstring suffix = L"_mip";
-        suffix.append(std::to_wstring(index));
+        std::wstring suffix = kMipSuffix;
+        suffix.append(std::to_wstring(mipIndex));
         texturePath.insert(texturePath.find_last_of(L'.'), suffix);
     }
 
     return texturePath;
+}
+
+std::wstring D3D12Texture::GetDefaultTexturePath(UINT mipSize)
+{
+    std::wstring path = kDefaultTexturePath;
+    path.insert(path.find_last_of(L'.'), std::to_wstring(mipSize));
+
+    return path;
 }

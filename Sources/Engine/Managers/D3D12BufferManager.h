@@ -1,6 +1,6 @@
 #pragma once
 
-#define MAX_UPLOAD_BUFFER_COUNT 20
+#define MAX_UPLOAD_BUFFER_COUNT 100
 
 enum class UploadBufferType
 {
