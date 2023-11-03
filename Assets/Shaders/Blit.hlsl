@@ -1,6 +1,6 @@
 
-Texture2D t1 : register(t0);
-SamplerState s1 : register(s0);
+Texture2D t0 : register(t0);
+SamplerState s0 : register(s0);
 
 struct VSInput
 {
@@ -32,5 +32,5 @@ PSInput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    return t1.Sample(s1, input.texCoord);
+    return t0.Sample(s0, input.texCoord);
 }

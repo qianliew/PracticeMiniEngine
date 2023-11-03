@@ -11,7 +11,8 @@ enum class D3D12TextureType
 class D3D12Texture
 {
 private:
-	UINT id;
+	UINT srvID;
+	UINT rtvID;
 	UINT width;
 	UINT height;
 	DXGI_FORMAT dxgiFormat;
@@ -29,13 +30,14 @@ private:
 	std::wstring GetDefaultMipTexturePath(UINT mipSize);
 
 public:
-	D3D12Texture(UINT inID);
-	D3D12Texture(UINT inID, UINT inWidth, UINT inHeght);
+	D3D12Texture(UINT inSRVID, UINT inRTVID = -1);
+	D3D12Texture(UINT inSRVID, UINT inRTVID, UINT inWidth, UINT inHeght);
 	~D3D12Texture();
 
 	inline const BYTE* GetTextureDataAt(UINT index) { return pData[index]; }
 	inline D3D12Resource* GetTextureBuffer() { return pTextureBuffer; }
-	inline const UINT GetTextureID() const { return id; }
+	inline const UINT GetTextureID() const { return srvID; }
+	inline const UINT GetRenderTargetID() const { return rtvID; }
 	inline const UINT GetMipCount() const { return min(kMipCount, log2(width)); }
 	inline const D3D12TextureType GetType() const { return type; }
 

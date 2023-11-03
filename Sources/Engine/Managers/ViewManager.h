@@ -10,6 +10,8 @@ private:
     D3D12Texture* pRenderTarget;
     D3D12Texture* pDepthStencil;
 
+    UINT globalSRVID;
+    UINT rtvID;
     UINT width;
     UINT height;
 

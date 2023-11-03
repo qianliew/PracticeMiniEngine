@@ -5,7 +5,9 @@
 ViewManager::ViewManager(shared_ptr<D3D12Device>& device, UINT inWidth, UINT inHeight) :
     pDevice(device),
     width(inWidth),
-    height(inHeight)
+    height(inHeight),
+    globalSRVID(0),
+    rtvID(FRAME_COUNT)
 {
     // Describe and create the swap chain.
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
@@ -41,7 +43,7 @@ ViewManager::ViewManager(shared_ptr<D3D12Device>& device, UINT inWidth, UINT inH
     }
 
     // Create a render target buffer.
-    pRenderTarget = new D3D12Texture(5, width, height);
+    pRenderTarget = new D3D12Texture(globalSRVID++, rtvID++, width, height);
     pRenderTarget->CreateTexture(D3D12TextureType::RenderTarget);
 
     D3D12_CLEAR_VALUE renderTargetClearValue = {};
@@ -58,7 +60,7 @@ ViewManager::ViewManager(shared_ptr<D3D12Device>& device, UINT inWidth, UINT inH
         pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW, 2));
 
     // Create a depth stencil buffer.
-    pDepthStencil = new D3D12Texture(-1, width, height);
+    pDepthStencil = new D3D12Texture(-1, -1, width, height);
     pDepthStencil->CreateTexture(D3D12TextureType::DepthStencil);
 
     D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
@@ -83,8 +85,8 @@ ViewManager::~ViewManager()
 void ViewManager::EmplaceRenderTarget(D3D12CommandList*& pCommandList, D3D12TextureType type)
 {
     D3D12_RESOURCE_STATES stateBefore = GetResourceState(pRenderTarget->GetType());
-    UINT heapMapIndex = type == D3D12TextureType::ShaderResource ? SHADER_RESOURCE_VIEW : RENDER_TARGET_VIEW;
-    UINT offset = type == D3D12TextureType::ShaderResource ? 5 : 2;
+    UINT heapMapIndex = type == D3D12TextureType::ShaderResource ? SHADER_RESOURCE_VIEW_GLOBAL : RENDER_TARGET_VIEW;
+    UINT offset = type == D3D12TextureType::ShaderResource ? pRenderTarget->GetTextureID() : pRenderTarget->GetRenderTargetID();
 
     pRenderTarget->CreateTexture(type);
     pRenderTarget->GetTextureBuffer()->CreateView(pDevice->GetDevice(),

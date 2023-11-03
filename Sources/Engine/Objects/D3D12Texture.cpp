@@ -1,14 +1,15 @@
 #include "stdafx.h"
 #include "D3D12Texture.h"
 
-D3D12Texture::D3D12Texture(UINT inID) :
-    D3D12Texture(inID, 0, 0)
+D3D12Texture::D3D12Texture(UINT inSRVID, UINT inRTVID) :
+    D3D12Texture(inSRVID, inRTVID, 0, 0)
 {
 
 }
 
-D3D12Texture::D3D12Texture(UINT inID, UINT inWidth, UINT inHeght) :
-    id(inID),
+D3D12Texture::D3D12Texture(UINT inSRVID, UINT inRTVID, UINT inWidth, UINT inHeght) :
+    srvID(inSRVID),
+    rtvID(inRTVID),
     width(inWidth),
     height(inHeght),
     dxgiFormat(DXGI_FORMAT_R8G8B8A8_UNORM)

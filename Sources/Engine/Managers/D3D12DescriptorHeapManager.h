@@ -2,12 +2,11 @@
 
 #define CONSTANT_BUFFER_VIEW_GLOBAL 0
 #define CONSTANT_BUFFER_VIEW_PEROBJECT 1
-#define SHADER_RESOURCE_VIEW 2
-#define SAMPLER 3
-#define RENDER_TARGET_VIEW 4
-#define DEPTH_STENCIL_VIEW 5
-
-#define UNDEFINED 100
+#define SHADER_RESOURCE_VIEW_GLOBAL 2
+#define SHADER_RESOURCE_VIEW 3
+#define SAMPLER 4
+#define RENDER_TARGET_VIEW 5
+#define DEPTH_STENCIL_VIEW 6
 
 #define FRAME_COUNT 2
 
@@ -24,7 +23,7 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetHandle(UINT index, INT offset);
 	void GetSamplerHandle(D3D12Sampler* const, INT offset);
 
-	void SetCBVs(ComPtr<ID3D12GraphicsCommandList>&, UINT index, INT offset);
+	void SetViews(ComPtr<ID3D12GraphicsCommandList>&, UINT index, INT offset);
 	void SetSRVs(ComPtr<ID3D12GraphicsCommandList>&, INT offset);
 	void SetSamplers(ComPtr<ID3D12GraphicsCommandList>&, INT offset);
 };
