@@ -11,8 +11,8 @@ cbuffer PerObjectConstants : register(b1)
 
 Texture2D t1 : register(t1);
 Texture2D t2 : register(t2);
-SamplerState s0 : register(s0);
 SamplerState s1 : register(s1);
+SamplerState s2 : register(s2);
 
 struct VSInput
 {
@@ -42,5 +42,5 @@ PSInput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    return t1.Sample(s0, input.texCoord) * 0.5f + t2.Sample(s0, input.texCoord) * 0.5f;
+    return t1.Sample(s1, input.texCoord) * 0.5f + t2.Sample(s2, input.texCoord) * 0.5f;
 }
