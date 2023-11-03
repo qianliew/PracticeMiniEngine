@@ -40,6 +40,7 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
 
         LoadTextureBufferAndSampler(pCommandList, material->GetTexture());
         LoadTextureBufferAndSampler(pCommandList, material->GetMRATexture());
+        LoadTextureBufferAndSampler(pCommandList, material->GetNormalTexture());
         pMaterialPool[EraseSuffix(materialName)] = material;
     }
 

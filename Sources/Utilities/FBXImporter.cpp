@@ -285,6 +285,38 @@ void FBXImporter::LoadMesh(FbxNode* pNode, D3D12Mesh* mesh)
                     static_cast<float>(lControlPoints[cpIndex].mData[2]),
                 };
 
+                FbxGeometryElementNormal* leNormal = lMesh->GetElementNormal(0);
+
+                if (leNormal->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
+                {
+                    switch (leNormal->GetReferenceMode())
+                    {
+                    case FbxGeometryElement::eDirect:
+                        iVertex->normal = XMFLOAT4
+                        {
+                            static_cast<float>(leNormal->GetDirectArray().GetAt(cpIndex).mData[0]),
+                            static_cast<float>(leNormal->GetDirectArray().GetAt(cpIndex).mData[1]),
+                            static_cast<float>(leNormal->GetDirectArray().GetAt(cpIndex).mData[2]),
+                            static_cast<float>(leNormal->GetDirectArray().GetAt(cpIndex).mData[3]),
+                        };
+                        break;
+                    case FbxGeometryElement::eIndexToDirect:
+                    {
+                        int id = leNormal->GetIndexArray().GetAt(cpIndex);
+                        iVertex->normal = XMFLOAT4
+                        {
+                            static_cast<float>(leNormal->GetDirectArray().GetAt(id).mData[0]),
+                            static_cast<float>(leNormal->GetDirectArray().GetAt(id).mData[1]),
+                            static_cast<float>(leNormal->GetDirectArray().GetAt(id).mData[2]),
+                            static_cast<float>(leNormal->GetDirectArray().GetAt(id).mData[3]),
+                        };
+                    }
+                    break;
+                    default:
+                        break; // other reference modes not shown here!
+                    }
+                }
+
                 FbxGeometryElementUV* leUV = lMesh->GetElementUV(0);
 
                 switch (leUV->GetMappingMode())
