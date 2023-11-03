@@ -26,7 +26,7 @@ private:
 
 	// Helper functions
 	std::wstring GetTexturePath(std::wstring texturePath, UINT mipIndex);
-	std::wstring GetDefaultTexturePath(UINT mipSize);
+	std::wstring GetDefaultMipTexturePath(UINT mipSize);
 
 public:
 	D3D12Texture(UINT inID);

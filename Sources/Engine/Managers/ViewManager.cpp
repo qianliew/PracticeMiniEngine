@@ -41,7 +41,7 @@ ViewManager::ViewManager(shared_ptr<D3D12Device>& device, UINT inWidth, UINT inH
     }
 
     // Create a render target buffer.
-    pRenderTarget = new D3D12Texture(1, width, height);
+    pRenderTarget = new D3D12Texture(5, width, height);
     pRenderTarget->CreateTexture(D3D12TextureType::RenderTarget);
 
     D3D12_CLEAR_VALUE renderTargetClearValue = {};
@@ -84,10 +84,11 @@ void ViewManager::EmplaceRenderTarget(D3D12CommandList*& pCommandList, D3D12Text
 {
     D3D12_RESOURCE_STATES stateBefore = GetResourceState(pRenderTarget->GetType());
     UINT heapMapIndex = type == D3D12TextureType::ShaderResource ? SHADER_RESOURCE_VIEW : RENDER_TARGET_VIEW;
+    UINT offset = type == D3D12TextureType::ShaderResource ? 5 : 2;
 
     pRenderTarget->CreateTexture(type);
     pRenderTarget->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(heapMapIndex, 2));
+        pDevice->GetDescriptorHeapManager()->GetHandle(heapMapIndex, offset));
     pCommandList->AddTransitionResourceBarriers(pRenderTarget->GetTextureBuffer()->GetResource(), stateBefore, GetResourceState(type));
     pCommandList->FlushResourceBarriers();
 }

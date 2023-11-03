@@ -38,12 +38,9 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
         Material* material = new Material(materialName);
         material->LoadTexture(textureID);
 
-        for (UINT j = 0; j < material->GetTextureNum(); j++)
-        {
-            LoadTextureBufferAndSampler(pCommandList, material->GetTexture());
-            pTexturePool[EraseSuffix(materialName)] = material->GetTexture();
-            pMaterialPool[EraseSuffix(materialName)] = material;
-        }
+        LoadTextureBufferAndSampler(pCommandList, material->GetTexture());
+        LoadTextureBufferAndSampler(pCommandList, material->GetMRATexture());
+        pMaterialPool[EraseSuffix(materialName)] = material;
     }
 
     // Parse FBX from the scene file.
@@ -101,12 +98,6 @@ void SceneManager::UnloadScene()
         delete it->second;
     }
     pMaterialPool.clear();
-
-    for (auto it = pTexturePool.begin(); it != pTexturePool.end(); it++)
-    {
-        delete it->second;
-    }
-    pTexturePool.clear();
 }
 
 void SceneManager::CreateCamera(UINT width, UINT height)
@@ -175,7 +166,7 @@ void SceneManager::UpdateCamera()
 
 void SceneManager::Release()
 {
-    for (auto it = pTexturePool.begin(); it != pTexturePool.end(); it++)
+    for (auto it = pMaterialPool.begin(); it != pMaterialPool.end(); it++)
     {
         it->second->ReleaseTextureData();
     }
