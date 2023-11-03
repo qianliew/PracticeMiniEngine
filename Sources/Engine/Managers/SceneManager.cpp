@@ -28,20 +28,22 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
     std::wifstream inFile(GetAssetPath(sceneName));
 
     // Parse textures from the scene file.
-    UINT numTextures = 0;
-    inFile >> numTextures;
+    UINT numMaterials = 0;
+    inFile >> numMaterials;
 
-    for (UINT i = 0; i < numTextures; i++)
+    for (UINT i = 0; i < numMaterials; i++)
     {
-        WCHAR textureName[32];
-        inFile >> textureName;
+        WCHAR materialName[32];
+        inFile >> materialName;
+        Material* material = new Material(materialName);
+        material->LoadTexture(textureID);
 
-        D3D12Texture* texture = new D3D12Texture(textureID++);
-        texture->LoadTexture(GetAssetPath(textureName));
-        texture->CreateTexture(D3D12TextureType::ShaderResource, TRUE);
-        LoadTextureBufferAndSampler(pCommandList, texture);
-
-        pTextures[EraseSuffix(textureName)] = texture;
+        for (UINT j = 0; j < material->GetTextureNum(); j++)
+        {
+            LoadTextureBufferAndSampler(pCommandList, material->GetTexture());
+            pTexturePool[EraseSuffix(materialName)] = material->GetTexture();
+            pMaterialPool[EraseSuffix(materialName)] = material;
+        }
     }
 
     // Parse FBX from the scene file.
@@ -55,7 +57,7 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
 
         Model* model = new Model(objectID++, fileName);
         model->LoadModel(pFBXImporter);
-        model->AddTexture(pTextures[EraseSuffix(fileName)]->GetTextureID());
+        model->SetMaterial(pMaterialPool[EraseSuffix(fileName)]);
 
         AddObject(model);
         LoadObjectVertexBufferAndIndexBuffer(pCommandList, model);
@@ -94,11 +96,17 @@ void SceneManager::UnloadScene()
     }
     pObjects.clear();
 
-    for (auto it = pTextures.begin(); it != pTextures.end(); it++)
+    for (auto it = pMaterialPool.begin(); it != pMaterialPool.end(); it++)
     {
         delete it->second;
     }
-    pTextures.clear();
+    pMaterialPool.clear();
+
+    for (auto it = pTexturePool.begin(); it != pTexturePool.end(); it++)
+    {
+        delete it->second;
+    }
+    pTexturePool.clear();
 }
 
 void SceneManager::CreateCamera(UINT width, UINT height)
@@ -126,9 +134,9 @@ void SceneManager::DrawObjects(D3D12CommandList*& pCommandList)
 
         // Set the material relating views.
         pDevice->GetDescriptorHeapManager()->SetSRVs(pCommandList->GetCommandList(),
-            model->GetMaterial()->GetTextureIDAt(0));
+            model->GetMaterial()->GetTexture()->GetTextureID());
         pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList(),
-            model->GetMaterial()->GetTextureIDAt(0));
+            model->GetMaterial()->GetTexture()->GetTextureID());
 
         // Set buffers and draw the instance.
         pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -167,7 +175,7 @@ void SceneManager::UpdateCamera()
 
 void SceneManager::Release()
 {
-    for (auto it = pTextures.begin(); it != pTextures.end(); it++)
+    for (auto it = pTexturePool.begin(); it != pTexturePool.end(); it++)
     {
         it->second->ReleaseTextureData();
     }

@@ -15,7 +15,8 @@ public:
     ~Model();
 
     void LoadModel(unique_ptr<FBXImporter>&);
-    void AddTexture(UINT);
+    void SetMaterial(Material*);
+
     inline D3D12Mesh* GetMesh() const { return pMesh; }
     inline Material* GetMaterial() const { return pMaterial; }
 };

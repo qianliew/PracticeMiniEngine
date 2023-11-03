@@ -1,16 +1,22 @@
 #pragma once
+#include "D3D12Texture.h"
 
 class Material
 {
 private:
 	// TODO: Parse the shader to decide how many textures in each material.
 	// Material is equal to Shader in this engine right now, and there is just one object shader.
-	const UINT maxTextureNum = 1;
+	const UINT kTextureNum = 1;
+	std::wstring name;
 
-	std::vector<UINT> textureList;
+	D3D12Texture* pTexture;
 
 public:
-	void AddTexture(UINT id);
+	Material(std::wstring inName);
+	~Material();
 
-	inline const UINT GetTextureIDAt(UINT index) const { return textureList[index]; }
+	void LoadTexture(UINT& textureID);
+
+	inline const UINT GetTextureNum() const { return kTextureNum; }
+	inline D3D12Texture* GetTexture() const { return pTexture; }
 };

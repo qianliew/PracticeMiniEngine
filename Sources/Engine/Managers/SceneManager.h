@@ -1,8 +1,8 @@
 #pragma once
 #include "FBXImporter.h"
-#include "D3D12Texture.h"
 #include "Camera.h"
 #include "Model.h"
+#include "Material.h"
 
 class SceneManager
 {
@@ -11,7 +11,8 @@ private:
 	unique_ptr<FBXImporter> pFBXImporter;
 
 	std::vector<Model*> pObjects;
-	std::map<wstring, D3D12Texture*> pTextures;
+	std::map<wstring, D3D12Texture*> pTexturePool;
+	std::map<wstring, Material*> pMaterialPool;
 	Camera* pCamera;
 	Model* pFullScreenMesh;
 

@@ -6,13 +6,11 @@ Model::Model(UINT id, LPCWSTR meshPath) :
     pMeshPath(meshPath)
 {
     pMesh = new D3D12Mesh();
-    pMaterial = new Material();
 }
 
 Model::~Model()
 {
     delete pMesh;
-    delete pMaterial;
 }
 
 void Model::LoadModel(unique_ptr<FBXImporter>& importer)
@@ -24,7 +22,7 @@ void Model::LoadModel(unique_ptr<FBXImporter>& importer)
     }
 }
 
-void Model::AddTexture(UINT id)
+void Model::SetMaterial(Material* material)
 {
-    pMaterial->AddTexture(id);
+    pMaterial = material;
 }
