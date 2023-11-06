@@ -286,39 +286,60 @@ void FBXImporter::LoadMesh(FbxNode* pNode, D3D12Mesh* mesh)
                 };
 
                 FbxGeometryElementNormal* leNormal = lMesh->GetElementNormal(0);
-
-                if (leNormal->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
+                switch (leNormal->GetReferenceMode())
                 {
-                    switch (leNormal->GetReferenceMode())
+                case FbxGeometryElement::eDirect:
+                    iVertex->normal = XMFLOAT3
                     {
-                    case FbxGeometryElement::eDirect:
-                        iVertex->normal = XMFLOAT4
-                        {
-                            static_cast<float>(leNormal->GetDirectArray().GetAt(cpIndex).mData[0]),
-                            static_cast<float>(leNormal->GetDirectArray().GetAt(cpIndex).mData[1]),
-                            static_cast<float>(leNormal->GetDirectArray().GetAt(cpIndex).mData[2]),
-                            static_cast<float>(leNormal->GetDirectArray().GetAt(cpIndex).mData[3]),
-                        };
-                        break;
-                    case FbxGeometryElement::eIndexToDirect:
-                    {
-                        int id = leNormal->GetIndexArray().GetAt(cpIndex);
-                        iVertex->normal = XMFLOAT4
-                        {
-                            static_cast<float>(leNormal->GetDirectArray().GetAt(id).mData[0]),
-                            static_cast<float>(leNormal->GetDirectArray().GetAt(id).mData[1]),
-                            static_cast<float>(leNormal->GetDirectArray().GetAt(id).mData[2]),
-                            static_cast<float>(leNormal->GetDirectArray().GetAt(id).mData[3]),
-                        };
-                    }
+                        static_cast<float>(leNormal->GetDirectArray().GetAt(cpIndex).mData[0]),
+                        static_cast<float>(leNormal->GetDirectArray().GetAt(cpIndex).mData[1]),
+                        static_cast<float>(leNormal->GetDirectArray().GetAt(cpIndex).mData[2]),
+                    };
                     break;
-                    default:
-                        break; // other reference modes not shown here!
-                    }
+                case FbxGeometryElement::eIndexToDirect:
+                {
+                    int id = leNormal->GetIndexArray().GetAt(cpIndex);
+                    iVertex->normal = XMFLOAT3
+                    {
+                        static_cast<float>(leNormal->GetDirectArray().GetAt(id).mData[0]),
+                        static_cast<float>(leNormal->GetDirectArray().GetAt(id).mData[1]),
+                        static_cast<float>(leNormal->GetDirectArray().GetAt(id).mData[2]),
+                    };
+                }
+                break;
+                default:
+                    break; // other reference modes not shown here!
+                }
+
+                FbxGeometryElementTangent* leTangent = lMesh->GetElementTangent(0);
+                switch (leTangent->GetReferenceMode())
+                {
+                case FbxGeometryElement::eDirect:
+                    iVertex->tangent = XMFLOAT4
+                    {
+                        static_cast<float>(leTangent->GetDirectArray().GetAt(cpIndex).mData[0]),
+                        static_cast<float>(leTangent->GetDirectArray().GetAt(cpIndex).mData[1]),
+                        static_cast<float>(leTangent->GetDirectArray().GetAt(cpIndex).mData[2]),
+                        static_cast<float>(leTangent->GetDirectArray().GetAt(cpIndex).mData[3]),
+                    };
+                    break;
+                case FbxGeometryElement::eIndexToDirect:
+                {
+                    int id = leTangent->GetIndexArray().GetAt(cpIndex);
+                    iVertex->tangent = XMFLOAT4
+                    {
+                        static_cast<float>(leTangent->GetDirectArray().GetAt(id).mData[0]),
+                        static_cast<float>(leTangent->GetDirectArray().GetAt(id).mData[1]),
+                        static_cast<float>(leTangent->GetDirectArray().GetAt(id).mData[2]),
+                        static_cast<float>(leTangent->GetDirectArray().GetAt(id).mData[3]),
+                    };
+                }
+                break;
+                default:
+                    break; // other reference modes not shown here!
                 }
 
                 FbxGeometryElementUV* leUV = lMesh->GetElementUV(0);
-
                 switch (leUV->GetMappingMode())
                 {
                 default:

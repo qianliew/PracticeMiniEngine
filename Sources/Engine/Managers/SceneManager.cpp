@@ -72,8 +72,6 @@ void SceneManager::LoadScene(D3D12CommandList*& pCommandList)
     // Create static data.
     pFullScreenMesh = new Model(objectID++, L"plane.fbx");
     pFullScreenMesh->LoadModel(pFBXImporter);
-    pFullScreenMesh->MoveAlongX(10.0f);
-    pFullScreenMesh->MoveAlongZ(5.0f);
 
     // Create the global constant buffer.
     pDevice->GetBufferManager()->AllocateGlobalConstantBuffer();

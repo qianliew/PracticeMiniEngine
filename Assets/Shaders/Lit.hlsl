@@ -19,7 +19,7 @@ SamplerState s3 : register(s3);
 struct VSInput
 {
     float4 position : POSITION;
-    float3 normal   : NORMAL;
+    float3 normalOS : NORMAL;
     float4 tangent  : TANGENT;
     float2 texCoord : TEXCOORD;
     float4 color    : COLOR;
@@ -29,8 +29,14 @@ struct PSInput
 {
     float4 position : SV_POSITION;
     float2 texCoord : TEXCOORD;
+    float3 normalWS : TEXCOORD1;
     float4 color    : COLOR;
 };
+
+float3 GetNormalizedWorldNormal(float3 normalOS)
+{
+    return normalize(mul((float3x3)ObjectToWorldMatrix, normalOS));
+}
 
 PSInput VSMain(VSInput input)
 {
@@ -39,6 +45,7 @@ PSInput VSMain(VSInput input)
     input.position.w = 1;
     result.position = mul(mul(ObjectToWorldMatrix, WorldToProjectionMatrix), input.position);
     result.texCoord = input.texCoord;
+    result.normalWS = GetNormalizedWorldNormal(input.normalOS);
     result.color = input.color;
 
     return result;
@@ -46,5 +53,6 @@ PSInput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    return t1.Sample(s1, input.texCoord);
+    float NdotL = saturate(dot(input.normalWS, float3(1, 1, 0)));
+    return t1.Sample(s1, input.texCoord) * NdotL;
 }
