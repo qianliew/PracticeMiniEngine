@@ -48,6 +48,12 @@ void Camera::SetScissorRect(const LONG width, const LONG height)
     pScissorRect->bottom = height;
 }
 
+void Camera::UpdateCameraConstant()
+{
+    XMStoreFloat4x4(&cameraConstant.WorldToProjectionMatrix, GetVPMatrix());
+    XMStoreFloat3(&cameraConstant.CameraWorldPosition, worldPosition);
+}
+
 const XMMATRIX Camera::GetVPMatrix()
 {
     // Get the view matrix.

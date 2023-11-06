@@ -2,6 +2,7 @@
 cbuffer GlobalConstants : register(b0)
 {
     float4x4 WorldToProjectionMatrix;
+    float3 CameraPositionWS;
 };
 
 cbuffer PerObjectConstants : register(b1)
@@ -18,34 +19,50 @@ SamplerState s3 : register(s3);
 
 struct VSInput
 {
-    float4 position : POSITION;
-    float3 normalOS : NORMAL;
-    float4 tangent  : TANGENT;
+    float4 positionOS   : POSITION;
+    float3 normalOS     : NORMAL;
+    float4 tangentOS    : TANGENT;
     float2 texCoord : TEXCOORD;
     float4 color    : COLOR;
 };
 
 struct PSInput
 {
-    float4 position : SV_POSITION;
-    float2 texCoord : TEXCOORD;
-    float3 normalWS : TEXCOORD1;
-    float4 color    : COLOR;
+    float4 positionWS   : SV_POSITION;
+    float2 texCoord     : TEXCOORD;
+    float3 normalWS     : TEXCOORD1;
+    float4 tangentWS    : TEXCOORD2;
+    float3 viewDirWS    : TEXCOORD3;
+    float4 color        : COLOR;
 };
 
-float3 GetNormalizedWorldNormal(float3 normalOS)
+inline float3 GetWorldSpaceNormal(float3 normalOS)
 {
-    return normalize(mul((float3x3)ObjectToWorldMatrix, normalOS));
+    return mul((float3x3)ObjectToWorldMatrix, normalOS);
+}
+
+inline float3 GetWorldSpaceTangent(float4 tangentOS)
+{
+    return mul((float3x3)ObjectToWorldMatrix, tangentOS.xyz);
+}
+
+inline float3 GetWorldSpaceViewDir(float3 positionWS)
+{
+    return CameraPositionWS - positionWS;
 }
 
 PSInput VSMain(VSInput input)
 {
     PSInput result;
 
-    input.position.w = 1;
-    result.position = mul(mul(ObjectToWorldMatrix, WorldToProjectionMatrix), input.position);
+    input.positionOS.w = 1;
+    result.positionWS = mul(mul(ObjectToWorldMatrix, WorldToProjectionMatrix), input.positionOS);
     result.texCoord = input.texCoord;
-    result.normalWS = GetNormalizedWorldNormal(input.normalOS);
+
+    result.normalWS = normalize(GetWorldSpaceNormal(input.normalOS));
+    result.tangentWS = float4(normalize(GetWorldSpaceTangent(input.tangentOS)), input.tangentOS.w);
+    result.viewDirWS = normalize(GetWorldSpaceViewDir(result.positionWS));
+
     result.color = input.color;
 
     return result;
@@ -53,6 +70,38 @@ PSInput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    float NdotL = saturate(dot(input.normalWS, float3(1, 1, 0)));
-    return t1.Sample(s1, input.texCoord) * NdotL;
+    float3 normalTS = t3.Sample(s3, input.texCoord).xyz * 2.0f - 1.0f;
+
+    float sgn = input.tangentWS.w > 0.0f ? -1.0f : 1.0f;
+    float3 bitangentWS = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
+    float3 normalWS = mul(float3x3(input.tangentWS.xyz, bitangentWS.xyz, input.normalWS.xyz), normalTS);
+
+    //return float4(input.normalWS.xyz, 1.0f);
+    //return float4(normalWS.xyz, 1.0f);
+
+    float roughness = t1.Sample(s1, input.texCoord).g;
+    float roughness2 = roughness * roughness;
+
+    float3 diffuse = t1.Sample(s1, input.texCoord).rgb;
+    float3 specular = diffuse;
+
+    float3 lightDirWS = float3(1.0f, 1.0f, 0.0f);
+    float NdotV = dot(normalWS, input.viewDirWS);
+    float NdotL = dot(normalWS, lightDirWS);
+
+    float clampedNdotV = max(NdotV, 0.0001f);
+    float clampedNdotL = saturate(NdotL);
+
+    float diffuseTerm = 1.0f;
+
+    float3 halfDir = normalize(lightDirWS + input.viewDirWS);
+    float NdotH = saturate(dot(normalWS, halfDir));
+    float LdotH = saturate(dot(lightDirWS, halfDir));
+
+    float d = NdotH * NdotH * (roughness2 - 1.0f) + 1.00001f;
+
+    float LdotH2 = LdotH * LdotH;
+    float specularTerm = roughness2 / ((d * d) * max(0.1h, LdotH2) * (roughness * 4.0f + 2.0f));
+
+    return float4((diffuse * diffuseTerm + specular * specularTerm) * clampedNdotL, 1.0f);
 }

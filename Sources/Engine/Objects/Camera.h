@@ -12,6 +12,7 @@ using namespace DirectX;
 struct CameraConstant
 {
     XMFLOAT4X4 WorldToProjectionMatrix;
+    XMFLOAT3 CameraWorldPosition;
 };
 
 class Camera : public Transform
@@ -39,12 +40,12 @@ public:
 
     void SetViewport(const FLOAT width, const FLOAT height);
     void SetScissorRect(const LONG width, const LONG height);
+    void UpdateCameraConstant();
+    const XMMATRIX GetVPMatrix();
 
     inline const FLOAT GetCameraWidth() const { return width; }
     inline const FLOAT GetCameraHeight() const { return height; }
     inline const D3D12_VIEWPORT* GetViewport() const { return pViewport; }
     inline const D3D12_RECT* GetScissorRect() const { return pScissorRect; }
     inline CameraConstant& GetCameraConstant() { return cameraConstant; }
-
-    const XMMATRIX GetVPMatrix();
 };

@@ -150,17 +150,15 @@ void SceneManager::UpdateTransforms()
     for (UINT i = 0; i < pObjects.size(); i++)
     {
         pObjects[i]->SetObjectToWorldMatrix();
-        TransformConstant transformConstant = pObjects[i]->GetTransformConstant();
         pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(pObjects[i]->GetObjectID())
-            ->CopyData(&transformConstant, sizeof(TransformConstant));
+            ->CopyData(&pObjects[i]->GetTransformConstant(), sizeof(TransformConstant));
     }
 }
 
 void SceneManager::UpdateCamera()
 {
-    CameraConstant cameraConstant = pCamera->GetCameraConstant();
-    XMStoreFloat4x4(&cameraConstant.WorldToProjectionMatrix, pCamera->GetVPMatrix());
-    pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CopyData(&cameraConstant, sizeof(CameraConstant));
+    pCamera->UpdateCameraConstant();
+    pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CopyData(&pCamera->GetCameraConstant(), sizeof(CameraConstant));
 }
 
 void SceneManager::Release()
