@@ -45,7 +45,7 @@ void D3D12Texture::LoadTexture(std::wstring& texturePath)
         if (INVALID_FILE_ATTRIBUTES == GetFileAttributes(GetTexturePath(texturePath, i).c_str())
             && GetLastError() == ERROR_FILE_NOT_FOUND)
         {
-            ThrowIfFailed(pFactory->CreateDecoderFromFilename(GetDefaultMipTexturePath(mipWidth).c_str(),
+            ThrowIfFailed(pFactory->CreateDecoderFromFilename(GetDefaultMipTexturePath(texturePath, mipWidth).c_str(),
                 NULL, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &pDecoder));
         }
         else
@@ -184,9 +184,11 @@ std::wstring D3D12Texture::GetTexturePath(std::wstring texturePath, UINT mipInde
     return texturePath;
 }
 
-std::wstring D3D12Texture::GetDefaultMipTexturePath(UINT mipSize)
+std::wstring D3D12Texture::GetDefaultMipTexturePath(std::wstring texturePath, UINT mipSize)
 {
-    std::wstring path = kDefaultTexturePath;
+    std::wstring path = texturePath.find(L"_mra") == texturePath.size() - 8 ? kDefaultMRATexturePath :
+        texturePath.find(L"_n") == texturePath.size() - 6 ? kDefaultNormalTexturePath :
+        kDefaultTexturePath;
     path.insert(path.find_last_of(L'.'), std::to_wstring(mipSize));
 
     return path;

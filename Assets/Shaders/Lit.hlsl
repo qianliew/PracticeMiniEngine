@@ -76,7 +76,7 @@ float4 PSMain(PSInput input) : SV_TARGET
     float3 bitangentWS = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
     float3 normalWS = mul(normalTS, float3x3(input.tangentWS.xyz, bitangentWS.xyz, input.normalWS.xyz));
 
-    float roughness = t1.Sample(s1, input.texCoord).g;
+    float roughness = t2.Sample(s2, input.texCoord).g;
     float roughness2 = roughness * roughness;
 
     float3 diffuse = t1.Sample(s1, input.texCoord).rgb;

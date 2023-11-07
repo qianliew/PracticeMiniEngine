@@ -21,13 +21,15 @@ private:
 	const UINT kMipCount = 10;
 	const std::wstring kMipSuffix = L"_mip";
 	const std::wstring kDefaultTexturePath = L"..\\Assets\\default_mip.png";
+	const std::wstring kDefaultMRATexturePath = L"..\\Assets\\default_mra_mip.png";
+	const std::wstring kDefaultNormalTexturePath = L"..\\Assets\\default_n_mip.png";
 
 	std::map<UINT, BYTE*> pData;
 	D3D12Resource* pTextureBuffer;
 
 	// Helper functions
 	std::wstring GetTexturePath(std::wstring texturePath, UINT mipIndex);
-	std::wstring GetDefaultMipTexturePath(UINT mipSize);
+	std::wstring GetDefaultMipTexturePath(std::wstring texturePath, UINT mipSize);
 
 public:
 	D3D12Texture(UINT inSRVID, UINT inRTVID = -1);
