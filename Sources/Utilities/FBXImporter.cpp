@@ -270,6 +270,8 @@ void FBXImporter::LoadMesh(FbxNode* pNode, D3D12Mesh* mesh)
     Vertex* pVertex = (Vertex*)malloc(verticesSize);
     Vertex* iVertex = pVertex;
 
+    UINT index = 0;
+    fbxsdk::FbxVector4 pNormal;
     if (pIndex && pVertex)
     {
         for (int i = 0; i < polygonSize; i++)
@@ -289,11 +291,12 @@ void FBXImporter::LoadMesh(FbxNode* pNode, D3D12Mesh* mesh)
                 switch (leNormal->GetReferenceMode())
                 {
                 case FbxGeometryElement::eDirect:
+                    lMesh->GetPolygonVertexNormal(i, j, pNormal);
                     iVertex->normal = XMFLOAT3
                     {
-                        static_cast<float>(leNormal->GetDirectArray().GetAt(cpIndex).mData[0]),
-                        static_cast<float>(leNormal->GetDirectArray().GetAt(cpIndex).mData[1]),
-                        static_cast<float>(leNormal->GetDirectArray().GetAt(cpIndex).mData[2]),
+                        static_cast<float>(pNormal.mData[0]),
+                        static_cast<float>(pNormal.mData[1]),
+                        static_cast<float>(pNormal.mData[2]),
                     };
                     break;
                 case FbxGeometryElement::eIndexToDirect:
@@ -317,15 +320,15 @@ void FBXImporter::LoadMesh(FbxNode* pNode, D3D12Mesh* mesh)
                 case FbxGeometryElement::eDirect:
                     iVertex->tangent = XMFLOAT4
                     {
-                        static_cast<float>(leTangent->GetDirectArray().GetAt(cpIndex).mData[0]),
-                        static_cast<float>(leTangent->GetDirectArray().GetAt(cpIndex).mData[1]),
-                        static_cast<float>(leTangent->GetDirectArray().GetAt(cpIndex).mData[2]),
-                        static_cast<float>(leTangent->GetDirectArray().GetAt(cpIndex).mData[3]),
+                        static_cast<float>(leTangent->GetDirectArray().GetAt(index).mData[0]),
+                        static_cast<float>(leTangent->GetDirectArray().GetAt(index).mData[1]),
+                        static_cast<float>(leTangent->GetDirectArray().GetAt(index).mData[2]),
+                        static_cast<float>(leTangent->GetDirectArray().GetAt(index).mData[3]),
                     };
                     break;
                 case FbxGeometryElement::eIndexToDirect:
                 {
-                    int id = leTangent->GetIndexArray().GetAt(cpIndex);
+                    int id = leTangent->GetIndexArray().GetAt(index);
                     iVertex->tangent = XMFLOAT4
                     {
                         static_cast<float>(leTangent->GetDirectArray().GetAt(id).mData[0]),
@@ -350,13 +353,13 @@ void FBXImporter::LoadMesh(FbxNode* pNode, D3D12Mesh* mesh)
                     case FbxGeometryElement::eDirect:
                         iVertex->texCoord = XMFLOAT2
                         {
-                            static_cast<float>(leUV->GetDirectArray().GetAt(cpIndex).mData[0]),
-                            static_cast<float>(leUV->GetDirectArray().GetAt(cpIndex).mData[1]),
+                            static_cast<float>(leUV->GetDirectArray().GetAt(index).mData[0]),
+                            static_cast<float>(leUV->GetDirectArray().GetAt(index).mData[1]),
                         };
                         break;
                     case FbxGeometryElement::eIndexToDirect:
                     {
-                        int id = leUV->GetIndexArray().GetAt(cpIndex);
+                        int id = leUV->GetIndexArray().GetAt(index);
                         iVertex->texCoord = XMFLOAT2
                         {
                             static_cast<float>(leUV->GetDirectArray().GetAt(id).mData[0]),
@@ -400,6 +403,7 @@ void FBXImporter::LoadMesh(FbxNode* pNode, D3D12Mesh* mesh)
                 {
                     1, 1, 1, 1
                 };
+                index++;
             }
         }
 

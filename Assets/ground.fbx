@@ -8,11 +8,11 @@ FBXHeaderExtension:  {
 		Version: 1000
 		Year: 2023
 		Month: 11
-		Day: 6
-		Hour: 14
-		Minute: 43
-		Second: 4
-		Millisecond: 12
+		Day: 7
+		Hour: 15
+		Minute: 42
+		Second: 22
+		Millisecond: 106
 	}
 	Creator: "FBX SDK/FBX Plugins version 2018.1.1"
 	SceneInfo: "SceneInfo::GlobalInfo", "UserData" {
@@ -34,13 +34,13 @@ FBXHeaderExtension:  {
 			P: "Original|ApplicationVendor", "KString", "", "", "Autodesk"
 			P: "Original|ApplicationName", "KString", "", "", "Maya"
 			P: "Original|ApplicationVersion", "KString", "", "", "201800"
-			P: "Original|DateTime_GMT", "DateTime", "", "", "06/11/2023 06:43:04.011"
+			P: "Original|DateTime_GMT", "DateTime", "", "", "07/11/2023 07:42:22.105"
 			P: "Original|FileName", "KString", "", "", "F:\Engine\Assets\ground.fbx"
 			P: "LastSaved", "Compound", "", ""
 			P: "LastSaved|ApplicationVendor", "KString", "", "", "Autodesk"
 			P: "LastSaved|ApplicationName", "KString", "", "", "Maya"
 			P: "LastSaved|ApplicationVersion", "KString", "", "", "201800"
-			P: "LastSaved|DateTime_GMT", "DateTime", "", "", "06/11/2023 06:43:04.011"
+			P: "LastSaved|DateTime_GMT", "DateTime", "", "", "07/11/2023 07:42:22.105"
 			P: "Original|ApplicationActiveProject", "KString", "", "", "F:\Engine\Assets"
 			P: "Original|ApplicationNativeFile", "KString", "", "", "C:\Users\wangqianlie\Desktop\test.mb"
 		}
@@ -77,7 +77,7 @@ GlobalSettings:  {
 
 Documents:  {
 	Count: 1
-	Document: 1695936115872, "", "Scene" {
+	Document: 1695223669664, "", "Scene" {
 		Properties70:  {
 			P: "SourceObject", "object", "", ""
 			P: "ActiveAnimStackName", "KString", "", "", "Take 001"
@@ -250,7 +250,7 @@ Definitions:  {
 ;------------------------------------------------------------------
 
 Objects:  {
-	Geometry: 1693998302848, "Geometry::", "Mesh" {
+	Geometry: 1695886487792, "Geometry::", "Mesh" {
 		Vertices: *243 {
 			a: -500,-10,500,500,-10,500,-500,-10,-500,500,-10,-500,-500,-10,0,0,-10,500,500,-10,0,0,-10,-500,0,-10,0,-250,-10,250,250,-10,250,250,-10,-250,-250,-10,-250,0,-10,250,250,-10,0,0,-10,-250,-250,-10,0,-250,-10,500,250,-10,500,500,-10,250,500,-10,-250,250,-10,-500,-250,-10,-500,-500,-10,-250,-500,-10,250,0,-10,-125,500,-10,-125,375,-10,-250,500,-10,-375,375,-10,-500,250,-10,-375,125,-10,-500,0,-10,-375,-250,-10,-125,-375,-10,-250,-500,-10,-125,-125,-10,-250,-125,-10,-500,-250,-10,-375,-375,-10,-500,-500,-10,-375,-375,-10,500,-250,-10,375,-375,-10,250,-500,-10,375,-125,-10,500,0,-10,375,-125,-10,250,0,-10,125,-125,-10,0,-250,-10,125,-375,-10,0,-500,-10,125,125,-10,500,250,-10,375,125,-10,250,375,-10,500,500,-10,375,375,-10,250,500,-10,125,375,-10,0,250,-10,125,125,-10,0,250,-10,-125,125,-10,-250,-375,-10,375,-125,-10,375,-125,-10,125,-375,-10,125,125,-10,375,375,-10,375,375,-10,125,125,-10,125,125,-10,-125,375,-10,-125,375,-10,-375,125,-10,-375,-375,-10,-125,-125,-10,-125,-125,-10,-375,-375,-10,-375
 		} 
@@ -344,7 +344,7 @@ Objects:  {
 			}
 		}
 	}
-	Model: 1694007992480, "Model::ground", "Mesh" {
+	Model: 1694007978560, "Model::ground", "Mesh" {
 		Version: 232
 		Properties70:  {
 			P: "RotationActive", "bool", "", "",1
@@ -356,7 +356,7 @@ Objects:  {
 		Shading: T
 		Culling: "CullingOff"
 	}
-	Material: 1695592609856, "Material::lambert1", "" {
+	Material: 1696141165072, "Material::lambert1", "" {
 		Version: 102
 		ShadingModel: "lambert"
 		MultiLayer: 0
@@ -371,7 +371,7 @@ Objects:  {
 			P: "Opacity", "double", "Number", "",1
 		}
 	}
-	AnimationStack: 1693397791584, "AnimStack::Take 001", "" {
+	AnimationStack: 1693969608512, "AnimStack::Take 001", "" {
 		Properties70:  {
 			P: "LocalStart", "KTime", "Time", "",1924423250
 			P: "LocalStop", "KTime", "Time", "",230930790000
@@ -379,7 +379,7 @@ Objects:  {
 			P: "ReferenceStop", "KTime", "Time", "",230930790000
 		}
 	}
-	AnimationLayer: 1695980542096, "AnimLayer::BaseLayer", "" {
+	AnimationLayer: 1693971449872, "AnimLayer::BaseLayer", "" {
 	}
 }
 
@@ -389,16 +389,16 @@ Objects:  {
 Connections:  {
 	
 	;Model::ground, Model::RootNode
-	C: "OO",1694007992480,0
+	C: "OO",1694007978560,0
 	
 	;AnimLayer::BaseLayer, AnimStack::Take 001
-	C: "OO",1695980542096,1693397791584
+	C: "OO",1693971449872,1693969608512
 	
 	;Geometry::, Model::ground
-	C: "OO",1693998302848,1694007992480
+	C: "OO",1695886487792,1694007978560
 	
 	;Material::lambert1, Model::ground
-	C: "OO",1695592609856,1694007992480
+	C: "OO",1696141165072,1694007978560
 }
 ;Takes section
 ;----------------------------------------------------

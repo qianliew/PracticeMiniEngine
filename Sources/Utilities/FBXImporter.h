@@ -3,6 +3,7 @@
 #include "D3D12Mesh.h"
 
 using namespace std;
+using namespace fbxsdk;
 
 class FBXImporter
 {

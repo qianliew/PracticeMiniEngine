@@ -22,8 +22,8 @@ struct VSInput
     float4 positionOS   : POSITION;
     float3 normalOS     : NORMAL;
     float4 tangentOS    : TANGENT;
-    float2 texCoord : TEXCOORD;
-    float4 color    : COLOR;
+    float2 texCoord     : TEXCOORD;
+    float4 color        : COLOR;
 };
 
 struct PSInput
@@ -41,9 +41,9 @@ inline float3 GetWorldSpaceNormal(float3 normalOS)
     return mul((float3x3)ObjectToWorldMatrix, normalOS);
 }
 
-inline float3 GetWorldSpaceTangent(float4 tangentOS)
+inline float3 GetWorldSpaceTangent(float3 tangentOS)
 {
-    return mul((float3x3)ObjectToWorldMatrix, tangentOS.xyz);
+    return mul((float3x3)ObjectToWorldMatrix, tangentOS);
 }
 
 inline float3 GetWorldSpaceViewDir(float3 positionWS)
@@ -60,7 +60,7 @@ PSInput VSMain(VSInput input)
     result.texCoord = input.texCoord;
 
     result.normalWS = normalize(GetWorldSpaceNormal(input.normalOS));
-    result.tangentWS = float4(normalize(GetWorldSpaceTangent(input.tangentOS)), input.tangentOS.w);
+    result.tangentWS = float4(normalize(GetWorldSpaceTangent(input.tangentOS.xyz)), input.tangentOS.w);
     result.viewDirWS = normalize(GetWorldSpaceViewDir(result.positionWS));
 
     result.color = input.color;
@@ -74,10 +74,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 
     float sgn = input.tangentWS.w > 0.0f ? -1.0f : 1.0f;
     float3 bitangentWS = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
-    float3 normalWS = mul(float3x3(input.tangentWS.xyz, bitangentWS.xyz, input.normalWS.xyz), normalTS);
-
-    //return float4(input.normalWS.xyz, 1.0f);
-    //return float4(normalWS.xyz, 1.0f);
+    float3 normalWS = mul(normalTS, float3x3(input.tangentWS.xyz, bitangentWS.xyz, input.normalWS.xyz));
 
     float roughness = t1.Sample(s1, input.texCoord).g;
     float roughness2 = roughness * roughness;
