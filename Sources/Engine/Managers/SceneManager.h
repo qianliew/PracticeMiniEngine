@@ -2,7 +2,7 @@
 #include "FBXImporter.h"
 #include "Camera.h"
 #include "Model.h"
-#include "Material.h"
+#include "AbstractMaterial.h"
 
 class SceneManager
 {
@@ -11,12 +11,11 @@ private:
 	unique_ptr<FBXImporter> pFBXImporter;
 
 	std::vector<Model*> pObjects;
-	std::map<wstring, Material*> pMaterialPool;
+	std::map<wstring, AbstractMaterial*> pMaterialPool;
 	Camera* pCamera;
 	Model* pFullScreenMesh;
 
 	UINT objectID;
-	UINT textureID;
 
 	// Helper functions.
 	void LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*&, Model* object);
@@ -25,6 +24,8 @@ private:
 public:
 	SceneManager(shared_ptr<D3D12Device>&);
 	~SceneManager();
+
+	static UINT sTextureID;
 
 	void InitFBXImporter();
 	void ParseScene(D3D12CommandList*&);

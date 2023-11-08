@@ -1,49 +1,50 @@
 #include "stdafx.h"
-#include "Material.h"
+#include "LitMaterial.h"
+#include "SceneManager.h"
 
-Material::Material(std::wstring inName) :
-	name(inName)
+LitMaterial::LitMaterial(std::wstring inName) :
+	AbstractMaterial(inName)
 {
 
 }
 
-Material::~Material()
+LitMaterial::~LitMaterial()
 {
 	delete pTexture;
 	delete pMRATexture;
 	delete pNormalTexture;
 }
 
-void Material::LoadTexture(UINT& textureID)
+void LitMaterial::LoadTexture()
 {
 	std::wstring texturePath = GetAssetPath(name.c_str());
 
 	// Load the diffuse texture.
-	UINT id = textureID++;
+	UINT id = SceneManager::sTextureID++;
 	pTexture = new D3D12Texture(id);
 	pTexture->LoadTexture(texturePath);
 	pTexture->CreateTexture(D3D12TextureType::ShaderResource, TRUE);
 
 	// Load the MRA texture.
-	id = textureID++;
+	id = SceneManager::sTextureID++;
 	pMRATexture = new D3D12Texture(id);
 	pMRATexture->LoadTexture(GetMRATexturePath(texturePath));
 	pMRATexture->CreateTexture(D3D12TextureType::ShaderResource, TRUE);
 
 	// Load the normal texture.
-	id = textureID++;
+	id = SceneManager::sTextureID++;
 	pNormalTexture = new D3D12Texture(id);
 	pNormalTexture->LoadTexture(GetNormalTexturePath(texturePath));
 	pNormalTexture->CreateTexture(D3D12TextureType::ShaderResource, TRUE);
 }
 
-void Material::ReleaseTextureData()
+void LitMaterial::ReleaseTextureData()
 {
 	pTexture->ReleaseTextureData();
 	pMRATexture->ReleaseTextureData();
 }
 
-std::wstring Material::GetMRATexturePath(std::wstring texturePath)
+std::wstring LitMaterial::GetMRATexturePath(std::wstring texturePath)
 {
 	std::wstring suffix = kMRASuffix;
 	texturePath.insert(texturePath.find_last_of(L'.'), suffix);
@@ -51,7 +52,7 @@ std::wstring Material::GetMRATexturePath(std::wstring texturePath)
 	return texturePath;
 }
 
-std::wstring Material::GetNormalTexturePath(std::wstring texturePath)
+std::wstring LitMaterial::GetNormalTexturePath(std::wstring texturePath)
 {
 	std::wstring suffix = kNormalSuffix;
 	texturePath.insert(texturePath.find_last_of(L'.'), suffix);

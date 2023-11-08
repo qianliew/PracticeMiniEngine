@@ -1,13 +1,13 @@
 #pragma once
 #include "FBXImporter.h"
 #include "D3D12Mesh.h"
-#include "Material.h"
+#include "AbstractMaterial.h"
 
 class Model : public Transform
 {
 private:
     D3D12Mesh* pMesh;
-    Material* pMaterial;
+    AbstractMaterial* pMaterial;
     LPCWSTR pMeshPath;
 
 public:
@@ -15,8 +15,8 @@ public:
     ~Model();
 
     void LoadModel(unique_ptr<FBXImporter>&);
-    void SetMaterial(Material*);
+    void SetMaterial(AbstractMaterial*);
 
     inline D3D12Mesh* GetMesh() const { return pMesh; }
-    inline Material* GetMaterial() const { return pMaterial; }
+    inline AbstractMaterial* GetMaterial() const { return pMaterial; }
 };

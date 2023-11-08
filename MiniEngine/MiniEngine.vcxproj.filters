@@ -130,7 +130,7 @@
     <ClInclude Include="..\Sources\Engine\Rendering\BlitPass.h">
       <Filter>Engine\Rendering\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\Sources\Engine\Objects\Material.h">
+    <ClInclude Include="..\Sources\Engine\Objects\LitMaterial.h">
       <Filter>Engine\Objects\Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Sources\Engine\Objects\Model.h">
@@ -141,6 +141,12 @@
     </ClInclude>
     <ClInclude Include="..\Sources\Engine\Managers\ViewManager.h">
       <Filter>Engine\Managers\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Rendering\DrawSkyboxPass.h">
+      <Filter>Engine\Rendering\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Objects\AbstractMaterial.h">
+      <Filter>Engine\Objects\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -219,7 +225,7 @@
     <ClCompile Include="..\Sources\Engine\Objects\Model.cpp">
       <Filter>Engine\Objects\Sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\Sources\Engine\Objects\Material.cpp">
+    <ClCompile Include="..\Sources\Engine\Objects\LitMaterial.cpp">
       <Filter>Engine\Objects\Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\Sources\Engine\Objects\Camera.cpp">
@@ -227,6 +233,12 @@
     </ClCompile>
     <ClCompile Include="..\Sources\Engine\Managers\ViewManager.cpp">
       <Filter>Engine\Managers\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Rendering\DrawSkyboxPass.cpp">
+      <Filter>Engine\Rendering\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Objects\AbstractMaterial.cpp">
+      <Filter>Engine\Objects\Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

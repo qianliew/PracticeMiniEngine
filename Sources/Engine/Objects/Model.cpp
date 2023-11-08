@@ -22,7 +22,7 @@ void Model::LoadModel(unique_ptr<FBXImporter>& importer)
     }
 }
 
-void Model::SetMaterial(Material* material)
+void Model::SetMaterial(AbstractMaterial* material)
 {
     pMaterial = material;
 }

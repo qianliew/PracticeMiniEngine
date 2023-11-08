@@ -1,10 +1,12 @@
 #include "stdafx.h"
 #include "SceneManager.h"
+#include "LitMaterial.h"
+
+UINT SceneManager::sTextureID = 0;
 
 SceneManager::SceneManager(shared_ptr<D3D12Device>& device) :
     pDevice(device),
-    objectID(0),
-    textureID(0)
+    objectID(0)
 {
 
 }
@@ -27,7 +29,10 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
     LPCWSTR sceneName = L"scene";
     std::wifstream inFile(GetAssetPath(sceneName));
 
-    // Parse textures from the scene file.
+    // Create a skybox material.
+
+
+    // Parse textures from the scene file to materials.
     UINT numMaterials = 0;
     inFile >> numMaterials;
 
@@ -35,8 +40,8 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
     {
         WCHAR materialName[32];
         inFile >> materialName;
-        Material* material = new Material(materialName);
-        material->LoadTexture(textureID);
+        LitMaterial* material = new LitMaterial(materialName);
+        material->LoadTexture();
 
         LoadTextureBufferAndSampler(pCommandList, material->GetTexture());
         LoadTextureBufferAndSampler(pCommandList, material->GetMRATexture());
@@ -84,7 +89,7 @@ void SceneManager::LoadScene(D3D12CommandList*& pCommandList)
 void SceneManager::UnloadScene()
 {
     objectID = 0;
-    textureID = 0;
+    sTextureID = 0;
 
     for (auto it = pObjects.begin(); it != pObjects.end(); it++)
     {
@@ -123,10 +128,12 @@ void SceneManager::DrawObjects(D3D12CommandList*& pCommandList)
             pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->GetResource()->GetGPUVirtualAddress());
 
         // Set the material relating views.
+        LitMaterial* litMaterial = dynamic_cast<LitMaterial*>(model->GetMaterial());
+
         pDevice->GetDescriptorHeapManager()->SetSRVs(pCommandList->GetCommandList(),
-            model->GetMaterial()->GetTexture()->GetTextureID());
+            litMaterial->GetTexture()->GetTextureID());
         pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList(),
-            model->GetMaterial()->GetTexture()->GetTextureID());
+            litMaterial->GetTexture()->GetTextureID());
 
         // Set buffers and draw the instance.
         pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

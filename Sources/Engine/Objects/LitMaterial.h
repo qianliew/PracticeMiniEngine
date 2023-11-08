@@ -1,15 +1,11 @@
 #pragma once
-#include "D3D12Texture.h"
+#include "AbstractMaterial.h"
 
-class Material
+class LitMaterial : public AbstractMaterial
 {
 private:
-	// TODO: Parse the shader to decide how many textures in each material.
-	// Material is equal to Shader in this engine right now, and there is just one object shader.
-	const UINT kTextureNum = 2;
 	const std::wstring kMRASuffix = L"_mra";
 	const std::wstring kNormalSuffix = L"_n";
-	std::wstring name;
 
 	D3D12Texture* pTexture;
 	D3D12Texture* pMRATexture;
@@ -20,13 +16,12 @@ private:
 	std::wstring GetNormalTexturePath(std::wstring texturePath);
 
 public:
-	Material(std::wstring inName);
-	~Material();
+	LitMaterial(std::wstring inName);
+	~LitMaterial();
 
-	void LoadTexture(UINT& textureID);
-	void ReleaseTextureData();
+	virtual void LoadTexture() override;
+	virtual void ReleaseTextureData() override;
 
-	inline const UINT GetTextureNum() const { return kTextureNum; }
 	inline D3D12Texture* GetTexture() const { return pTexture; }
 	inline D3D12Texture* GetMRATexture() const { return pMRATexture; }
 	inline D3D12Texture* GetNormalTexture() const { return pNormalTexture; }

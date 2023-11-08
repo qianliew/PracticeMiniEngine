@@ -161,11 +161,12 @@
     <ClInclude Include="..\Sources\Engine\Managers\D3D12Device.h" />
     <ClInclude Include="..\Sources\Engine\Managers\SceneManager.h" />
     <ClInclude Include="..\Sources\Engine\Managers\ViewManager.h" />
+    <ClInclude Include="..\Sources\Engine\Objects\AbstractMaterial.h" />
     <ClInclude Include="..\Sources\Engine\Objects\Camera.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12CommandList.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12ConstantBuffer.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12IndexBuffer.h" />
-    <ClInclude Include="..\Sources\Engine\Objects\Material.h" />
+    <ClInclude Include="..\Sources\Engine\Objects\LitMaterial.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12Mesh.h" />
     <ClInclude Include="..\Sources\Engine\Objects\Model.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12Texture.h" />
@@ -174,6 +175,7 @@
     <ClInclude Include="..\Sources\Engine\Rendering\AbstractRenderPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\BlitPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\DrawObjecstPass.h" />
+    <ClInclude Include="..\Sources\Engine\Rendering\DrawSkyboxPass.h" />
     <ClInclude Include="..\Sources\Engine\Window.h" />
     <ClInclude Include="..\Sources\Utilities\FBXImporter.h" />
     <ClInclude Include="..\Sources\Utilities\Macros.h" />
@@ -195,11 +197,12 @@
     <ClCompile Include="..\Sources\Engine\Managers\D3D12Device.cpp" />
     <ClCompile Include="..\Sources\Engine\Managers\SceneManager.cpp" />
     <ClCompile Include="..\Sources\Engine\Managers\ViewManager.cpp" />
+    <ClCompile Include="..\Sources\Engine\Objects\AbstractMaterial.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\Camera.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12CommandList.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12ConstantBuffer.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12IndexBuffer.cpp" />
-    <ClCompile Include="..\Sources\Engine\Objects\Material.cpp" />
+    <ClCompile Include="..\Sources\Engine\Objects\LitMaterial.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Mesh.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\Model.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Texture.cpp" />
@@ -208,6 +211,7 @@
     <ClCompile Include="..\Sources\Engine\Rendering\AbstractRenderPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\BlitPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\DrawObjectsPass.cpp" />
+    <ClCompile Include="..\Sources\Engine\Rendering\DrawSkyboxPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Window.cpp" />
     <ClCompile Include="..\Sources\Utilities\FBXImporter.cpp" />
     <ClCompile Include="Main.cpp" />
