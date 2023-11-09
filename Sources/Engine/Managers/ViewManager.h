@@ -4,7 +4,7 @@
 class ViewManager
 {
 private:
-    shared_ptr<D3D12Device> pDevice;
+    std::shared_ptr<D3D12Device> pDevice;
     ComPtr<IDXGISwapChain3> pSwapChain;
     ComPtr<ID3D12Resource> pBackBuffers[FRAME_COUNT];
     D3D12Texture* pRenderTarget;
@@ -19,7 +19,7 @@ private:
     D3D12_RESOURCE_STATES GetResourceState(D3D12TextureType type);
 
 public:
-    ViewManager(shared_ptr<D3D12Device>&, UINT inWidth, UINT inHeight);
+    ViewManager(std::shared_ptr<D3D12Device>&, UINT inWidth, UINT inHeight);
     ~ViewManager();
 
     void EmplaceRenderTarget(D3D12CommandList*& pCommandList, D3D12TextureType type);

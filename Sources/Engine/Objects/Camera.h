@@ -1,6 +1,7 @@
 #pragma once
 
 #include "D3D12ConstantBuffer.h"
+#include "Transform.h"
 
 #define CAMERA_DEFAULT_FOV XM_PI / 3.0f
 #define CAMERA_DEFAULT_ASPECT_RATIO 16.0f / 9.0f

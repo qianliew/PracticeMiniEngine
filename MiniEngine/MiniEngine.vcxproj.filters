@@ -49,6 +49,9 @@
     <Filter Include="Assets\Shaders">
       <UniqueIdentifier>{8f362c68-41da-4d59-bf76-472b0a259cc8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Objects\Material">
+      <UniqueIdentifier>{cec1c197-f53e-4190-a31e-489113f30522}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Sources\Engine\Objects\D3D12IndexBuffer.h">
@@ -130,9 +133,6 @@
     <ClInclude Include="..\Sources\Engine\Rendering\BlitPass.h">
       <Filter>Engine\Rendering\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\Sources\Engine\Objects\LitMaterial.h">
-      <Filter>Engine\Objects\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\Sources\Engine\Objects\Model.h">
       <Filter>Engine\Objects\Headers</Filter>
     </ClInclude>
@@ -146,7 +146,13 @@
       <Filter>Engine\Rendering\Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Sources\Engine\Objects\AbstractMaterial.h">
-      <Filter>Engine\Objects\Headers</Filter>
+      <Filter>Engine\Objects\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Objects\LitMaterial.h">
+      <Filter>Engine\Objects\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Objects\SkyboxMaterial.h">
+      <Filter>Engine\Objects\Material</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -225,9 +231,6 @@
     <ClCompile Include="..\Sources\Engine\Objects\Model.cpp">
       <Filter>Engine\Objects\Sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\Sources\Engine\Objects\LitMaterial.cpp">
-      <Filter>Engine\Objects\Sources</Filter>
-    </ClCompile>
     <ClCompile Include="..\Sources\Engine\Objects\Camera.cpp">
       <Filter>Engine\Objects\Sources</Filter>
     </ClCompile>
@@ -238,7 +241,13 @@
       <Filter>Engine\Rendering\Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\Sources\Engine\Objects\AbstractMaterial.cpp">
-      <Filter>Engine\Objects\Sources</Filter>
+      <Filter>Engine\Objects\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Objects\LitMaterial.cpp">
+      <Filter>Engine\Objects\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Objects\SkyboxMaterial.cpp">
+      <Filter>Engine\Objects\Material</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -2,7 +2,7 @@
 #include "ViewManager.h"
 #include "Window.h"
 
-ViewManager::ViewManager(shared_ptr<D3D12Device>& device, UINT inWidth, UINT inHeight) :
+ViewManager::ViewManager(std::shared_ptr<D3D12Device>& device, UINT inWidth, UINT inHeight) :
     pDevice(device),
     width(inWidth),
     height(inHeight),

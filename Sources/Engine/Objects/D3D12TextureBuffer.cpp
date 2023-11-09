@@ -1,8 +1,11 @@
 #include "stdafx.h"
 #include "D3D12TextureBuffer.h"
 
-D3D12TextureBuffer::D3D12TextureBuffer(const D3D12_RESOURCE_DESC& desc) :
-    TD3D12Resource(desc)
+D3D12TextureBuffer::D3D12TextureBuffer(
+    const D3D12_RESOURCE_DESC& desc, 
+    const D3D12_SRV_DIMENSION inSRVDimension) :
+    TD3D12Resource(desc),
+    srvDimension(inSRVDimension)
 {
 
 }
@@ -17,10 +20,20 @@ void D3D12TextureBuffer::CreateView(const ComPtr<ID3D12Device>& device, const D3
     D3D12_SHADER_RESOURCE_VIEW_DESC desc;
     desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     desc.Format = resourceDesc.Format;
-    desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    desc.Texture2D.MostDetailedMip = 0;
-    desc.Texture2D.MipLevels = resourceDesc.MipLevels;
-    desc.Texture2D.PlaneSlice = 0;
+    desc.ViewDimension = srvDimension;
+
+    if (srvDimension == D3D12_SRV_DIMENSION_TEXTURE2D)
+    {
+        desc.Texture2D.MostDetailedMip = 0;
+        desc.Texture2D.MipLevels = resourceDesc.MipLevels;
+        desc.Texture2D.PlaneSlice = 0;
+    }
+    else if (srvDimension == D3D12_SRV_DIMENSION_TEXTURECUBE)
+    {
+        desc.TextureCube.MostDetailedMip = 0;
+        desc.TextureCube.MipLevels = resourceDesc.MipLevels;
+        desc.TextureCube.ResourceMinLODClamp = 0.0f;
+    }
 
     view = new D3D12SRV(desc);
     view->SetResource(resourceLocation.Resource.Get());

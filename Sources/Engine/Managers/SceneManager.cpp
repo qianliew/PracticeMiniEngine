@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "SceneManager.h"
 #include "LitMaterial.h"
+#include "SkyboxMaterial.h"
 
 UINT SceneManager::sTextureID = 0;
 
@@ -30,7 +31,12 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
     std::wifstream inFile(GetAssetPath(sceneName));
 
     // Create a skybox material.
-
+    {
+        SkyboxMaterial* material = new SkyboxMaterial(L"Skybox\\sky01");
+        material->LoadTexture();
+        LoadTextureBufferAndSampler(pCommandList, material->GetTexture());
+        pSkyboxMaterial = material;
+    }
 
     // Parse textures from the scene file to materials.
     UINT numMaterials = 0;
@@ -102,6 +108,7 @@ void SceneManager::UnloadScene()
         delete it->second;
     }
     pMaterialPool.clear();
+    delete pSkyboxMaterial;
 }
 
 void SceneManager::CreateCamera(UINT width, UINT height)
@@ -222,7 +229,7 @@ void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList*& pCommandList, 
         pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW, id));
 
     // Init texture data.
-    for (int i = 0; i < texture->GetMipCount(); i++)
+    for (UINT i = 0; i < texture->GetSubresourceNum(); i++)
     {
         D3D12_SUBRESOURCE_DATA textureData;
         UINT64 rowSizeInBytes, totalBytes;

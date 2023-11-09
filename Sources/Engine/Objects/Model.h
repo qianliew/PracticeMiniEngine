@@ -1,6 +1,7 @@
 #pragma once
 #include "FBXImporter.h"
 #include "D3D12Mesh.h"
+#include "Transform.h"
 #include "AbstractMaterial.h"
 
 class Model : public Transform

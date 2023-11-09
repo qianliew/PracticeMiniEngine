@@ -32,8 +32,7 @@
 #include "D3D12View.h"
 #include "D3D12Sampler.h"
 #include "D3D12Resource.h"
-
-#include "Transform.h"
+#include "D3D12ConstantBuffer.h"
 
 #include "D3D12Device.h"
 #include "D3D12CommandList.h"

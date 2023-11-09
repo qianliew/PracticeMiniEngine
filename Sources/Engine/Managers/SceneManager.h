@@ -12,6 +12,7 @@ private:
 
 	std::vector<Model*> pObjects;
 	std::map<wstring, AbstractMaterial*> pMaterialPool;
+	AbstractMaterial* pSkyboxMaterial;
 	Camera* pCamera;
 	Model* pFullScreenMesh;
 
