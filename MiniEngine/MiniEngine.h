@@ -3,6 +3,7 @@
 #include "Window.h"
 #include "ViewManager.h"
 #include "DrawObjecstPass.h"
+#include "DrawSkyboxPass.h"
 #include "BlitPass.h"
 
 using namespace DirectX;
@@ -31,6 +32,7 @@ private:
     D3D12CommandList* pCommandList;
 
     shared_ptr<DrawObjectsPass> pDrawObjectPass;
+    shared_ptr<DrawSkyboxPass> pDrawSkyboxPass;
     shared_ptr<BlitPass> pBlitPass;
 
     // Synchronization objects.

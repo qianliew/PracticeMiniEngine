@@ -7,7 +7,7 @@ protected:
 	shared_ptr<D3D12Device> pDevice;
 	shared_ptr<SceneManager> pSceneManager;
 
-	ID3D12PipelineState* pPipelineState;
+	ComPtr<ID3D12PipelineState> pPipelineState;
 
 public:
 	AbstractRenderPass(shared_ptr<D3D12Device>&, shared_ptr<SceneManager>&);

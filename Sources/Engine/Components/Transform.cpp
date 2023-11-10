@@ -22,6 +22,11 @@ void Transform::ResetTransform()
 	upDirction = DefaultUpDirction;
 }
 
+void Transform::CopyWorldPosition(const Transform& other)
+{
+    this->worldPosition = other.worldPosition;
+}
+
 void Transform::SetObjectToWorldMatrix()
 {
     XMMATRIX m = XMMatrixTranslationFromVector(worldPosition);

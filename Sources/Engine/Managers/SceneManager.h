@@ -14,6 +14,7 @@ private:
 	std::map<wstring, AbstractMaterial*> pMaterialPool;
 	AbstractMaterial* pSkyboxMaterial;
 	Camera* pCamera;
+	Model* pSkyboxMesh;
 	Model* pFullScreenMesh;
 
 	UINT objectID;
@@ -35,6 +36,7 @@ public:
 	void CreateCamera(UINT width, UINT height);
 	void AddObject(Model* object);
 	void DrawObjects(D3D12CommandList*&);
+	void DrawSkybox(D3D12CommandList*&);
 	void DrawFullScreenMesh(D3D12CommandList*&);
 
 	void UpdateTransforms();
@@ -44,4 +46,5 @@ public:
 
 	inline const std::vector<Model*>& GetObjects() const { return pObjects; }
 	inline Camera* GetCamera() const { return pCamera; }
+	inline Model* GetSkybox() const { return pSkyboxMesh; }
 };

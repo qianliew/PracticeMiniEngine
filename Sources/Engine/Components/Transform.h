@@ -30,7 +30,8 @@ protected:
 public:
     Transform(UINT);
     virtual ~Transform();
-
+    
+    void CopyWorldPosition(const Transform &other);
     void SetObjectToWorldMatrix();
 
     virtual void ResetTransform();

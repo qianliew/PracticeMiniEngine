@@ -56,7 +56,7 @@ PSInput VSMain(VSInput input)
     PSInput result;
 
     input.positionOS.w = 1;
-    result.positionWS = mul(mul(ObjectToWorldMatrix, WorldToProjectionMatrix), input.positionOS);
+    result.positionWS = mul(WorldToProjectionMatrix, mul(ObjectToWorldMatrix, input.positionOS));
     result.texCoord = input.texCoord;
 
     result.normalWS = normalize(GetWorldSpaceNormal(input.normalOS));

@@ -107,6 +107,9 @@ void MiniEngine::LoadAssets()
         pDrawObjectPass = make_shared<DrawObjectsPass>(pDevice, pSceneManager);
         pDrawObjectPass->Setup(pCommandList, rootSignature);
 
+        pDrawSkyboxPass = make_shared<DrawSkyboxPass>(pDevice, pSceneManager);
+        pDrawSkyboxPass->Setup(pCommandList, rootSignature);
+
         pBlitPass = make_shared<BlitPass>(pDevice, pSceneManager);
         pBlitPass->Setup(pCommandList, rootSignature);
     }
@@ -222,6 +225,7 @@ void MiniEngine::PopulateCommandList()
     pCommandList->FlushResourceBarriers();
 
     pDrawObjectPass->Execute(pCommandList, frameIndex);
+    pDrawSkyboxPass->Execute(pCommandList, frameIndex);
 
     pViewManager->EmplaceRenderTarget(pCommandList, D3D12TextureType::ShaderResource);
     pBlitPass->Execute(pCommandList, frameIndex);

@@ -260,5 +260,8 @@
     <CustomBuild Include="..\Assets\Shaders\Lit.hlsl">
       <Filter>Assets\Shaders</Filter>
     </CustomBuild>
+    <CustomBuild Include="..\Assets\Shaders\Skybox.hlsl">
+      <Filter>Assets\Shaders</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

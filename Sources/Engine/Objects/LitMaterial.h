@@ -7,7 +7,6 @@ private:
 	const std::wstring kMRASuffix = L"_mra";
 	const std::wstring kNormalSuffix = L"_n";
 
-	D3D12Texture* pTexture;
 	D3D12Texture* pMRATexture;
 	D3D12Texture* pNormalTexture;
 
@@ -22,7 +21,6 @@ public:
 	virtual void LoadTexture() override;
 	virtual void ReleaseTextureData() override;
 
-	inline D3D12Texture* GetTexture() const { return pTexture; }
 	inline D3D12Texture* GetMRATexture() const { return pMRATexture; }
 	inline D3D12Texture* GetNormalTexture() const { return pNormalTexture; }
 };

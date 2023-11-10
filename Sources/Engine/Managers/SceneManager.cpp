@@ -15,6 +15,10 @@ SceneManager::SceneManager(shared_ptr<D3D12Device>& device) :
 SceneManager::~SceneManager()
 {
     UnloadScene();
+
+    delete pSkyboxMaterial;
+    delete pSkyboxMesh;
+    // delete pFullScreenMesh;
     delete pCamera;
 }
 
@@ -29,14 +33,6 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
 {
     LPCWSTR sceneName = L"scene";
     std::wifstream inFile(GetAssetPath(sceneName));
-
-    // Create a skybox material.
-    {
-        SkyboxMaterial* material = new SkyboxMaterial(L"Skybox\\sky01");
-        material->LoadTexture();
-        LoadTextureBufferAndSampler(pCommandList, material->GetTexture());
-        pSkyboxMaterial = material;
-    }
 
     // Parse textures from the scene file to materials.
     UINT numMaterials = 0;
@@ -83,13 +79,23 @@ void SceneManager::LoadScene(D3D12CommandList*& pCommandList)
     // Create static data.
     pFullScreenMesh = new Model(objectID++, L"plane.fbx");
     pFullScreenMesh->LoadModel(pFBXImporter);
+    LoadObjectVertexBufferAndIndexBuffer(pCommandList, pFullScreenMesh);
+
+    // Create assets of the skybox.
+    std::wstring skyboxName = L"Skybox\\sky01";
+    SkyboxMaterial* material = new SkyboxMaterial(skyboxName);
+    material->LoadTexture();
+    LoadTextureBufferAndSampler(pCommandList, material->GetTexture());
+    pSkyboxMaterial = material;
+
+    pSkyboxMesh = new Model(objectID++, L"Skybox\\skybox.fbx");
+    pSkyboxMesh->LoadModel(pFBXImporter);
+    LoadObjectVertexBufferAndIndexBuffer(pCommandList, pSkyboxMesh);
 
     // Create the global constant buffer.
     pDevice->GetBufferManager()->AllocateGlobalConstantBuffer();
     pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_GLOBAL, 0));
-
-    LoadObjectVertexBufferAndIndexBuffer(pCommandList, pFullScreenMesh);
 }
 
 void SceneManager::UnloadScene()
@@ -108,7 +114,6 @@ void SceneManager::UnloadScene()
         delete it->second;
     }
     pMaterialPool.clear();
-    delete pSkyboxMaterial;
 }
 
 void SceneManager::CreateCamera(UINT width, UINT height)
@@ -150,6 +155,24 @@ void SceneManager::DrawObjects(D3D12CommandList*& pCommandList)
     }
 }
 
+void SceneManager::DrawSkybox(D3D12CommandList*& pCommandList)
+{
+    pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    // Set views for the skybox.
+    UINT id = pSkyboxMesh->GetObjectID();
+    pCommandList->SetRootConstantBufferView(CONSTANT_BUFFER_VIEW_PEROBJECT,
+        pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->GetResource()->GetGPUVirtualAddress());
+    pDevice->GetDescriptorHeapManager()->SetSRVs(pCommandList->GetCommandList(),
+        pSkyboxMaterial->GetTexture()->GetTextureID());
+    pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList(),
+        pSkyboxMaterial->GetTexture()->GetTextureID());
+
+    pCommandList->SetVertexBuffers(0, 1, &pSkyboxMesh->GetMesh()->VertexBuffer->VertexBufferView);
+    pCommandList->SetIndexBuffer(&pSkyboxMesh->GetMesh()->IndexBuffer->IndexBufferView);
+    pCommandList->DrawIndexedInstanced(pSkyboxMesh->GetMesh()->GetIndicesNum());
+}
+
 void SceneManager::DrawFullScreenMesh(D3D12CommandList*& pCommandList)
 {
     pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -161,6 +184,14 @@ void SceneManager::DrawFullScreenMesh(D3D12CommandList*& pCommandList)
 
 void SceneManager::UpdateTransforms()
 {
+    // Set the transform of the skybox.
+    pCamera->SetObjectToWorldMatrix();
+    pSkyboxMesh->CopyWorldPosition(*pCamera);
+    pSkyboxMesh->SetObjectToWorldMatrix();
+    pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(pSkyboxMesh->GetObjectID())
+        ->CopyData(&pSkyboxMesh->GetTransformConstant(), sizeof(TransformConstant));
+
+    // Set the transform of objects.
     for (UINT i = 0; i < pObjects.size(); i++)
     {
         pObjects[i]->SetObjectToWorldMatrix();
