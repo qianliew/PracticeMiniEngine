@@ -1,36 +1,33 @@
 
-Texture2D t0 : register(t0);
-SamplerState s0 : register(s0);
+Texture2D SourceTexture : register(t0);
+SamplerState SourceTextureSampler : register(s0);
 
 struct VSInput
 {
-    float4 position : POSITION;
-    float2 texCoord : TEXCOORD;
-    float4 color    : COLOR;
+    float4 positionOS   : POSITION;
+    float2 texCoord     : TEXCOORD;
 };
 
 struct PSInput
 {
-    float4 position : SV_POSITION;
-    float2 texCoord : TEXCOORD;
-    float4 color    : COLOR;
+    float4 positionCS   : SV_POSITION;
+    float2 texCoord     : TEXCOORD;
 };
 
 PSInput VSMain(VSInput input)
 {
     PSInput result;
 
-    input.position /= 100;
-    input.position.z = 0;
-    input.position.w = 1;
-    result.position = input.position;
+    input.positionOS /= 100;
+    input.positionOS.z = 0;
+    input.positionOS.w = 1;
+    result.positionCS = input.positionOS;
     result.texCoord = input.texCoord;
-    result.color = input.color;
 
     return result;
 }
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    return t0.Sample(s0, input.texCoord);
+    return SourceTexture.Sample(SourceTextureSampler, input.texCoord);
 }

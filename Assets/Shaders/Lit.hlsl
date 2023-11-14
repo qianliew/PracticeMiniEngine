@@ -10,12 +10,13 @@ cbuffer PerObjectConstants : register(b1)
     float4x4 ObjectToWorldMatrix;
 };
 
-Texture2D t1 : register(t1);
-Texture2D t2 : register(t2);
-Texture2D t3 : register(t3);
-SamplerState s1 : register(s1);
-SamplerState s2 : register(s2);
-SamplerState s3 : register(s3);
+Texture2D BaseTexture   : register(t1);
+Texture2D MRATexture    : register(t2);
+Texture2D NormalTexture : register(t3);
+
+SamplerState BaseTextureSampler     : register(s1);
+SamplerState MRATextureSampler      : register(s2);
+SamplerState NormalTextureSampler   : register(s3);
 
 struct VSInput
 {
@@ -70,16 +71,16 @@ PSInput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    float3 normalTS = t3.Sample(s3, input.texCoord).xyz * 2.0f - 1.0f;
+    float3 normalTS = NormalTexture.Sample(NormalTextureSampler, input.texCoord).xyz * 2.0f - 1.0f;
 
     float sgn = input.tangentWS.w > 0.0f ? -1.0f : 1.0f;
     float3 bitangentWS = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
     float3 normalWS = mul(normalTS, float3x3(input.tangentWS.xyz, bitangentWS.xyz, input.normalWS.xyz));
 
-    float roughness = t2.Sample(s2, input.texCoord).g;
+    float roughness = MRATexture.Sample(MRATextureSampler, input.texCoord).g;
     float roughness2 = roughness * roughness;
 
-    float3 diffuse = t1.Sample(s1, input.texCoord).rgb;
+    float3 diffuse = BaseTexture.Sample(BaseTextureSampler, input.texCoord).rgb;
     float3 specular = diffuse;
 
     float3 lightDirWS = float3(1.0f, 1.0f, 0.0f);
