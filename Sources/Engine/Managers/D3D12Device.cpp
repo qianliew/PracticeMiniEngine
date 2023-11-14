@@ -59,6 +59,8 @@ void D3D12Device::CreateDevice()
             IID_PPV_ARGS(&pDevice)
         ));
     }
+    // Query the interface of the DXR device.
+    ThrowIfFailed(pDevice->QueryInterface(IID_PPV_ARGS(&pDXRDevice)));
 
     // Describe and create the command queue.
     D3D12_COMMAND_QUEUE_DESC queueDesc = {};

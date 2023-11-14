@@ -7,7 +7,9 @@ D3D12CommandList::D3D12CommandList(ComPtr<ID3D12Device>& device, ComPtr<ID3D12Co
     ThrowIfFailed(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT,
         commandAllocator.Get(),
         nullptr,
-        IID_PPV_ARGS(&commandList)));
+        IID_PPV_ARGS(&pCommandList)));
+
+    ThrowIfFailed(pCommandList->QueryInterface(IID_PPV_ARGS(&pDXRCommandList)));
 }
 
 D3D12CommandList::~D3D12CommandList()

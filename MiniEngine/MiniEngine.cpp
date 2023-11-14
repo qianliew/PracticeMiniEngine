@@ -46,19 +46,19 @@ void MiniEngine::LoadAssets()
 {
     // Create an empty root signature.
     {
-        CD3DX12_DESCRIPTOR_RANGE descriptorTableRanges[3];
+        CD3DX12_DESCRIPTOR_RANGE descriptorTableRanges[4];
         descriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
         descriptorTableRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 1, 0);
-        descriptorTableRanges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 3, 1, 0);
-        // descriptorTableRanges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0);
-        // descriptorTableRanges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, 0);
+        descriptorTableRanges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+        descriptorTableRanges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 3, 1, 0);
 
-        CD3DX12_ROOT_PARAMETER rootParameters[5];
+        CD3DX12_ROOT_PARAMETER rootParameters[6];
         rootParameters[CONSTANT_BUFFER_VIEW_GLOBAL].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
         rootParameters[CONSTANT_BUFFER_VIEW_PEROBJECT].InitAsConstantBufferView(1, 0, D3D12_SHADER_VISIBILITY_VERTEX);
         rootParameters[SHADER_RESOURCE_VIEW_GLOBAL].InitAsDescriptorTable(1, &descriptorTableRanges[0], D3D12_SHADER_VISIBILITY_PIXEL);
         rootParameters[SHADER_RESOURCE_VIEW].InitAsDescriptorTable(1, &descriptorTableRanges[1], D3D12_SHADER_VISIBILITY_PIXEL);
-        rootParameters[SAMPLER].InitAsDescriptorTable(1, &descriptorTableRanges[2], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[UNORDERED_ACCESS_VIEW].InitAsDescriptorTable(1, &descriptorTableRanges[2], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[SAMPLER].InitAsDescriptorTable(1, &descriptorTableRanges[3], D3D12_SHADER_VISIBILITY_PIXEL);
 
         // create a static sampler
         D3D12_STATIC_SAMPLER_DESC sampler = {};

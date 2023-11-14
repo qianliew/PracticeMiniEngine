@@ -4,13 +4,16 @@
 
 class D3D12Device
 {
-private:
+protected:
     // Adapter info.
     bool useWarpDevice;
 
     ComPtr<ID3D12Device> pDevice;
     ComPtr<IDXGIFactory4> pFactory;
     ComPtr<ID3D12CommandQueue> pCommandQueue;
+
+    // DirectX Raytracing (DXR) attributes
+    ComPtr<ID3D12Device5> pDXRDevice;
 
     D3D12DescriptorHeapManager* pDescriptorHeapManager;
     D3D12BufferManager* pBufferManager;
@@ -24,11 +27,11 @@ public:
     D3D12Device();
     ~D3D12Device();
 
-    void CreateDevice();
+    virtual void CreateDevice();
     void CreateDescriptorHeapManager();
     void CreateBufferManager();
 
-    ComPtr<ID3D12Device> GetDevice() const { return pDevice; }
+    virtual ComPtr<ID3D12Device> GetDevice() const { return pDevice; }
     ComPtr<IDXGIFactory4> GetFactory() const { return pFactory; }
     ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return pCommandQueue; }
 
