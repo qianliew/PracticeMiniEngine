@@ -31,7 +31,8 @@ public:
     void CreateDescriptorHeapManager();
     void CreateBufferManager();
 
-    virtual ComPtr<ID3D12Device> GetDevice() const { return pDevice; }
+    ComPtr<ID3D12Device> GetDevice() const { return pDevice; }
+    ComPtr<ID3D12Device5> GetDXRDevice() const { return pDXRDevice; }
     ComPtr<IDXGIFactory4> GetFactory() const { return pFactory; }
     ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return pCommandQueue; }
 

@@ -154,6 +154,12 @@
     <ClInclude Include="..\Sources\Engine\Objects\SkyboxMaterial.h">
       <Filter>Engine\Objects\Material</Filter>
     </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Rendering\RayTracingPass.h">
+      <Filter>Engine\Rendering\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Assets\Shaders\RaytracingHlslCompat.h">
+      <Filter>Assets\Shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Sources\Engine\Objects\D3D12IndexBuffer.cpp">
@@ -249,6 +255,9 @@
     <ClCompile Include="..\Sources\Engine\Objects\SkyboxMaterial.cpp">
       <Filter>Engine\Objects\Material</Filter>
     </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Rendering\RayTracingPass.cpp">
+      <Filter>Engine\Rendering\Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\Assets\Shaders\Blit.hlsl">
@@ -263,5 +272,10 @@
     <CustomBuild Include="..\Assets\Shaders\Skybox.hlsl">
       <Filter>Assets\Shaders</Filter>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="..\Assets\Shaders\Raytracing.hlsl">
+      <Filter>Assets\Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

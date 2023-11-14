@@ -148,6 +148,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\Assets\Shaders\RaytracingHlslCompat.h" />
     <ClInclude Include="..\Sources\Engine\Components\D3D12Buffer.h" />
     <ClInclude Include="..\Sources\Engine\Components\D3D12DefaultBuffer.h" />
     <ClInclude Include="..\Sources\Engine\Components\D3D12Resource.h" />
@@ -177,6 +178,7 @@
     <ClInclude Include="..\Sources\Engine\Rendering\BlitPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\DrawObjecstPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\DrawSkyboxPass.h" />
+    <ClInclude Include="..\Sources\Engine\Rendering\RayTracingPass.h" />
     <ClInclude Include="..\Sources\Engine\Window.h" />
     <ClInclude Include="..\Sources\Utilities\FBXImporter.h" />
     <ClInclude Include="..\Sources\Utilities\Macros.h" />
@@ -214,6 +216,7 @@
     <ClCompile Include="..\Sources\Engine\Rendering\BlitPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\DrawObjectsPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\DrawSkyboxPass.cpp" />
+    <ClCompile Include="..\Sources\Engine\Rendering\RayTracingPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Window.cpp" />
     <ClCompile Include="..\Sources\Utilities\FBXImporter.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -249,6 +252,16 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <FileType>Document</FileType>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="..\Assets\Shaders\Raytracing.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Library</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.3</ShaderModel>
+      <VariableName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">g_p%(Filename)</VariableName>
+      <HeaderFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)CompiledShaders\%(Filename).hlsl.h</HeaderFileOutput>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
