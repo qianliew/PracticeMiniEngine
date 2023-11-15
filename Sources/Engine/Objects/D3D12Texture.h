@@ -6,6 +6,7 @@ enum class D3D12TextureType
 	ShaderResource = 0,
 	RenderTarget = 1,
 	DepthStencil = 2,
+	UnorderedAccess = 3,
 };
 
 class D3D12Texture

@@ -18,6 +18,7 @@ D3D12Mesh::~D3D12Mesh()
 void D3D12Mesh::SetVertices(Vertex* triangleVertices, UINT size)
 {
     verticesSize = size;
+    verticesNum = size / sizeof(Vertex);
     pVertices = (Vertex*)malloc(size);
     if (pVertices != nullptr)
     {

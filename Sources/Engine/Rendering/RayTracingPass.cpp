@@ -65,7 +65,7 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
         ThrowIfFailed(pDevice->GetDevice()->CreateRootSignature(1,
             blob->GetBufferPointer(),
             blob->GetBufferSize(),
-            IID_PPV_ARGS(&RaytracingLocalRootSignature)));
+            IID_PPV_ARGS(&pRaytracingLocalRootSignature)));
     }
 
     // Hit group and miss shaders in this sample are not using a local root signature and thus one is not associated with them.
@@ -73,7 +73,7 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
     // Local root signature to be used in a ray gen shader.
     {
         auto localRootSignature = raytracingPipeline.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-        localRootSignature->SetRootSignature(RaytracingLocalRootSignature.Get());
+        localRootSignature->SetRootSignature(pRaytracingLocalRootSignature.Get());
         // Shader association
         auto rootSignatureAssociation = raytracingPipeline.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
         rootSignatureAssociation->SetSubobjectToAssociate(*localRootSignature);
@@ -94,5 +94,68 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
     pipelineConfig->Config(maxRecursionDepth);
 
     // Create the state object.
-    ThrowIfFailed(pDevice->GetDXRDevice()->CreateStateObject(raytracingPipeline, IID_PPV_ARGS(&DXRStateObject)));
+    ThrowIfFailed(pDevice->GetDXRDevice()->CreateStateObject(raytracingPipeline, IID_PPV_ARGS(&pDXRStateObject)));
+}
+
+void RayTracingPass::BuildAccelerationStructures(D3D12CommandList*& pCommandList)
+{
+}
+
+void RayTracingPass::BuildShaderTables()
+{
+    void* rayGenShaderIdentifier;
+    void* missShaderIdentifier;
+    void* hitGroupShaderIdentifier;
+
+    auto GetShaderIdentifiers = [&](auto* stateObjectProperties)
+    {
+        rayGenShaderIdentifier = stateObjectProperties->GetShaderIdentifier(kRaygenShaderName);
+        missShaderIdentifier = stateObjectProperties->GetShaderIdentifier(kMissShaderName);
+        hitGroupShaderIdentifier = stateObjectProperties->GetShaderIdentifier(kHitGroupName);
+    };
+
+    // Get shader identifiers.
+    UINT shaderIdentifierSize;
+    {
+        ComPtr<ID3D12StateObjectProperties> stateObjectProperties;
+        ThrowIfFailed(pDXRStateObject.As(&stateObjectProperties));
+        GetShaderIdentifiers(stateObjectProperties.Get());
+        shaderIdentifierSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+    }
+
+    // Ray gen shader table
+    {
+        struct RootArguments
+        {
+            RayGenConstantBuffer cb;
+        } rootArguments;
+        rootArguments.cb = rayGenCB;
+
+        UINT numShaderRecords = 1;
+        UINT shaderRecordSize = shaderIdentifierSize + sizeof(rootArguments);
+        ShaderTable rayGenShaderTable(numShaderRecords, shaderRecordSize);
+        rayGenShaderTable.CreateBuffer(pDevice->GetDevice().Get());
+        rayGenShaderTable.PushBack(ShaderRecord(rayGenShaderIdentifier, shaderIdentifierSize, &rootArguments, sizeof(rootArguments)));
+        pRayGenShaderTable = rayGenShaderTable.ResourceLocation.Resource;
+    }
+
+    // Miss shader table
+    {
+        UINT numShaderRecords = 1;
+        UINT shaderRecordSize = shaderIdentifierSize;
+        ShaderTable missShaderTable(numShaderRecords, shaderRecordSize);
+        missShaderTable.CreateBuffer(pDevice->GetDevice().Get());
+        missShaderTable.PushBack(ShaderRecord(missShaderIdentifier, shaderIdentifierSize));
+        pMissShaderTable = missShaderTable.ResourceLocation.Resource;
+    }
+
+    // Hit group shader table
+    {
+        UINT numShaderRecords = 1;
+        UINT shaderRecordSize = shaderIdentifierSize;
+        ShaderTable hitGroupShaderTable(numShaderRecords, shaderRecordSize);
+        hitGroupShaderTable.CreateBuffer(pDevice->GetDevice().Get());
+        hitGroupShaderTable.PushBack(ShaderRecord(hitGroupShaderIdentifier, shaderIdentifierSize));
+        pHitGroupShaderTable = hitGroupShaderTable.ResourceLocation.Resource;
+    }
 }

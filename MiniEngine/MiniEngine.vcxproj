@@ -118,7 +118,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\Plugins\FBXSDK\include;$(ProjectDir)..\Sources\Engine;$(ProjectDir)..\Sources\Engine\Components;$(ProjectDir)..\Sources\Engine\Managers;$(ProjectDir)..\Sources\Engine\Objects;$(ProjectDir)..\Sources\Engine\Rendering;$(ProjectDir)..\Sources\Utilities;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)\obj\x64\Debug;$(ProjectDir)..\Assets\Shaders;$(ProjectDir)..\Plugins\FBXSDK\include;$(ProjectDir)..\Sources\Engine;$(ProjectDir)..\Sources\Engine\Components;$(ProjectDir)..\Sources\Engine\Managers;$(ProjectDir)..\Sources\Engine\Objects;$(ProjectDir)..\Sources\Engine\Rendering;$(ProjectDir)..\Sources\Utilities;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -155,6 +155,7 @@
     <ClInclude Include="..\Sources\Engine\Components\D3D12Sampler.h" />
     <ClInclude Include="..\Sources\Engine\Components\D3D12UploadBuffer.h" />
     <ClInclude Include="..\Sources\Engine\Components\D3D12View.h" />
+    <ClInclude Include="..\Sources\Engine\Components\D3D12ShaderTable.h" />
     <ClInclude Include="..\Sources\Engine\Components\Transform.h" />
     <ClInclude Include="..\Sources\Engine\d3dx12.h" />
     <ClInclude Include="..\Sources\Engine\Managers\D3D12BufferManager.h" />
@@ -192,6 +193,7 @@
     <ClCompile Include="..\Sources\Engine\Components\D3D12DefaultBuffer.cpp" />
     <ClCompile Include="..\Sources\Engine\Components\D3D12Resource.cpp" />
     <ClCompile Include="..\Sources\Engine\Components\D3D12Sampler.cpp" />
+    <ClCompile Include="..\Sources\Engine\Components\D3D12ShaderTable.cpp" />
     <ClCompile Include="..\Sources\Engine\Components\D3D12UploadBuffer.cpp" />
     <ClCompile Include="..\Sources\Engine\Components\D3D12View.cpp" />
     <ClCompile Include="..\Sources\Engine\Components\Transform.cpp" />

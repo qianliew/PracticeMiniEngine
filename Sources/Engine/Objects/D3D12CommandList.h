@@ -16,6 +16,7 @@ public:
     ~D3D12CommandList();
 
     inline ComPtr<ID3D12GraphicsCommandList>& GetCommandList() { return pCommandList; }
+    inline ComPtr<ID3D12GraphicsCommandList4>& GetDXRCommandList() { return pDXRCommandList; }
 
     inline void Reset(ComPtr<ID3D12CommandAllocator>& commandAllocator)
     {

@@ -87,3 +87,27 @@ void D3D12DepthStencilBuffer::CreateView(const ComPtr<ID3D12Device>& device, con
     view->SetResource(resourceLocation.Resource.Get());
     view->CreateView(device, handle);
 }
+
+D3D12UnorderedAccessViewBuffer::D3D12UnorderedAccessViewBuffer(const D3D12_RESOURCE_DESC& desc) :
+    TD3D12Resource(desc)
+{
+
+}
+
+D3D12UnorderedAccessViewBuffer::~D3D12UnorderedAccessViewBuffer()
+{
+
+}
+
+void D3D12UnorderedAccessViewBuffer::CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle)
+{
+    D3D12_UNORDERED_ACCESS_VIEW_DESC desc;
+    desc.Format = resourceDesc.Format;
+    desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+    desc.Texture2D.MipSlice = 0;
+    desc.Texture2D.PlaneSlice = 0;
+    
+    view = new D3D12UAV(desc);
+    view->SetResource(resourceLocation.Resource.Get());
+    view->CreateView(device, handle);
+}

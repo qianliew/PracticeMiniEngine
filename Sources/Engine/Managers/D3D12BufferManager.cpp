@@ -2,7 +2,7 @@
 #include "D3D12BufferManager.h"
 
 D3D12BufferManager::D3D12BufferManager(ComPtr<ID3D12Device>& device) :
-    device(device)
+    pDevice(device)
 {
     for (int i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++)
     {
@@ -53,7 +53,7 @@ void D3D12BufferManager::AllocateUploadBuffer(D3D12UploadBuffer* pBuffer, UINT64
         }
 
         *ppBuffer = pBuffer;
-        pBuffer->CreateBuffer(device.Get(), size);
+        pBuffer->CreateBuffer(pDevice.Get(), size);
         break;
     }
 }
@@ -80,7 +80,7 @@ void D3D12BufferManager::AllocateDefaultBuffer(
         || DefaultBufferPool.find(pResource) == DefaultBufferPool.end())
     {
         D3D12DefaultBuffer* pbuffer = new D3D12DefaultBuffer();
-        pbuffer->CreateBuffer(device.Get(), &pResource->GetResourceDesc(), state, clearValue);
+        pbuffer->CreateBuffer(pDevice.Get(), &pResource->GetResourceDesc(), state, clearValue);
         DefaultBufferPool.insert(std::make_pair(pResource, pbuffer));
         pResource->SetResourceLoaction(pbuffer->ResourceLocation);
     }

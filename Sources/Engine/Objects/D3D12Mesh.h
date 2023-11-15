@@ -20,6 +20,7 @@ private:
     Vertex* pVertices;
     UINT16* pIndices;
     UINT verticesSize;
+    UINT verticesNum;
     UINT indicesSize;
     UINT indicesNum;
 
@@ -34,7 +35,8 @@ public:
     void CreateView();
 
     inline const UINT GetVerticesSize() const { return verticesSize; }
-    inline const UINT GetIndicesSize() { return indicesSize; }
+    inline const UINT GetVerticesNum() const { return verticesNum; }
+    inline const UINT GetIndicesSize() const { return indicesSize; }
     inline const UINT GetIndicesNum() const { return indicesNum; }
     inline const void* GetVerticesData() const { return pVertices; }
     inline const void* GetIndicesData() const { return pIndices; }

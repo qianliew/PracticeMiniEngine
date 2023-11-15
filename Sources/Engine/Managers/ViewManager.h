@@ -9,6 +9,7 @@ private:
     ComPtr<ID3D12Resource> pBackBuffers[FRAME_COUNT];
     D3D12Texture* pRenderTarget;
     D3D12Texture* pDepthStencil;
+    D3D12Texture* pRayTracingOutput;
 
     UINT globalSRVID;
     UINT rtvID;

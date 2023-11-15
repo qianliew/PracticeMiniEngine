@@ -44,6 +44,11 @@ inline void ThrowIfFailed(HRESULT hr)
     }
 }
 
+inline void ThrowIfFalse(bool value)
+{
+    ThrowIfFailed(value ? S_OK : E_FAIL);
+}
+
 inline void GetAssetsPath(_Out_writes_(pathSize) WCHAR* path, UINT pathSize)
 {
     if (path == nullptr)
@@ -287,4 +292,9 @@ inline std::wstring EraseSuffix(LPCWSTR assetName)
     name.erase(start, name.size() - start);
 
     return name;
+}
+
+inline UINT Align(UINT size, UINT alignment)
+{
+    return (size + (alignment - 1)) & ~(alignment - 1);
 }

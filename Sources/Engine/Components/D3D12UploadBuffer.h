@@ -12,7 +12,7 @@ public:
 	D3D12UploadBuffer(BOOL inIsConstant = FALSE);
 	~D3D12UploadBuffer();
 
-	void CreateBuffer(ID3D12Device* device, UINT64 size);
+	virtual void CreateBuffer(ID3D12Device* device, UINT64 size);
 	void CreateConstantBuffer(ID3D12Device* device, UINT64 size);
 	void CopyData(void const* source);
 	void CopyData(void const* source, size_t size);

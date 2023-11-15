@@ -109,6 +109,16 @@ void D3D12Texture::CreateTexture(D3D12TextureType inType)
         desc.SampleDesc.Quality = 0;
         pTextureBuffer = new D3D12DepthStencilBuffer(desc);
     }
+    else if (type == D3D12TextureType::UnorderedAccess)
+    {
+        desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+        desc.DepthOrArraySize = 1;
+        desc.MipLevels = 1;
+        desc.SampleDesc.Count = 1;
+        desc.SampleDesc.Quality = 0;
+        pTextureBuffer = new D3D12UnorderedAccessViewBuffer(desc);
+    }
 
     if (oldBuffer != nullptr)
     {

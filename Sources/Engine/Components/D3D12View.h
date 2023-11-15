@@ -80,3 +80,15 @@ public:
 
 	void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
 };
+
+class D3D12UAV final : public TD3D12View<D3D12UAV, D3D12_UNORDERED_ACCESS_VIEW_DESC>
+{
+public:
+	D3D12UAV(const D3D12_UNORDERED_ACCESS_VIEW_DESC& inDesc)
+		: TD3D12View(inDesc)
+	{
+
+	}
+
+	void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
+};

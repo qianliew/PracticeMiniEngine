@@ -19,8 +19,12 @@ private:
 
 	UINT objectID;
 
+	ComPtr<ID3D12Resource> pBottomLevelAccelerationStructure;
+	ComPtr<ID3D12Resource> pTopLevelAccelerationStructure;
+
 	// Helper functions.
 	void LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*&, Model* object);
+	void BuildAccelerationStructures(D3D12CommandList*&, Model* object);
 	void LoadTextureBufferAndSampler(D3D12CommandList*&, D3D12Texture* texture);
 
 public:

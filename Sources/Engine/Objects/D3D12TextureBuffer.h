@@ -33,3 +33,14 @@ public:
 
 	virtual void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
 };
+
+class D3D12UnorderedAccessViewBuffer : public TD3D12Resource<D3D12UAV>
+{
+private:
+
+public:
+	D3D12UnorderedAccessViewBuffer(const D3D12_RESOURCE_DESC&);
+	~D3D12UnorderedAccessViewBuffer();
+
+	virtual void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
+};
