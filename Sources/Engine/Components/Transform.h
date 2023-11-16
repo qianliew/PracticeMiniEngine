@@ -41,6 +41,7 @@ public:
     virtual void RotateAlongY(const FLOAT direction);
     virtual void RotateAlongX(const FLOAT direction);
 
-    const UINT GetObjectID() const { return id; }
-    TransformConstant& GetTransformConstant() { return transformConstant; }
+    inline const UINT GetObjectID() const { return id; }
+    inline XMVECTOR GetWorldPosition() const { return worldPosition; }
+    inline TransformConstant& GetTransformConstant() { return transformConstant; }
 };

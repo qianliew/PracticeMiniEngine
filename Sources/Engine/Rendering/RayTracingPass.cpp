@@ -145,17 +145,15 @@ void RayTracingPass::BuildShaderTables()
 
     // Ray gen shader table
     {
-        struct RootArguments
-        {
-            RayGenConstantBuffer cb;
-        } rootArguments;
-        rootArguments.cb = rayGenCB;
+        rayGenCB.viewport = { -1.0f, -1.0f, 1.0f, 1.0f };
+        rayGenCB.cameraPosition = pSceneManager->GetCamera()->GetWorldPosition();
+        rayGenCB.projectionToWorld = XMMatrixInverse(nullptr, pSceneManager->GetCamera()->GetVPMatrix());
 
         UINT numShaderRecords = 1;
-        UINT shaderRecordSize = shaderIdentifierSize + sizeof(rootArguments);
+        UINT shaderRecordSize = shaderIdentifierSize + sizeof(rayGenCB);
         ShaderTable rayGenShaderTable(numShaderRecords, shaderRecordSize);
         rayGenShaderTable.CreateBuffer(pDevice->GetDevice().Get());
-        rayGenShaderTable.PushBack(ShaderRecord(rayGenShaderIdentifier, shaderIdentifierSize, &rootArguments, sizeof(rootArguments)));
+        rayGenShaderTable.PushBack(ShaderRecord(rayGenShaderIdentifier, shaderIdentifierSize, &rayGenCB, sizeof(rayGenCB)));
         pRayGenShaderTable = rayGenShaderTable.ResourceLocation.Resource;
     }
 
