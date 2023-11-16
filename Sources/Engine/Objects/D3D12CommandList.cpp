@@ -1,10 +1,12 @@
 #include "stdafx.h"
 #include "D3D12CommandList.h"
 
-D3D12CommandList::D3D12CommandList(ComPtr<ID3D12Device>& device, ComPtr<ID3D12CommandAllocator>& commandAllocator) :
+D3D12CommandList::D3D12CommandList(std::shared_ptr<D3D12Device>& inDevice, 
+    ComPtr<ID3D12CommandAllocator>& commandAllocator) :
+    pDevice(inDevice),
     barrierIndex(0)
 {
-    ThrowIfFailed(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT,
+    ThrowIfFailed(pDevice->GetDevice()->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT,
         commandAllocator.Get(),
         nullptr,
         IID_PPV_ARGS(&pCommandList)));
@@ -15,4 +17,13 @@ D3D12CommandList::D3D12CommandList(ComPtr<ID3D12Device>& device, ComPtr<ID3D12Co
 D3D12CommandList::~D3D12CommandList()
 {
 
+}
+
+void D3D12CommandList::ExecuteCommandList()
+{
+    ThrowIfFailed(pCommandList->Close());
+
+    // Execute the command list.
+    ID3D12CommandList* ppCommandLists[] = { pCommandList.Get() };
+    pDevice->GetCommandQueue()->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 }

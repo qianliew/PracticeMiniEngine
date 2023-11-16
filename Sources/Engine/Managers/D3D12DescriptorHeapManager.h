@@ -25,6 +25,7 @@ public:
 	void GetSamplerHandle(D3D12Sampler* const, INT offset);
 
 	void SetViews(ComPtr<ID3D12GraphicsCommandList>&, UINT index, INT offset);
+	void SetComputeViews(ComPtr<ID3D12GraphicsCommandList>&, UINT index, INT offset, UINT temp);
 	void SetSRVs(ComPtr<ID3D12GraphicsCommandList>&, INT offset);
 	void SetSamplers(ComPtr<ID3D12GraphicsCommandList>&, INT offset);
 };

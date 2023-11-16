@@ -34,6 +34,8 @@ public:
     void CopyIndices(void* destination);
     void CreateView();
 
+    void BuildAccelerationStructures();
+
     inline const UINT GetVerticesSize() const { return verticesSize; }
     inline const UINT GetVerticesNum() const { return verticesNum; }
     inline const UINT GetIndicesSize() const { return indicesSize; }
@@ -43,4 +45,10 @@ public:
 
     std::unique_ptr<D3D12VertexBuffer> VertexBuffer;
     std::unique_ptr<D3D12IndexBuffer> IndexBuffer;
+    D3D12UploadBuffer* pInstanceDescBuffer;
+
+    D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc;
+    D3D12_RAYTRACING_INSTANCE_DESC instanceDesc;
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC bottomLevelBuildDesc;
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC topLevelBuildDesc;
 };

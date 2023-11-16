@@ -19,6 +19,7 @@ private:
 
 	UINT objectID;
 
+	ComPtr<ID3D12Resource> pScratchResource;
 	ComPtr<ID3D12Resource> pBottomLevelAccelerationStructure;
 	ComPtr<ID3D12Resource> pTopLevelAccelerationStructure;
 
@@ -51,4 +52,6 @@ public:
 	inline const std::vector<Model*>& GetObjects() const { return pObjects; }
 	inline Camera* GetCamera() const { return pCamera; }
 	inline Model* GetSkybox() const { return pSkyboxMesh; }
+
+	inline ComPtr<ID3D12Resource>& GetTLAS() { return pTopLevelAccelerationStructure; }
 };

@@ -96,6 +96,17 @@ void D3D12DescriptorHeapManager::SetViews(ComPtr<ID3D12GraphicsCommandList>& com
     commandList->SetGraphicsRootDescriptorTable(index, handle);
 }
 
+void D3D12DescriptorHeapManager::SetComputeViews(ComPtr<ID3D12GraphicsCommandList>& commandList, UINT index, INT offset, UINT temp)
+{
+    ID3D12DescriptorHeap* heap[] = { heapTable[index].Get() };
+
+    CD3DX12_GPU_DESCRIPTOR_HANDLE handle(heapTable[index]->GetGPUDescriptorHandleForHeapStart());
+    handle.Offset(offset, sizeTable[index]);
+
+    commandList->SetDescriptorHeaps(_countof(heap), heap);
+    commandList->SetComputeRootDescriptorTable(temp, handle);
+}
+
 void D3D12DescriptorHeapManager::SetSRVs(ComPtr<ID3D12GraphicsCommandList>& commandList, INT offset)
 {
     ID3D12DescriptorHeap* heap[] = { heapTable[SHADER_RESOURCE_VIEW].Get() };

@@ -38,7 +38,7 @@ void MiniEngine::LoadPipeline()
     ThrowIfFailed(pDevice->GetDevice()->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator)));
 
     // Create the command list.
-    pCommandList = new D3D12CommandList(pDevice->GetDevice(), commandAllocator);
+    pCommandList = new D3D12CommandList(pDevice, commandAllocator);
 }
 
 // Load the sample assets.
@@ -95,25 +95,6 @@ void MiniEngine::LoadAssets()
             IID_PPV_ARGS(&rootSignature)));
     }
 
-    // Create scene objects.
-    {
-        // Create and init the scene manager.
-        pSceneManager = make_shared<SceneManager>(pDevice);
-        pSceneManager->InitFBXImporter();
-        pSceneManager->LoadScene(pCommandList);
-        pSceneManager->CreateCamera(width, height);
-
-        // Create and init render passes.
-        pDrawObjectPass = make_shared<DrawObjectsPass>(pDevice, pSceneManager);
-        pDrawObjectPass->Setup(pCommandList, rootSignature);
-
-        pDrawSkyboxPass = make_shared<DrawSkyboxPass>(pDevice, pSceneManager);
-        pDrawSkyboxPass->Setup(pCommandList, rootSignature);
-
-        pBlitPass = make_shared<BlitPass>(pDevice, pSceneManager);
-        pBlitPass->Setup(pCommandList, rootSignature);
-    }
-
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
     {
         ThrowIfFailed(pDevice->GetDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
@@ -125,14 +106,35 @@ void MiniEngine::LoadAssets()
         {
             ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
         }
+    }
 
-        ExecuteCommandList();
-        UpdateFence();
+    // Create scene objects.
+    {
+        // Create and init the scene manager.
+        pSceneManager = make_shared<SceneManager>(pDevice);
+        pSceneManager->InitFBXImporter();
+        pSceneManager->LoadScene(pCommandList);
+        pSceneManager->CreateCamera(width, height);
+        pCommandList->ExecuteCommandList();
+        WaitForGPU();
 
-        // Wait for the command list to execute; we are reusing the same command 
-        // list in our main loop but for now, we just want to wait for setup to 
-        // complete before continuing.
-        WaitForPreviousFrame();
+        // Create and init render passes.
+        pCommandList->Reset(commandAllocator);
+        pDrawObjectPass = make_shared<DrawObjectsPass>(pDevice, pSceneManager);
+        pDrawObjectPass->Setup(pCommandList, rootSignature);
+
+        pDrawSkyboxPass = make_shared<DrawSkyboxPass>(pDevice, pSceneManager);
+        pDrawSkyboxPass->Setup(pCommandList, rootSignature);
+
+        pBlitPass = make_shared<BlitPass>(pDevice, pSceneManager);
+        pBlitPass->Setup(pCommandList, rootSignature);
+
+        pRayTracingPass = make_shared<RayTracingPass>(pDevice, pSceneManager);
+        pRayTracingPass->Setup(pCommandList, rootSignature);
+        pRayTracingPass->BuildShaderTables();
+
+        pCommandList->ExecuteCommandList();
+        WaitForGPU();
     }
 }
 
@@ -217,26 +219,42 @@ void MiniEngine::PopulateCommandList()
     // list, that command list can then be reset at any time and must be before 
     // re-recording.
     pCommandList->Reset(commandAllocator);
-    pCommandList->SetRootSignature(rootSignature);
+    //pCommandList->SetRootSignature(rootSignature);
 
     // Indicate that the back buffer will be used as a render target.
     pCommandList->AddTransitionResourceBarriers(pViewManager->GetBackBufferAt(frameIndex),
         D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     pCommandList->FlushResourceBarriers();
 
-    pDrawObjectPass->Execute(pCommandList, frameIndex);
-    pDrawSkyboxPass->Execute(pCommandList, frameIndex);
+    //pDrawObjectPass->Execute(pCommandList, frameIndex);
+    //pDrawSkyboxPass->Execute(pCommandList, frameIndex);
 
-    pViewManager->EmplaceRenderTarget(pCommandList, D3D12TextureType::ShaderResource);
-    pBlitPass->Execute(pCommandList, frameIndex);
-    pViewManager->EmplaceRenderTarget(pCommandList, D3D12TextureType::RenderTarget);
+    //pViewManager->EmplaceRenderTarget(pCommandList, D3D12TextureType::ShaderResource);
+    //pBlitPass->Execute(pCommandList, frameIndex);
+    //pViewManager->EmplaceRenderTarget(pCommandList, D3D12TextureType::RenderTarget);
 
-    // Indicate that the back buffer will now be used to present.
+    //// Indicate that the back buffer will now be used to present.
+    //pCommandList->AddTransitionResourceBarriers(pViewManager->GetBackBufferAt(frameIndex),
+    //    D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+    //pCommandList->FlushResourceBarriers();
+
+    pRayTracingPass->Execute(pCommandList, frameIndex);
+
     pCommandList->AddTransitionResourceBarriers(pViewManager->GetBackBufferAt(frameIndex),
-        D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+        D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
+    pCommandList->AddTransitionResourceBarriers(pViewManager->GetRayTracingOutput(),
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
     pCommandList->FlushResourceBarriers();
 
-    ExecuteCommandList();
+    pCommandList->CopyResource(pViewManager->GetBackBufferAt(frameIndex), pViewManager->GetRayTracingOutput());
+
+    pCommandList->AddTransitionResourceBarriers(pViewManager->GetBackBufferAt(frameIndex),
+        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
+    pCommandList->AddTransitionResourceBarriers(pViewManager->GetRayTracingOutput(),
+        D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    pCommandList->FlushResourceBarriers();
+
+    pCommandList->ExecuteCommandList();
 }
 
 void MiniEngine::WaitForPreviousFrame()
@@ -264,13 +282,17 @@ void MiniEngine::WaitForPreviousFrame()
     pSceneManager->Release();
 }
 
-void MiniEngine::ExecuteCommandList()
+// Wait for pending GPU work to complete.
+void MiniEngine::WaitForGPU()
 {
-    ThrowIfFailed(pCommandList->GetCommandList()->Close());
+    const UINT64 value = UpdateFence();
 
-    // Execute the command list.
-    ID3D12CommandList* ppCommandLists[] = { pCommandList->GetCommandList().Get() };
-    pDevice->GetCommandQueue()->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+    // Wait until the previous frame is finished.
+    if (fence->GetCompletedValue() < value)
+    {
+        ThrowIfFailed(fence->SetEventOnCompletion(value, fenceEvent));
+        WaitForSingleObject(fenceEvent, INFINITE);
+    }
 }
 
 UINT64 MiniEngine::UpdateFence()

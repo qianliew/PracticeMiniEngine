@@ -5,6 +5,7 @@
 #include "DrawObjecstPass.h"
 #include "DrawSkyboxPass.h"
 #include "BlitPass.h"
+#include "RayTracingPass.h"
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
@@ -34,6 +35,7 @@ private:
     shared_ptr<DrawObjectsPass> pDrawObjectPass;
     shared_ptr<DrawSkyboxPass> pDrawSkyboxPass;
     shared_ptr<BlitPass> pBlitPass;
+    shared_ptr<RayTracingPass> pRayTracingPass;
 
     // Synchronization objects.
     UINT frameIndex;
@@ -49,6 +51,6 @@ private:
     void LoadAssets();
     void PopulateCommandList();
     void WaitForPreviousFrame();
-    void ExecuteCommandList();
+    void WaitForGPU();
     UINT64 UpdateFence();
 };

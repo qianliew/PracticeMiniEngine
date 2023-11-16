@@ -10,6 +10,7 @@ D3D12Mesh::~D3D12Mesh()
 {
     delete pVertices;
     delete pIndices;
+    // delete pInstanceDescBuffer;
 
     pVertices = nullptr;
     pIndices = nullptr;
@@ -96,4 +97,22 @@ void D3D12Mesh::CreateView()
     IndexBuffer->CreateView();
     IndexBuffer->IndexBufferView.Format = DXGI_FORMAT_R16_UINT;
     IndexBuffer->IndexBufferView.SizeInBytes = indicesSize;
+}
+
+void D3D12Mesh::BuildAccelerationStructures()
+{
+    geometryDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+    geometryDesc.Triangles.IndexBuffer = IndexBuffer->GetResourceLocation().Resource->GetGPUVirtualAddress();
+    geometryDesc.Triangles.IndexCount = indicesNum;
+    geometryDesc.Triangles.IndexFormat = DXGI_FORMAT_R16_UINT;
+    geometryDesc.Triangles.Transform3x4 = 0;
+    geometryDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
+    geometryDesc.Triangles.VertexCount = verticesNum;
+    geometryDesc.Triangles.VertexBuffer.StartAddress = VertexBuffer->GetResourceLocation().Resource->GetGPUVirtualAddress();
+    geometryDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(Vertex);
+
+    // Mark the geometry as opaque. 
+    // PERFORMANCE TIP: mark geometry as opaque whenever applicable as it can enable important ray processing optimizations.
+    // Note: When rays encounter opaque geometry an any hit shader will not be executed whether it is present or not.
+    geometryDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
 }

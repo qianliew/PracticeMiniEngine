@@ -17,6 +17,7 @@ private:
 
 	shared_ptr<D3D12Device> pDevice;
 	shared_ptr<SceneManager> pSceneManager;
+	ComPtr<ID3D12RootSignature> pRaytracingGlobalRootSignature;
 	ComPtr<ID3D12RootSignature> pRaytracingLocalRootSignature;
 	ComPtr<ID3D12StateObject> pDXRStateObject;
 	ComPtr<ID3D12Resource> pMissShaderTable;
@@ -29,6 +30,6 @@ public:
 	RayTracingPass(shared_ptr<D3D12Device>&, shared_ptr<SceneManager>&);
 
 	void Setup(D3D12CommandList*&, ComPtr<ID3D12RootSignature>&);
-	void BuildAccelerationStructures(D3D12CommandList*&);
+	void Execute(D3D12CommandList*&, UINT);
 	void BuildShaderTables();
 };

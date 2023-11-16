@@ -46,6 +46,30 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
     UINT attributeSize = 2 * sizeof(float); // float2 barycentrics
     shaderConfig->Config(payloadSize, attributeSize);
 
+    // Global Root Signature
+    // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
+    {
+        CD3DX12_DESCRIPTOR_RANGE UAVDescriptor;
+        UAVDescriptor.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+        CD3DX12_ROOT_PARAMETER rootParameters[2];
+        rootParameters[0].InitAsDescriptorTable(1, &UAVDescriptor);
+        rootParameters[1].InitAsShaderResourceView(0);
+        CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
+
+        ComPtr<ID3DBlob> blob;
+        ComPtr<ID3DBlob> error;
+        ThrowIfFailed(D3D12SerializeRootSignature(
+            &globalRootSignatureDesc,
+            D3D_ROOT_SIGNATURE_VERSION_1,
+            &blob,
+            &error));
+
+        ThrowIfFailed(pDevice->GetDevice()->CreateRootSignature(1,
+            blob->GetBufferPointer(),
+            blob->GetBufferSize(),
+            IID_PPV_ARGS(&pRaytracingGlobalRootSignature)));
+    }
+
     // Local Root Signature
     // This is a root signature that enables a shader to have unique arguments that come from shader tables.
     {
@@ -83,7 +107,7 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
     // Global root signature
     // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
     auto globalRootSignature = raytracingPipeline.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
-    globalRootSignature->SetRootSignature(pRootSignature.Get());
+    globalRootSignature->SetRootSignature(pRaytracingGlobalRootSignature.Get());
 
     // Pipeline config
     // Defines the maximum TraceRay() recursion depth.
@@ -95,10 +119,6 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
 
     // Create the state object.
     ThrowIfFailed(pDevice->GetDXRDevice()->CreateStateObject(raytracingPipeline, IID_PPV_ARGS(&pDXRStateObject)));
-}
-
-void RayTracingPass::BuildAccelerationStructures(D3D12CommandList*& pCommandList)
-{
 }
 
 void RayTracingPass::BuildShaderTables()
@@ -158,4 +178,34 @@ void RayTracingPass::BuildShaderTables()
         hitGroupShaderTable.PushBack(ShaderRecord(hitGroupShaderIdentifier, shaderIdentifierSize));
         pHitGroupShaderTable = hitGroupShaderTable.ResourceLocation.Resource;
     }
+}
+
+void RayTracingPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
+{
+    auto DispatchRays = [&](auto* commandList, auto* stateObject, auto* dispatchDesc)
+    {
+        // Since each shader table has only one shader record, the stride is same as the size.
+        dispatchDesc->HitGroupTable.StartAddress = pHitGroupShaderTable->GetGPUVirtualAddress();
+        dispatchDesc->HitGroupTable.SizeInBytes = pHitGroupShaderTable->GetDesc().Width;
+        dispatchDesc->HitGroupTable.StrideInBytes = dispatchDesc->HitGroupTable.SizeInBytes;
+        dispatchDesc->MissShaderTable.StartAddress = pMissShaderTable->GetGPUVirtualAddress();
+        dispatchDesc->MissShaderTable.SizeInBytes = pMissShaderTable->GetDesc().Width;
+        dispatchDesc->MissShaderTable.StrideInBytes = dispatchDesc->MissShaderTable.SizeInBytes;
+        dispatchDesc->RayGenerationShaderRecord.StartAddress = pRayGenShaderTable->GetGPUVirtualAddress();
+        dispatchDesc->RayGenerationShaderRecord.SizeInBytes = pRayGenShaderTable->GetDesc().Width;
+        dispatchDesc->Width = 1920;
+        dispatchDesc->Height = 1080;
+        dispatchDesc->Depth = 1;
+        commandList->SetPipelineState1(stateObject);
+        commandList->DispatchRays(dispatchDesc);
+    };
+
+    pCommandList->SetComputeRootSignature(pRaytracingGlobalRootSignature);
+
+    // Bind the heaps, acceleration structure and dispatch rays.    
+    D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
+    pDevice->GetDescriptorHeapManager()->SetComputeViews(pCommandList->GetCommandList(), UNORDERED_ACCESS_VIEW, 0, 0);
+    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(1, pSceneManager->GetTLAS()->GetGPUVirtualAddress());
+
+    DispatchRays(pCommandList->GetDXRCommandList().Get(), pDXRStateObject.Get(), &dispatchDesc);
 }

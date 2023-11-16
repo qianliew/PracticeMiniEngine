@@ -27,4 +27,5 @@ public:
 
     inline IDXGISwapChain3* GetSwapChain() const { return pSwapChain.Get(); }
     inline ID3D12Resource* GetBackBufferAt(UINT index) const { return pBackBuffers[index].Get(); }
+    inline ID3D12Resource* GetRayTracingOutput() const { return pRayTracingOutput->GetTextureBuffer()->GetResource(); }
 };

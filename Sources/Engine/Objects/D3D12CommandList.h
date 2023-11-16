@@ -7,13 +7,16 @@ class D3D12CommandList
 private:
     ComPtr<ID3D12GraphicsCommandList> pCommandList;
     ComPtr<ID3D12GraphicsCommandList4> pDXRCommandList;
+    std::shared_ptr<D3D12Device> pDevice;
 
     D3D12_RESOURCE_BARRIER resourceBarriers[MAX_RESOURCE_BARRIER];
     UINT barrierIndex;
 
 public:
-    D3D12CommandList(ComPtr<ID3D12Device>&, ComPtr<ID3D12CommandAllocator>&);
+    D3D12CommandList(std::shared_ptr<D3D12Device>&, ComPtr<ID3D12CommandAllocator>&);
     ~D3D12CommandList();
+
+    void ExecuteCommandList();
 
     inline ComPtr<ID3D12GraphicsCommandList>& GetCommandList() { return pCommandList; }
     inline ComPtr<ID3D12GraphicsCommandList4>& GetDXRCommandList() { return pDXRCommandList; }
@@ -31,6 +34,11 @@ public:
     inline void SetRootSignature(ComPtr<ID3D12RootSignature>& rootSignature)
     {
         pCommandList->SetGraphicsRootSignature(rootSignature.Get());
+    }
+
+    inline void SetComputeRootSignature(ComPtr<ID3D12RootSignature>& rootSignature)
+    {
+        pCommandList->SetComputeRootSignature(rootSignature.Get());
     }
 
     inline void SetRootConstantBufferView(UINT index, D3D12_GPU_VIRTUAL_ADDRESS location)
@@ -96,6 +104,11 @@ public:
     {
         UpdateSubresources(pCommandList.Get(), pDestinationResource, pIntermediate,
             IntermediateOffset, FirstSubresource, NumSubresources, pSrcData);
+    }
+
+    inline void CopyResource(ID3D12Resource* pDstResource, ID3D12Resource* pSrcResource)
+    {
+        pCommandList->CopyResource(pDstResource, pSrcResource);
     }
 
     inline void AddTransitionResourceBarriers(ID3D12Resource* pResource,
