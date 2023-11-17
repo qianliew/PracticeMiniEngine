@@ -1,7 +1,6 @@
 #pragma once
 #include "SceneManager.h"
 #include "D3D12ShaderTable.h"
-#include "RaytracingHlslCompat.h"
 
 using namespace std;
 
@@ -23,8 +22,6 @@ private:
 	ComPtr<ID3D12Resource> pMissShaderTable;
 	ComPtr<ID3D12Resource> pHitGroupShaderTable;
 	ComPtr<ID3D12Resource> pRayGenShaderTable;
-
-	RayGenConstantBuffer rayGenCB;
 
 public:
 	RayTracingPass(shared_ptr<D3D12Device>&, shared_ptr<SceneManager>&);

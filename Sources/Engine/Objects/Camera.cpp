@@ -13,6 +13,10 @@ Camera::Camera(UINT id, FLOAT width, FLOAT height) :
     pViewport = new CD3DX12_VIEWPORT(0.0f, 0.0f, width, height);
     pScissorRect = new CD3DX12_RECT(0.0f, 0.0f, static_cast<LONG>(width), static_cast<LONG>(height));
     worldPosition = DefaultCameraWorldPosition;
+
+    rayGenCB.viewport = { -1.0f, -1.0f, 1.0f, 1.0f };
+    rayGenCB.cameraPosition = GetWorldPosition();
+    rayGenCB.projectionToWorld = XMMatrixInverse(nullptr, GetVPMatrix());
 }
 
 Camera::~Camera()
@@ -52,6 +56,9 @@ void Camera::UpdateCameraConstant()
 {
     XMStoreFloat4x4(&cameraConstant.WorldToProjectionMatrix, GetVPMatrix());
     XMStoreFloat3(&cameraConstant.CameraWorldPosition, worldPosition);
+
+    rayGenCB.cameraPosition = GetWorldPosition();
+    rayGenCB.projectionToWorld = XMMatrixInverse(nullptr, GetVPMatrix());
 }
 
 const XMMATRIX Camera::GetVPMatrix()

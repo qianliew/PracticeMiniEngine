@@ -23,9 +23,14 @@ private:
 	ComPtr<ID3D12Resource> pBottomLevelAccelerationStructure;
 	ComPtr<ID3D12Resource> pTopLevelAccelerationStructure;
 
+	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC bottomLevelBuildDesc;
+	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC topLevelBuildDesc;
+
+	std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> geometryDescs;
+	D3D12UploadBuffer* pInstanceDescBuffer;
+
 	// Helper functions.
 	void LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*&, Model* object);
-	void BuildAccelerationStructures(D3D12CommandList*&, Model* object);
 	void LoadTextureBufferAndSampler(D3D12CommandList*&, D3D12Texture* texture);
 
 public:

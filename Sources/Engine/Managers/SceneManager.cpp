@@ -66,8 +66,86 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
 
         AddObject(model);
         LoadObjectVertexBufferAndIndexBuffer(pCommandList, model);
+        model->GetMesh()->AddGeometryBuffer(geometryDescs);
     }
-    BuildAccelerationStructures(pCommandList, pObjects[0]);
+
+    // Get required sizes for an acceleration structure.
+    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS buildFlags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS topLevelInputs = {};
+    topLevelInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
+    topLevelInputs.Flags = buildFlags;
+    topLevelInputs.NumDescs = numModels;
+    topLevelInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
+
+    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO topLevelPrebuildInfo = {};
+    pDevice->GetDXRDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&topLevelInputs, &topLevelPrebuildInfo);
+    ThrowIfFalse(topLevelPrebuildInfo.ResultDataMaxSizeInBytes > 0);
+
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS bottomLevelInputs = {};
+    bottomLevelInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
+    bottomLevelInputs.Flags = buildFlags;
+    bottomLevelInputs.NumDescs = numModels;
+    bottomLevelInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
+    bottomLevelInputs.pGeometryDescs = geometryDescs.data();
+    
+    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO bottomLevelPrebuildInfo = {};
+    pDevice->GetDXRDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&bottomLevelInputs, &bottomLevelPrebuildInfo);
+    ThrowIfFalse(bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes > 0);
+
+    pDevice->GetBufferManager()->AllocateUAVBuffer(
+        max(topLevelPrebuildInfo.ScratchDataSizeInBytes, bottomLevelPrebuildInfo.ScratchDataSizeInBytes),
+        &pScratchResource,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        L"ScratchResource");
+
+    D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
+
+    pDevice->GetBufferManager()->AllocateUAVBuffer(
+        bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes,
+        &pBottomLevelAccelerationStructure,
+        initialResourceState,
+        L"BottomLevelAccelerationStructure");
+    pDevice->GetBufferManager()->AllocateUAVBuffer(
+        topLevelPrebuildInfo.ResultDataMaxSizeInBytes,
+        &pTopLevelAccelerationStructure,
+        initialResourceState,
+        L"TopLevelAccelerationStructure");
+
+    const UINT64 instanceDescSize = sizeof(D3D12_RAYTRACING_INSTANCE_DESC);
+    pInstanceDescBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateUploadBuffer(pInstanceDescBuffer, instanceDescSize * numModels);
+
+    for (UINT i = 0; i < numModels; i++)
+    {
+        D3D12_RAYTRACING_INSTANCE_DESC desc = {};
+        // Create an instance desc for the bottom-level acceleration structure.
+        desc.Transform[0][0] = desc.Transform[1][1] = desc.Transform[2][2] = 1;
+        desc.InstanceID = 0;
+        desc.InstanceMask = 0xFF;
+        desc.InstanceContributionToHitGroupIndex = 0;
+        desc.AccelerationStructure = pBottomLevelAccelerationStructure->GetGPUVirtualAddress();
+
+        pInstanceDescBuffer->CopyData(&desc, sizeof(desc), instanceDescSize * i);
+    }
+
+    // Bottom Level Acceleration Structure desc
+    bottomLevelBuildDesc.DestAccelerationStructureData = pBottomLevelAccelerationStructure->GetGPUVirtualAddress();
+    bottomLevelBuildDesc.Inputs = bottomLevelInputs;
+    bottomLevelBuildDesc.SourceAccelerationStructureData = NULL;
+    bottomLevelBuildDesc.ScratchAccelerationStructureData = pScratchResource->GetGPUVirtualAddress();
+
+    // Top Level Acceleration Structure desc
+    topLevelInputs.InstanceDescs = pInstanceDescBuffer->ResourceLocation.Resource->GetGPUVirtualAddress();
+    topLevelBuildDesc.DestAccelerationStructureData = pTopLevelAccelerationStructure->GetGPUVirtualAddress();
+    topLevelBuildDesc.Inputs = topLevelInputs;
+    topLevelBuildDesc.SourceAccelerationStructureData = NULL;
+    topLevelBuildDesc.ScratchAccelerationStructureData = pScratchResource->GetGPUVirtualAddress();
+
+    // Build acceleration structure.
+    pCommandList->GetDXRCommandList()->BuildRaytracingAccelerationStructure(&bottomLevelBuildDesc, 0, nullptr);
+    pCommandList->GetCommandList()->ResourceBarrier(1,
+        &CD3DX12_RESOURCE_BARRIER::UAV(pBottomLevelAccelerationStructure.Get()));
+    pCommandList->GetDXRCommandList()->BuildRaytracingAccelerationStructure(&topLevelBuildDesc, 0, nullptr);
 
     inFile.close();
 }
@@ -249,87 +327,6 @@ void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*& pComm
     pCommandList->AddTransitionResourceBarriers(object->GetMesh()->IndexBuffer->GetResource(),
         D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
     pCommandList->FlushResourceBarriers();
-}
-
-void SceneManager::BuildAccelerationStructures(D3D12CommandList*& pCommandList, Model* object)
-{
-    D3D12Mesh* pMesh = object->GetMesh();
-    pMesh->BuildAccelerationStructures();
-
-    // Get required sizes for an acceleration structure.
-    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS buildFlags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
-    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS topLevelInputs = {};
-    topLevelInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
-    topLevelInputs.Flags = buildFlags;
-    topLevelInputs.NumDescs = 1;
-    topLevelInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
-
-    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO topLevelPrebuildInfo = {};
-    pDevice->GetDXRDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&topLevelInputs, &topLevelPrebuildInfo);
-    ThrowIfFalse(topLevelPrebuildInfo.ResultDataMaxSizeInBytes > 0);
-
-    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO bottomLevelPrebuildInfo = {};
-    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS bottomLevelInputs = topLevelInputs;
-    bottomLevelInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
-    bottomLevelInputs.pGeometryDescs = &object->GetMesh()->geometryDesc;
-    pDevice->GetDXRDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&bottomLevelInputs, &bottomLevelPrebuildInfo);
-    ThrowIfFalse(bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes > 0);
-
-    pDevice->GetBufferManager()->AllocateUAVBuffer(
-        max(topLevelPrebuildInfo.ScratchDataSizeInBytes, bottomLevelPrebuildInfo.ScratchDataSizeInBytes),
-        &pScratchResource,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-        L"ScratchResource");
-
-    // Allocate resources for acceleration structures.
-    // Acceleration structures can only be placed in resources that are created in the default heap (or custom heap equivalent). 
-    // Default heap is OK since the application doesn’t need CPU read/write access to them. 
-    // The resources that will contain acceleration structures must be created in the state D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, 
-    // and must have resource flag D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS. The ALLOW_UNORDERED_ACCESS requirement simply acknowledges both: 
-    //  - the system will be doing this type of access in its implementation of acceleration structure builds behind the scenes.
-    //  - from the app point of view, synchronization of writes/reads to acceleration structures is accomplished using UAV barriers.
-
-    D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
-
-    pDevice->GetBufferManager()->AllocateUAVBuffer(
-        bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes,
-        &pBottomLevelAccelerationStructure,
-        initialResourceState,
-        L"BottomLevelAccelerationStructure");
-    pDevice->GetBufferManager()->AllocateUAVBuffer(
-        topLevelPrebuildInfo.ResultDataMaxSizeInBytes,
-        &pTopLevelAccelerationStructure,
-        initialResourceState,
-        L"TopLevelAccelerationStructure");
-
-    // Create an instance desc for the bottom-level acceleration structure.
-    pMesh->instanceDesc.Transform[0][0] = pMesh->instanceDesc.Transform[1][1] = pMesh->instanceDesc.Transform[2][2] = 1;
-    pMesh->instanceDesc.InstanceMask = 1;
-    pMesh->instanceDesc.AccelerationStructure = pBottomLevelAccelerationStructure->GetGPUVirtualAddress();
-
-    pMesh->pInstanceDescBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(object->GetMesh()->pInstanceDescBuffer, sizeof(pMesh->instanceDesc));
-    pMesh->pInstanceDescBuffer->CopyData(&pMesh->instanceDesc, sizeof(pMesh->instanceDesc));
-
-    // Bottom Level Acceleration Structure desc
-    pMesh->bottomLevelBuildDesc.Inputs = bottomLevelInputs;
-    pMesh->bottomLevelBuildDesc.ScratchAccelerationStructureData = pScratchResource->GetGPUVirtualAddress();
-    pMesh->bottomLevelBuildDesc.DestAccelerationStructureData = pBottomLevelAccelerationStructure->GetGPUVirtualAddress();
-
-    // Top Level Acceleration Structure desc
-    topLevelInputs.InstanceDescs = object->GetMesh()->pInstanceDescBuffer->ResourceLocation.Resource->GetGPUVirtualAddress();
-    pMesh->topLevelBuildDesc.Inputs = topLevelInputs;
-    pMesh->topLevelBuildDesc.DestAccelerationStructureData = pTopLevelAccelerationStructure->GetGPUVirtualAddress();
-    pMesh->topLevelBuildDesc.ScratchAccelerationStructureData = pScratchResource->GetGPUVirtualAddress();
-
-    // Build acceleration structure.
-    pCommandList->GetDXRCommandList()->BuildRaytracingAccelerationStructure(&pMesh->bottomLevelBuildDesc, 0, nullptr);
-    pCommandList->GetCommandList()->ResourceBarrier(1,
-        &CD3DX12_RESOURCE_BARRIER::UAV(pBottomLevelAccelerationStructure.Get()));
-    pCommandList->GetDXRCommandList()->BuildRaytracingAccelerationStructure(&pMesh->topLevelBuildDesc, 0, nullptr);
-
-    // Wait for GPU to finish as the locally created temporary GPU resources will get released once we go out of scope.
-    // m_deviceResources->WaitForGpu();
 }
 
 void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList*& pCommandList, D3D12Texture* texture)

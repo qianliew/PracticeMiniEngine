@@ -1,7 +1,8 @@
 #pragma once
 
-#include "D3D12ConstantBuffer.h"
 #include "Transform.h"
+#include "D3D12ConstantBuffer.h"
+#include "RaytracingHlslCompat.h"
 
 #define CAMERA_DEFAULT_FOV XM_PI / 3.0f
 #define CAMERA_DEFAULT_ASPECT_RATIO 16.0f / 9.0f
@@ -25,6 +26,7 @@ private:
     CD3DX12_RECT* pScissorRect;
 
     CameraConstant cameraConstant;
+    RayGenConstantBuffer rayGenCB;
 
     FLOAT width;
     FLOAT height;
@@ -49,4 +51,5 @@ public:
     inline const D3D12_VIEWPORT* GetViewport() const { return pViewport; }
     inline const D3D12_RECT* GetScissorRect() const { return pScissorRect; }
     inline CameraConstant& GetCameraConstant() { return cameraConstant; }
+    inline RayGenConstantBuffer& GetRayGenConstant() { return rayGenCB; }
 };

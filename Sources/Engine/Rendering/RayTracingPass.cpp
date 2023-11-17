@@ -74,7 +74,7 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
     // This is a root signature that enables a shader to have unique arguments that come from shader tables.
     {
         CD3DX12_ROOT_PARAMETER rootParameters[1];
-        rootParameters[0].InitAsConstants(SizeOfInUint32(rayGenCB), 0, 0);
+        rootParameters[0].InitAsConstants(SizeOfInUint32(RayGenConstantBuffer), 0, 0);
         CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
         localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
 
@@ -145,15 +145,11 @@ void RayTracingPass::BuildShaderTables()
 
     // Ray gen shader table
     {
-        rayGenCB.viewport = { -1.0f, -1.0f, 1.0f, 1.0f };
-        rayGenCB.cameraPosition = pSceneManager->GetCamera()->GetWorldPosition();
-        rayGenCB.projectionToWorld = XMMatrixInverse(nullptr, pSceneManager->GetCamera()->GetVPMatrix());
-
         UINT numShaderRecords = 1;
-        UINT shaderRecordSize = shaderIdentifierSize + sizeof(rayGenCB);
+        UINT shaderRecordSize = shaderIdentifierSize + sizeof(RayGenConstantBuffer);
         ShaderTable rayGenShaderTable(numShaderRecords, shaderRecordSize);
         rayGenShaderTable.CreateBuffer(pDevice->GetDevice().Get());
-        rayGenShaderTable.PushBack(ShaderRecord(rayGenShaderIdentifier, shaderIdentifierSize, &rayGenCB, sizeof(rayGenCB)));
+        rayGenShaderTable.PushBack(ShaderRecord(rayGenShaderIdentifier, shaderIdentifierSize, &pSceneManager->GetCamera()->GetRayGenConstant(), sizeof(RayGenConstantBuffer)));
         pRayGenShaderTable = rayGenShaderTable.ResourceLocation.Resource;
     }
 
