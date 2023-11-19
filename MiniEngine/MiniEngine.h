@@ -26,9 +26,10 @@ public:
     void OnKeyUp(UINT8 /*key*/);
 
 private:
+    BOOL isDXR;
+
     // Pipeline objects.
     shared_ptr<D3D12Device> pDevice;
-    ComPtr<ID3D12CommandAllocator> commandAllocator;
     D3D12RootSignature* pRootSignature;
     D3D12CommandList* pCommandList;
 

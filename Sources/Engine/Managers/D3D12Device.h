@@ -11,6 +11,7 @@ protected:
     ComPtr<ID3D12Device> pDevice;
     ComPtr<IDXGIFactory4> pFactory;
     ComPtr<ID3D12CommandQueue> pCommandQueue;
+    ComPtr<ID3D12CommandAllocator> pCommandAllocator;
 
     // DirectX Raytracing (DXR) attributes
     ComPtr<ID3D12Device5> pDXRDevice;
@@ -27,15 +28,16 @@ public:
     D3D12Device();
     ~D3D12Device();
 
-    virtual void CreateDevice();
+    void CreateDevice();
     void CreateDescriptorHeapManager();
     void CreateBufferManager();
 
-    ComPtr<ID3D12Device> GetDevice() const { return pDevice; }
-    ComPtr<ID3D12Device5> GetDXRDevice() const { return pDXRDevice; }
-    ComPtr<IDXGIFactory4> GetFactory() const { return pFactory; }
-    ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return pCommandQueue; }
+    inline ComPtr<ID3D12Device> GetDevice() const { return pDevice; }
+    inline ComPtr<ID3D12Device5> GetDXRDevice() const { return pDXRDevice; }
+    inline ComPtr<IDXGIFactory4> GetFactory() const { return pFactory; }
+    inline ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return pCommandQueue; }
+    inline ComPtr<ID3D12CommandAllocator> GetCommandAllocator() const { return pCommandAllocator; }
 
-    D3D12DescriptorHeapManager* GetDescriptorHeapManager() const { return pDescriptorHeapManager; }
-    D3D12BufferManager* GetBufferManager() const { return pBufferManager; }
+    inline D3D12DescriptorHeapManager* GetDescriptorHeapManager() const { return pDescriptorHeapManager; }
+    inline D3D12BufferManager* GetBufferManager() const { return pBufferManager; }
 };

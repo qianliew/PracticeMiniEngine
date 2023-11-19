@@ -13,7 +13,7 @@ private:
     UINT barrierIndex;
 
 public:
-    D3D12CommandList(std::shared_ptr<D3D12Device>&, ComPtr<ID3D12CommandAllocator>&);
+    D3D12CommandList(std::shared_ptr<D3D12Device>&);
     ~D3D12CommandList();
 
     void ExecuteCommandList();

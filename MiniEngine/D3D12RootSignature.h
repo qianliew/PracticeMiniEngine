@@ -10,7 +10,8 @@ public:
     D3D12RootSignature(std::shared_ptr<D3D12Device>&);
     ~D3D12RootSignature();
 
-    void Create();
+    void CreateRootSignature();
+    void CreateDXRRootSignature();
 
     inline ComPtr<ID3D12RootSignature>& GetRootSignature() { return pRootSignature; }
 };

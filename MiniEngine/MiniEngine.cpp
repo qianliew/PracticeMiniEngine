@@ -5,6 +5,7 @@ using namespace Microsoft::WRL;
 
 MiniEngine::MiniEngine(UINT width, UINT height, std::wstring name) :
     Window(width, height, name),
+    isDXR(TRUE),
     frameIndex(0)
 {
 
@@ -35,45 +36,53 @@ void MiniEngine::LoadPipeline()
     pViewManager = make_shared<ViewManager>(pDevice, width, height);
     frameIndex = pViewManager->GetSwapChain()->GetCurrentBackBufferIndex();
 
-    // Create the command allocator.
-    ThrowIfFailed(pDevice->GetDevice()->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator)));
-
     // Create the command list.
-    pCommandList = new D3D12CommandList(pDevice, commandAllocator);
+    pCommandList = new D3D12CommandList(pDevice);
 
     // Create the root signature.
     pRootSignature = new D3D12RootSignature(pDevice);
-    pRootSignature->Create();
+    if (isDXR)
+    {
+        pRootSignature->CreateDXRRootSignature();
+    }
+    else
+    {
+        pRootSignature->CreateRootSignature();
+    }
 }
 
 // Load the sample assets.
 void MiniEngine::LoadAssets()
 {
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
-    {
-        ThrowIfFailed(pDevice->GetDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
-        fenceValue = 1;
+    ThrowIfFailed(pDevice->GetDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
+    fenceValue = 1;
 
-        // Create an event handle to use for frame synchronization.
-        fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-        if (fenceEvent == nullptr)
-        {
-            ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
-        }
+    // Create an event handle to use for frame synchronization.
+    fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    if (fenceEvent == nullptr)
+    {
+        ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
     }
 
     // Create scene objects.
-    {
-        // Create and init the scene manager.
-        pSceneManager = make_shared<SceneManager>(pDevice);
-        pSceneManager->InitFBXImporter();
-        pSceneManager->LoadScene(pCommandList);
-        pSceneManager->CreateCamera(width, height);
-        pCommandList->ExecuteCommandList();
-        WaitForGPU();
+    pSceneManager = make_shared<SceneManager>(pDevice);
+    pSceneManager->InitFBXImporter();
+    pSceneManager->LoadScene(pCommandList);
+    pSceneManager->CreateCamera(width, height);
+    pCommandList->ExecuteCommandList();
+    WaitForGPU();
 
-        // Create and init render passes.
-        pCommandList->Reset(commandAllocator);
+    // Create and init render passes.
+    pCommandList->Reset(pDevice->GetCommandAllocator());
+    if (isDXR)
+    {
+        pRayTracingPass = make_shared<RayTracingPass>(pDevice, pSceneManager);
+        pRayTracingPass->Setup(pCommandList, pRootSignature->GetRootSignature());
+        pRayTracingPass->BuildShaderTables();
+    }
+    else
+    {
         pDrawObjectPass = make_shared<DrawObjectsPass>(pDevice, pSceneManager);
         pDrawObjectPass->Setup(pCommandList, pRootSignature->GetRootSignature());
 
@@ -82,14 +91,10 @@ void MiniEngine::LoadAssets()
 
         pBlitPass = make_shared<BlitPass>(pDevice, pSceneManager);
         pBlitPass->Setup(pCommandList, pRootSignature->GetRootSignature());
-
-        pRayTracingPass = make_shared<RayTracingPass>(pDevice, pSceneManager);
-        pRayTracingPass->Setup(pCommandList, pRootSignature->GetRootSignature());
-        pRayTracingPass->BuildShaderTables();
-
-        pCommandList->ExecuteCommandList();
-        WaitForGPU();
     }
+
+    pCommandList->ExecuteCommandList();
+    WaitForGPU();
 }
 
 void MiniEngine::OnKeyDown(UINT8 key)
@@ -167,46 +172,55 @@ void MiniEngine::PopulateCommandList()
     // Command list allocators can only be reset when the associated 
     // command lists have finished execution on the GPU; apps should use 
     // fences to determine GPU execution progress.
-    ThrowIfFailed(commandAllocator->Reset());
+    ThrowIfFailed(pDevice->GetCommandAllocator()->Reset());
 
     // However, when ExecuteCommandList() is called on a particular command 
     // list, that command list can then be reset at any time and must be before 
     // re-recording.
-    pCommandList->Reset(commandAllocator);
-    pCommandList->SetRootSignature(pRootSignature->GetRootSignature());
+    pCommandList->Reset(pDevice->GetCommandAllocator());
 
     // Indicate that the back buffer will be used as a render target.
     pCommandList->AddTransitionResourceBarriers(pViewManager->GetBackBufferAt(frameIndex),
         D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     pCommandList->FlushResourceBarriers();
 
-    pDrawObjectPass->Execute(pCommandList, frameIndex);
-    pDrawSkyboxPass->Execute(pCommandList, frameIndex);
+    if (isDXR)
+    {
+        pCommandList->SetComputeRootSignature(pRootSignature->GetRootSignature());
 
-    pViewManager->EmplaceRenderTarget(pCommandList, D3D12TextureType::ShaderResource);
-    pBlitPass->Execute(pCommandList, frameIndex);
-    pViewManager->EmplaceRenderTarget(pCommandList, D3D12TextureType::RenderTarget);
+        // Execute the ray tracing path.
+        pRayTracingPass->Execute(pCommandList, frameIndex);
 
-    // Indicate that the back buffer will now be used to present.
-    pCommandList->AddTransitionResourceBarriers(pViewManager->GetBackBufferAt(frameIndex),
-        D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-    pCommandList->FlushResourceBarriers();
+        pCommandList->AddTransitionResourceBarriers(pViewManager->GetBackBufferAt(frameIndex),
+            D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
+        pCommandList->AddTransitionResourceBarriers(pViewManager->GetRayTracingOutput(),
+            D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        pCommandList->FlushResourceBarriers();
 
-    //pRayTracingPass->Execute(pCommandList, frameIndex);
+        pCommandList->CopyResource(pViewManager->GetBackBufferAt(frameIndex), pViewManager->GetRayTracingOutput());
 
-    //pCommandList->AddTransitionResourceBarriers(pViewManager->GetBackBufferAt(frameIndex),
-    //    D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
-    //pCommandList->AddTransitionResourceBarriers(pViewManager->GetRayTracingOutput(),
-    //    D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
-    //pCommandList->FlushResourceBarriers();
+        pCommandList->AddTransitionResourceBarriers(pViewManager->GetBackBufferAt(frameIndex),
+            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
+        pCommandList->AddTransitionResourceBarriers(pViewManager->GetRayTracingOutput(),
+            D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+        pCommandList->FlushResourceBarriers();
+    }
+    else
+    {
+        pCommandList->SetRootSignature(pRootSignature->GetRootSignature());
 
-    //pCommandList->CopyResource(pViewManager->GetBackBufferAt(frameIndex), pViewManager->GetRayTracingOutput());
+        pDrawObjectPass->Execute(pCommandList, frameIndex);
+        pDrawSkyboxPass->Execute(pCommandList, frameIndex);
 
-    //pCommandList->AddTransitionResourceBarriers(pViewManager->GetBackBufferAt(frameIndex),
-    //    D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
-    //pCommandList->AddTransitionResourceBarriers(pViewManager->GetRayTracingOutput(),
-    //    D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-    //pCommandList->FlushResourceBarriers();
+        pViewManager->EmplaceRenderTarget(pCommandList, D3D12TextureType::ShaderResource);
+        pBlitPass->Execute(pCommandList, frameIndex);
+        pViewManager->EmplaceRenderTarget(pCommandList, D3D12TextureType::RenderTarget);
+
+        // Indicate that the back buffer will now be used to present.
+        pCommandList->AddTransitionResourceBarriers(pViewManager->GetBackBufferAt(frameIndex),
+            D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+        pCommandList->FlushResourceBarriers();
+    }
 
     pCommandList->ExecuteCommandList();
 }

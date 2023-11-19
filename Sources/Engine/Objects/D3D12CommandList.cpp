@@ -1,13 +1,12 @@
 #include "stdafx.h"
 #include "D3D12CommandList.h"
 
-D3D12CommandList::D3D12CommandList(std::shared_ptr<D3D12Device>& inDevice, 
-    ComPtr<ID3D12CommandAllocator>& commandAllocator) :
+D3D12CommandList::D3D12CommandList(std::shared_ptr<D3D12Device>& inDevice) :
     pDevice(inDevice),
     barrierIndex(0)
 {
     ThrowIfFailed(pDevice->GetDevice()->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        commandAllocator.Get(),
+        pDevice->GetCommandAllocator().Get(),
         nullptr,
         IID_PPV_ARGS(&pCommandList)));
 

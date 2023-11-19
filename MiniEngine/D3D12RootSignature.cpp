@@ -12,7 +12,7 @@ D3D12RootSignature::~D3D12RootSignature()
 
 }
 
-void D3D12RootSignature::Create()
+void D3D12RootSignature::CreateRootSignature()
 {
     CD3DX12_DESCRIPTOR_RANGE descriptorTableRanges[4];
     descriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
@@ -58,6 +58,28 @@ void D3D12RootSignature::Create()
         signature.GetAddressOf(),
         error.GetAddressOf()));
     ThrowIfFailed(pDevice->GetDevice()->CreateRootSignature(0,
+        signature->GetBufferPointer(),
+        signature->GetBufferSize(),
+        IID_PPV_ARGS(&pRootSignature)));
+}
+
+void D3D12RootSignature::CreateDXRRootSignature()
+{
+    CD3DX12_DESCRIPTOR_RANGE descriptorTableRanges;
+    descriptorTableRanges.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+
+    CD3DX12_ROOT_PARAMETER rootParameters[2];
+    rootParameters[DRX_SHADER_RESOURCE_VIEW].InitAsShaderResourceView(0);
+    rootParameters[DRX_UNORDERED_ACCESS_VIEW].InitAsDescriptorTable(1, &descriptorTableRanges);
+    CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
+
+    ComPtr<ID3DBlob> signature;
+    ComPtr<ID3DBlob> error;
+    ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc,
+        D3D_ROOT_SIGNATURE_VERSION_1,
+        signature.GetAddressOf(),
+        error.GetAddressOf()));
+    ThrowIfFailed(pDevice->GetDevice()->CreateRootSignature(1,
         signature->GetBufferPointer(),
         signature->GetBufferSize(),
         IID_PPV_ARGS(&pRootSignature)));

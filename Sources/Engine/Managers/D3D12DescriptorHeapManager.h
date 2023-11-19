@@ -9,6 +9,10 @@
 #define RENDER_TARGET_VIEW 6
 #define DEPTH_STENCIL_VIEW 7
 
+// For DRX
+#define DRX_SHADER_RESOURCE_VIEW 0
+#define DRX_UNORDERED_ACCESS_VIEW 1
+
 #define FRAME_COUNT 2
 
 class D3D12DescriptorHeapManager

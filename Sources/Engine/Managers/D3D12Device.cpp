@@ -68,6 +68,9 @@ void D3D12Device::CreateDevice()
     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
     ThrowIfFailed(pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&pCommandQueue)));
+
+    // Create the command allocator.
+    ThrowIfFailed(pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&pCommandAllocator)));
 }
 
 // Helper function for acquiring the first available hardware adapter that supports Direct3D 12.
