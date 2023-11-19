@@ -184,6 +184,7 @@
     <ClInclude Include="..\Sources\Utilities\FBXImporter.h" />
     <ClInclude Include="..\Sources\Utilities\Macros.h" />
     <ClInclude Include="..\Sources\Utilities\PathHelper.h" />
+    <ClInclude Include="D3D12RootSignature.h" />
     <ClInclude Include="MiniEngine.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Win32Application.h" />
@@ -221,6 +222,7 @@
     <ClCompile Include="..\Sources\Engine\Rendering\RayTracingPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Window.cpp" />
     <ClCompile Include="..\Sources\Utilities\FBXImporter.cpp" />
+    <ClCompile Include="D3D12RootSignature.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MiniEngine.cpp" />
     <ClCompile Include="Win32Application.cpp" />

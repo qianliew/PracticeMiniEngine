@@ -35,4 +35,5 @@
 #include "D3D12ConstantBuffer.h"
 
 #include "D3D12Device.h"
+#include "D3D12RootSignature.h"
 #include "D3D12CommandList.h"

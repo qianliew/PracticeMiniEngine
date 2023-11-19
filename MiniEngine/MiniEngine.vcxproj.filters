@@ -163,6 +163,9 @@
     <ClInclude Include="..\Sources\Engine\Components\D3D12ShaderTable.h">
       <Filter>Engine\Components\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="D3D12RootSignature.h">
+      <Filter>Engine\Components\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Sources\Engine\Objects\D3D12IndexBuffer.cpp">
@@ -262,6 +265,9 @@
       <Filter>Engine\Rendering\Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\Sources\Engine\Components\D3D12ShaderTable.cpp">
+      <Filter>Engine\Components\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12RootSignature.cpp">
       <Filter>Engine\Components\Sources</Filter>
     </ClCompile>
   </ItemGroup>

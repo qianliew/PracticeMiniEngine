@@ -29,7 +29,7 @@ private:
     // Pipeline objects.
     shared_ptr<D3D12Device> pDevice;
     ComPtr<ID3D12CommandAllocator> commandAllocator;
-    ComPtr<ID3D12RootSignature> rootSignature;
+    D3D12RootSignature* pRootSignature;
     D3D12CommandList* pCommandList;
 
     shared_ptr<DrawObjectsPass> pDrawObjectPass;
