@@ -18,6 +18,7 @@ private:
 	Model* pFullScreenMesh;
 
 	UINT objectID;
+	BOOL isDXR;
 
 	ComPtr<ID3D12Resource> pScratchResource;
 	ComPtr<ID3D12Resource> pBottomLevelAccelerationStructure;
@@ -34,7 +35,7 @@ private:
 	void LoadTextureBufferAndSampler(D3D12CommandList*&, D3D12Texture* texture);
 
 public:
-	SceneManager(shared_ptr<D3D12Device>&);
+	SceneManager(shared_ptr<D3D12Device>&, BOOL isDXR);
 	~SceneManager();
 
 	static UINT sTextureID;

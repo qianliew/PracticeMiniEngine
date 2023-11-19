@@ -171,8 +171,8 @@ void RayTracingPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
 
     // Bind the heaps, acceleration structure and dispatch rays.    
     D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
-    pDevice->GetDescriptorHeapManager()->SetComputeViews(pCommandList->GetCommandList(), UNORDERED_ACCESS_VIEW, 0, 1);
-    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(0, pSceneManager->GetTLAS()->GetGPUVirtualAddress());
+    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(DXR_SHADER_RESOURCE_VIEW_GLOBAL, pSceneManager->GetTLAS()->GetGPUVirtualAddress());
+    pDevice->GetDescriptorHeapManager()->SetComputeViews(pCommandList->GetCommandList(), UNORDERED_ACCESS_VIEW, DXR_UNORDERED_ACCESS_VIEW, 0);
 
     DispatchRays(pCommandList->GetDXRCommandList().Get(), pDXRStateObject.Get(), &dispatchDesc);
 }

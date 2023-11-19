@@ -69,8 +69,8 @@ void D3D12RootSignature::CreateDXRRootSignature()
     descriptorTableRanges.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
 
     CD3DX12_ROOT_PARAMETER rootParameters[2];
-    rootParameters[DRX_SHADER_RESOURCE_VIEW].InitAsShaderResourceView(0);
-    rootParameters[DRX_UNORDERED_ACCESS_VIEW].InitAsDescriptorTable(1, &descriptorTableRanges);
+    rootParameters[DXR_SHADER_RESOURCE_VIEW_GLOBAL].InitAsShaderResourceView(0);
+    rootParameters[DXR_UNORDERED_ACCESS_VIEW].InitAsDescriptorTable(1, &descriptorTableRanges);
     CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
 
     ComPtr<ID3DBlob> signature;

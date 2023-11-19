@@ -2,8 +2,9 @@
 #include "D3D12Device.h"
 #include "Win32Application.h"
 
-D3D12Device::D3D12Device() :
-    useWarpDevice(false)
+D3D12Device::D3D12Device(BOOL isDXR) :
+    useWarpDevice(false),
+    isDXR(isDXR)
 {
 
 }
@@ -59,8 +60,12 @@ void D3D12Device::CreateDevice()
             IID_PPV_ARGS(&pDevice)
         ));
     }
-    // Query the interface of the DXR device.
-    ThrowIfFailed(pDevice->QueryInterface(IID_PPV_ARGS(&pDXRDevice)));
+
+    if (isDXR)
+    {
+        // Query the interface of the DXR device.
+        ThrowIfFailed(pDevice->QueryInterface(IID_PPV_ARGS(&pDXRDevice)));
+    }
 
     // Describe and create the command queue.
     D3D12_COMMAND_QUEUE_DESC queueDesc = {};
@@ -143,7 +148,7 @@ void D3D12Device::GetHardwareAdapter(
 
 void D3D12Device::CreateDescriptorHeapManager()
 {
-    pDescriptorHeapManager = new D3D12DescriptorHeapManager(pDevice);
+    pDescriptorHeapManager = new D3D12DescriptorHeapManager(pDevice, isDXR);
 }
 
 void D3D12Device::CreateBufferManager()

@@ -27,13 +27,17 @@ void MiniEngine::OnInit()
 void MiniEngine::LoadPipeline()
 {
     // Create the device.
-    pDevice = std::make_shared<D3D12Device>();
+    pDevice = std::make_shared<D3D12Device>(isDXR);
     pDevice->CreateDevice();
     pDevice->CreateDescriptorHeapManager();
     pDevice->CreateBufferManager();
 
     // Create and init the view manager.
     pViewManager = make_shared<ViewManager>(pDevice, width, height);
+    if (isDXR)
+    {
+        pViewManager->CreateDXRUAV();
+    }
     frameIndex = pViewManager->GetSwapChain()->GetCurrentBackBufferIndex();
 
     // Create the command list.
@@ -66,7 +70,7 @@ void MiniEngine::LoadAssets()
     }
 
     // Create scene objects.
-    pSceneManager = make_shared<SceneManager>(pDevice);
+    pSceneManager = make_shared<SceneManager>(pDevice, isDXR);
     pSceneManager->InitFBXImporter();
     pSceneManager->LoadScene(pCommandList);
     pSceneManager->CreateCamera(width, height);

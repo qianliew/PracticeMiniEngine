@@ -23,6 +23,7 @@ public:
     ViewManager(std::shared_ptr<D3D12Device>&, UINT inWidth, UINT inHeight);
     ~ViewManager();
 
+    void CreateDXRUAV();
     void EmplaceRenderTarget(D3D12CommandList*& pCommandList, D3D12TextureType type);
 
     inline IDXGISwapChain3* GetSwapChain() const { return pSwapChain.Get(); }

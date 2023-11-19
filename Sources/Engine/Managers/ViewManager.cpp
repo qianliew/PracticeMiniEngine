@@ -74,7 +74,16 @@ ViewManager::ViewManager(std::shared_ptr<D3D12Device>& device, UINT inWidth, UIN
         &depthOptimizedClearValue);
     pDepthStencil->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(DEPTH_STENCIL_VIEW, 0));
+}
 
+ViewManager::~ViewManager()
+{
+    delete pRenderTarget;
+    delete pDepthStencil;
+}
+
+void ViewManager::CreateDXRUAV()
+{
     // Create 2D output texture for raytracing.
     pRayTracingOutput = new D3D12Texture(-1, -1, width, height);
     pRayTracingOutput->CreateTexture(D3D12TextureType::UnorderedAccess);
@@ -85,12 +94,6 @@ ViewManager::ViewManager(std::shared_ptr<D3D12Device>& device, UINT inWidth, UIN
         nullptr);
     pRayTracingOutput->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, 0));
-}
-
-ViewManager::~ViewManager()
-{
-    delete pRenderTarget;
-    delete pDepthStencil;
 }
 
 void ViewManager::EmplaceRenderTarget(D3D12CommandList*& pCommandList, D3D12TextureType type)

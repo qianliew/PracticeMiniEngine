@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "D3D12DescriptorHeapManager.h"
 
-D3D12DescriptorHeapManager::D3D12DescriptorHeapManager(ComPtr<ID3D12Device> &device)
+D3D12DescriptorHeapManager::D3D12DescriptorHeapManager(ComPtr<ID3D12Device> &device, BOOL isDXR)
 {
     // Describe and create constant buffer view (CBV) descriptor heaps.
     D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
@@ -79,12 +79,6 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12DescriptorHeapManager::GetHandle(UINT index, IN
     return handle;
 }
 
-void D3D12DescriptorHeapManager::GetSamplerHandle(D3D12Sampler* const sampler, INT offset)
-{
-    sampler->CPUHandle = heapTable[SAMPLER]->GetCPUDescriptorHandleForHeapStart();
-    sampler->CPUHandle.Offset(offset, sizeTable[SAMPLER]);
-}
-
 void D3D12DescriptorHeapManager::SetViews(ComPtr<ID3D12GraphicsCommandList>& commandList, UINT index, INT offset)
 {
     ID3D12DescriptorHeap* heap[] = { heapTable[index].Get() };
@@ -96,7 +90,11 @@ void D3D12DescriptorHeapManager::SetViews(ComPtr<ID3D12GraphicsCommandList>& com
     commandList->SetGraphicsRootDescriptorTable(index, handle);
 }
 
-void D3D12DescriptorHeapManager::SetComputeViews(ComPtr<ID3D12GraphicsCommandList>& commandList, UINT index, INT offset, UINT temp)
+void D3D12DescriptorHeapManager::SetComputeViews(
+    ComPtr<ID3D12GraphicsCommandList>& commandList,
+    UINT index,
+    UINT rootIndex,
+    INT offset)
 {
     ID3D12DescriptorHeap* heap[] = { heapTable[index].Get() };
 
@@ -104,7 +102,7 @@ void D3D12DescriptorHeapManager::SetComputeViews(ComPtr<ID3D12GraphicsCommandLis
     handle.Offset(offset, sizeTable[index]);
 
     commandList->SetDescriptorHeaps(_countof(heap), heap);
-    commandList->SetComputeRootDescriptorTable(temp, handle);
+    commandList->SetComputeRootDescriptorTable(rootIndex, handle);
 }
 
 void D3D12DescriptorHeapManager::SetSRVs(ComPtr<ID3D12GraphicsCommandList>& commandList, INT offset)
