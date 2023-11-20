@@ -1,5 +1,5 @@
 #pragma once
-#include "D3D12TextureBuffer.h"
+#include "D3D12ShaderResourceBuffer.h"
 
 enum class D3D12TextureType
 {

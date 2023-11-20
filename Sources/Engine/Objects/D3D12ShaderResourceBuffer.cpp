@@ -1,7 +1,7 @@
 #include "stdafx.h"
-#include "D3D12TextureBuffer.h"
+#include "D3D12ShaderResourceBuffer.h"
 
-D3D12TextureBuffer::D3D12TextureBuffer(
+D3D12ShaderResourceBuffer::D3D12ShaderResourceBuffer(
     const D3D12_RESOURCE_DESC& desc, 
     const D3D12_SRV_DIMENSION inSRVDimension) :
     TD3D12Resource(desc),
@@ -10,12 +10,12 @@ D3D12TextureBuffer::D3D12TextureBuffer(
 
 }
 
-D3D12TextureBuffer::~D3D12TextureBuffer()
+D3D12ShaderResourceBuffer::~D3D12ShaderResourceBuffer()
 {
 
 }
 
-void D3D12TextureBuffer::CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle)
+void D3D12ShaderResourceBuffer::CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC desc;
     desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -88,18 +88,18 @@ void D3D12DepthStencilBuffer::CreateView(const ComPtr<ID3D12Device>& device, con
     view->CreateView(device, handle);
 }
 
-D3D12UnorderedAccessViewBuffer::D3D12UnorderedAccessViewBuffer(const D3D12_RESOURCE_DESC& desc) :
+D3D12UnorderedAccessBuffer::D3D12UnorderedAccessBuffer(const D3D12_RESOURCE_DESC& desc) :
     TD3D12Resource(desc)
 {
 
 }
 
-D3D12UnorderedAccessViewBuffer::~D3D12UnorderedAccessViewBuffer()
+D3D12UnorderedAccessBuffer::~D3D12UnorderedAccessBuffer()
 {
 
 }
 
-void D3D12UnorderedAccessViewBuffer::CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle)
+void D3D12UnorderedAccessBuffer::CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle)
 {
     D3D12_UNORDERED_ACCESS_VIEW_DESC desc;
     desc.Format = resourceDesc.Format;

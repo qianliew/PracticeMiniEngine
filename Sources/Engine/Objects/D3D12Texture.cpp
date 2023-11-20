@@ -87,7 +87,7 @@ void D3D12Texture::CreateTexture(D3D12TextureType inType)
     {
         desc.Format = dxgiFormat;
         desc.Flags = D3D12_RESOURCE_FLAG_NONE;
-        pTextureBuffer = new D3D12TextureBuffer(desc, srvDimension);
+        pTextureBuffer = new D3D12ShaderResourceBuffer(desc, srvDimension);
     }
     else if (type == D3D12TextureType::RenderTarget)
     {
@@ -117,7 +117,7 @@ void D3D12Texture::CreateTexture(D3D12TextureType inType)
         desc.MipLevels = 1;
         desc.SampleDesc.Count = 1;
         desc.SampleDesc.Quality = 0;
-        pTextureBuffer = new D3D12UnorderedAccessViewBuffer(desc);
+        pTextureBuffer = new D3D12UnorderedAccessBuffer(desc);
     }
 
     if (oldBuffer != nullptr)
