@@ -5,7 +5,7 @@ using namespace Microsoft::WRL;
 
 MiniEngine::MiniEngine(UINT width, UINT height, std::wstring name) :
     Window(width, height, name),
-    isDXR(TRUE),
+    isDXR(FALSE),
     frameIndex(0)
 {
 

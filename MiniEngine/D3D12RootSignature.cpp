@@ -24,7 +24,7 @@ void D3D12RootSignature::CreateRootSignature()
     rootParameters[CONSTANT_BUFFER_VIEW_GLOBAL].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
     rootParameters[CONSTANT_BUFFER_VIEW_PEROBJECT].InitAsConstantBufferView(1, 0, D3D12_SHADER_VISIBILITY_VERTEX);
     rootParameters[SHADER_RESOURCE_VIEW_GLOBAL].InitAsDescriptorTable(1, &descriptorTableRanges[0], D3D12_SHADER_VISIBILITY_PIXEL);
-    rootParameters[SHADER_RESOURCE_VIEW].InitAsDescriptorTable(1, &descriptorTableRanges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+    rootParameters[SHADER_RESOURCE_VIEW_PEROBJECT].InitAsDescriptorTable(1, &descriptorTableRanges[1], D3D12_SHADER_VISIBILITY_PIXEL);
     rootParameters[UNORDERED_ACCESS_VIEW].InitAsDescriptorTable(1, &descriptorTableRanges[2], D3D12_SHADER_VISIBILITY_PIXEL);
     rootParameters[SAMPLER].InitAsDescriptorTable(1, &descriptorTableRanges[3], D3D12_SHADER_VISIBILITY_PIXEL);
 
@@ -65,12 +65,14 @@ void D3D12RootSignature::CreateRootSignature()
 
 void D3D12RootSignature::CreateDXRRootSignature()
 {
-    CD3DX12_DESCRIPTOR_RANGE descriptorTableRanges;
-    descriptorTableRanges.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+    CD3DX12_DESCRIPTOR_RANGE descriptorTableRanges[2];
+    descriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+    descriptorTableRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 1);
 
-    CD3DX12_ROOT_PARAMETER rootParameters[2];
+    CD3DX12_ROOT_PARAMETER rootParameters[3];
+    rootParameters[DXR_UNORDERED_ACCESS_VIEW].InitAsDescriptorTable(1, &descriptorTableRanges[0]);
     rootParameters[DXR_SHADER_RESOURCE_VIEW_GLOBAL].InitAsShaderResourceView(0);
-    rootParameters[DXR_UNORDERED_ACCESS_VIEW].InitAsDescriptorTable(1, &descriptorTableRanges);
+    rootParameters[DXR_SHADER_RESOURCE_VIEW_PEROBJECT].InitAsDescriptorTable(1, &descriptorTableRanges[1]);
     CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
 
     ComPtr<ID3DBlob> signature;

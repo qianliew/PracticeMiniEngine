@@ -14,6 +14,8 @@ D3D12Mesh::~D3D12Mesh()
 {
     delete pVertices;
     delete pIndices;
+    delete vertexBuffer;
+    delete indexBuffer;
     // delete pInstanceDescBuffer;
 
     pVertices = nullptr;
@@ -43,11 +45,11 @@ void D3D12Mesh::SetVertices(Vertex* triangleVertices, UINT size)
     desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
     desc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-    if (VertexBuffer != nullptr)
+    if (vertexBuffer != nullptr)
     {
-        VertexBuffer.release();
+        delete vertexBuffer;
     }
-    VertexBuffer = std::make_unique<D3D12VertexBuffer>(desc);
+    vertexBuffer = new D3D12VertexBuffer(desc);
 }
 
 void D3D12Mesh::SetIndices(UINT16* triangleIndices, UINT size)
@@ -73,11 +75,11 @@ void D3D12Mesh::SetIndices(UINT16* triangleIndices, UINT size)
     desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
     desc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-    if (IndexBuffer != nullptr)
+    if (indexBuffer != nullptr)
     {
-        IndexBuffer.release();
+        delete indexBuffer;
     }
-    IndexBuffer = std::make_unique<D3D12IndexBuffer>(desc);
+    indexBuffer = new D3D12IndexBuffer(desc);
 }
 
 void D3D12Mesh::CopyVertices(void* destination)
@@ -90,17 +92,24 @@ void D3D12Mesh::CopyIndices(void* destination)
     memcpy(destination, pIndices, indicesSize);
 }
 
-void D3D12Mesh::CreateView()
+void D3D12Mesh::CreateView(BOOL isDXR)
 {
-    // Initialize the vertex buffer view.
-    VertexBuffer->CreateView();
-    VertexBuffer->VertexBufferView.StrideInBytes = sizeof(Vertex);
-    VertexBuffer->VertexBufferView.SizeInBytes = verticesSize;
+    if (isDXR)
+    {
 
-    // Initialize the index buffer view.
-    IndexBuffer->CreateView();
-    IndexBuffer->IndexBufferView.Format = DXGI_FORMAT_R16_UINT;
-    IndexBuffer->IndexBufferView.SizeInBytes = indicesSize;
+    }
+    else
+    {
+        // Initialize the vertex buffer view.
+        vertexBuffer->CreateView();
+        vertexBuffer->VertexBufferView.StrideInBytes = sizeof(Vertex);
+        vertexBuffer->VertexBufferView.SizeInBytes = verticesSize;
+
+        // Initialize the index buffer view.
+        indexBuffer->CreateView();
+        indexBuffer->IndexBufferView.Format = DXGI_FORMAT_R16_UINT;
+        indexBuffer->IndexBufferView.SizeInBytes = indicesSize;
+    }
 }
 
 void D3D12Mesh::AddGeometryBuffer(std::vector<D3D12_RAYTRACING_GEOMETRY_DESC>& geometryDescs)
@@ -109,13 +118,13 @@ void D3D12Mesh::AddGeometryBuffer(std::vector<D3D12_RAYTRACING_GEOMETRY_DESC>& g
     geometryDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
     geometryDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
 
-    geometryDesc.Triangles.IndexBuffer = IndexBuffer->GetResourceLocation().Resource->GetGPUVirtualAddress();
+    geometryDesc.Triangles.IndexBuffer = indexBuffer->GetResourceLocation().Resource->GetGPUVirtualAddress();
     geometryDesc.Triangles.IndexCount = indicesNum;
     geometryDesc.Triangles.IndexFormat = DXGI_FORMAT_R16_UINT;
     geometryDesc.Triangles.Transform3x4 = 0;
     geometryDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
     geometryDesc.Triangles.VertexCount = verticesNum;
-    geometryDesc.Triangles.VertexBuffer.StartAddress = VertexBuffer->GetResourceLocation().Resource->GetGPUVirtualAddress();
+    geometryDesc.Triangles.VertexBuffer.StartAddress = vertexBuffer->GetResourceLocation().Resource->GetGPUVirtualAddress();
     geometryDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(Vertex);
 
     geometryDescs.push_back(geometryDesc);

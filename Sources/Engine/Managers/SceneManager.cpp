@@ -72,10 +72,14 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
         model->SetMaterial(pMaterialPool[EraseSuffix(fileName)]);
         AddObject(model);
 
-        LoadObjectVertexBufferAndIndexBuffer(pCommandList, model);
         if (isDXR)
         {
             model->GetMesh()->AddGeometryBuffer(geometryDescs);
+            LoadObjectVertexBufferAndIndexBuffer(pCommandList, model);
+        }
+        else
+        {
+            LoadObjectVertexBufferAndIndexBuffer(pCommandList, model);
         }
     }
 
@@ -241,8 +245,8 @@ void SceneManager::DrawObjects(D3D12CommandList*& pCommandList)
 
         // Set buffers and draw the instance.
         pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        pCommandList->SetVertexBuffers(0, 1, &model->GetMesh()->VertexBuffer->VertexBufferView);
-        pCommandList->SetIndexBuffer(&model->GetMesh()->IndexBuffer->IndexBufferView);
+        pCommandList->SetVertexBuffers(0, 1, &model->GetMesh()->GetVertexBuffer()->VertexBufferView);
+        pCommandList->SetIndexBuffer(&model->GetMesh()->GetIndexBuffer()->IndexBufferView);
         pCommandList->DrawIndexedInstanced(model->GetMesh()->GetIndicesNum());
     }
 }
@@ -260,8 +264,8 @@ void SceneManager::DrawSkybox(D3D12CommandList*& pCommandList)
     pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList(),
         pSkyboxMaterial->GetTexture()->GetTextureID());
 
-    pCommandList->SetVertexBuffers(0, 1, &pSkyboxMesh->GetMesh()->VertexBuffer->VertexBufferView);
-    pCommandList->SetIndexBuffer(&pSkyboxMesh->GetMesh()->IndexBuffer->IndexBufferView);
+    pCommandList->SetVertexBuffers(0, 1, &pSkyboxMesh->GetMesh()->GetVertexBuffer()->VertexBufferView);
+    pCommandList->SetIndexBuffer(&pSkyboxMesh->GetMesh()->GetIndexBuffer()->IndexBufferView);
     pCommandList->DrawIndexedInstanced(pSkyboxMesh->GetMesh()->GetIndicesNum());
 }
 
@@ -269,8 +273,8 @@ void SceneManager::DrawFullScreenMesh(D3D12CommandList*& pCommandList)
 {
     pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    pCommandList->SetVertexBuffers(0, 1, &pFullScreenMesh->GetMesh()->VertexBuffer->VertexBufferView);
-    pCommandList->SetIndexBuffer(&pFullScreenMesh->GetMesh()->IndexBuffer->IndexBufferView);
+    pCommandList->SetVertexBuffers(0, 1, &pFullScreenMesh->GetMesh()->GetVertexBuffer()->VertexBufferView);
+    pCommandList->SetIndexBuffer(&pFullScreenMesh->GetMesh()->GetIndexBuffer()->IndexBufferView);
     pCommandList->DrawIndexedInstanced(pFullScreenMesh->GetMesh()->GetIndicesNum());
 }
 
@@ -321,28 +325,46 @@ void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*& pComm
     // Create the vertex buffer and index buffer and their view.
     D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
     pDevice->GetBufferManager()->AllocateUploadBuffer(tempVertexBuffer, object->GetMesh()->GetVerticesSize());
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(object->GetMesh()->VertexBuffer.get());
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(object->GetMesh()->GetVertexBuffer());
     tempVertexBuffer->CopyData(object->GetMesh()->GetVerticesData(), object->GetMesh()->GetVerticesSize());
 
     D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer();
     pDevice->GetBufferManager()->AllocateUploadBuffer(tempIndexBuffer, object->GetMesh()->GetIndicesSize());
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(object->GetMesh()->IndexBuffer.get());
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(object->GetMesh()->GetIndexBuffer());
     tempIndexBuffer->CopyData(object->GetMesh()->GetIndicesData(), object->GetMesh()->GetIndicesSize());
 
-    object->GetMesh()->CreateView();
-    pCommandList->CopyBufferRegion(object->GetMesh()->VertexBuffer->GetResource(),
+    object->GetMesh()->CreateView(FALSE);
+    pCommandList->CopyBufferRegion(object->GetMesh()->GetVertexBuffer()->GetResource(),
         tempVertexBuffer->ResourceLocation.Resource.Get(),
         object->GetMesh()->GetVerticesSize());
-    pCommandList->CopyBufferRegion(object->GetMesh()->IndexBuffer->GetResource(),
+    pCommandList->CopyBufferRegion(object->GetMesh()->GetIndexBuffer()->GetResource(),
         tempIndexBuffer->ResourceLocation.Resource.Get(),
         object->GetMesh()->GetIndicesSize());
 
     // Setup transition barriers.
-    pCommandList->AddTransitionResourceBarriers(object->GetMesh()->VertexBuffer->GetResource(),
+    pCommandList->AddTransitionResourceBarriers(object->GetMesh()->GetVertexBuffer()->GetResource(),
         D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
-    pCommandList->AddTransitionResourceBarriers(object->GetMesh()->IndexBuffer->GetResource(),
+    pCommandList->AddTransitionResourceBarriers(object->GetMesh()->GetIndexBuffer()->GetResource(),
         D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
     pCommandList->FlushResourceBarriers();
+}
+
+void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*&, Model* object)
+{
+    UINT id = object->GetObjectID();
+
+    // Create the vertex buffer and index buffer and their view.
+    D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateUploadBuffer(tempVertexBuffer, object->GetMesh()->GetVerticesSize());
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(object->GetMesh()->GetVertexBuffer());
+    tempVertexBuffer->CopyData(object->GetMesh()->GetVerticesData(), object->GetMesh()->GetVerticesSize());
+
+    D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateUploadBuffer(tempIndexBuffer, object->GetMesh()->GetIndicesSize());
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(object->GetMesh()->GetIndexBuffer());
+    tempIndexBuffer->CopyData(object->GetMesh()->GetIndicesData(), object->GetMesh()->GetIndicesSize());
+
+    object->GetMesh()->CreateView(TRUE);
 }
 
 void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList*& pCommandList, D3D12Texture* texture)
@@ -352,7 +374,7 @@ void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList*& pCommandList, 
     // Create the texture buffer.
     pDevice->GetBufferManager()->AllocateDefaultBuffer(texture->GetTextureBuffer());
     texture->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW, id));
+        pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_PEROBJECT, id));
 
     // Init texture data.
     for (UINT i = 0; i < texture->GetSubresourceNum(); i++)

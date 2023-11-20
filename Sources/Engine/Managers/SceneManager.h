@@ -32,6 +32,7 @@ private:
 
 	// Helper functions.
 	void LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*&, Model* object);
+	void LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*&, Model* object);
 	void LoadTextureBufferAndSampler(D3D12CommandList*&, D3D12Texture* texture);
 
 public:

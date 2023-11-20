@@ -24,6 +24,9 @@ private:
     UINT indicesSize;
     UINT indicesNum;
 
+    D3D12VertexBuffer* vertexBuffer;
+    D3D12IndexBuffer* indexBuffer;
+
 public:
     D3D12Mesh();
     ~D3D12Mesh();
@@ -32,7 +35,7 @@ public:
     void SetIndices(UINT16* triangleIndices, UINT size);
     void CopyVertices(void* destination);
     void CopyIndices(void* destination);
-    void CreateView();
+    void CreateView(BOOL isDXR);
 
     void AddGeometryBuffer(std::vector<D3D12_RAYTRACING_GEOMETRY_DESC>&);
 
@@ -43,6 +46,6 @@ public:
     inline const void* GetVerticesData() const { return pVertices; }
     inline const void* GetIndicesData() const { return pIndices; }
 
-    std::unique_ptr<D3D12VertexBuffer> VertexBuffer;
-    std::unique_ptr<D3D12IndexBuffer> IndexBuffer;
+    inline D3D12VertexBuffer* GetVertexBuffer() const { return vertexBuffer; }
+    inline D3D12IndexBuffer* GetIndexBuffer() const { return indexBuffer; }
 };
