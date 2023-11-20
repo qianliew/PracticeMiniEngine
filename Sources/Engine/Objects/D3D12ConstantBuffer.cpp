@@ -15,11 +15,10 @@ D3D12ConstantBuffer::~D3D12ConstantBuffer()
 
 void D3D12ConstantBuffer::CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle)
 {
-	D3D12_CONSTANT_BUFFER_VIEW_DESC desc;
-	desc.BufferLocation = resourceLocation.Resource->GetGPUVirtualAddress();
-	desc.SizeInBytes = size;
+	viewDesc.BufferLocation = resourceLocation.Resource->GetGPUVirtualAddress();
+	viewDesc.SizeInBytes = size;
 
-	view = new D3D12CBV(desc);
+	view = new D3D12CBV(viewDesc);
 	view->SetResource(resourceLocation.Resource.Get());
 	view->CreateView(device, handle);
 }

@@ -172,7 +172,7 @@
     <ClInclude Include="..\Sources\Engine\Objects\D3D12Mesh.h" />
     <ClInclude Include="..\Sources\Engine\Objects\Model.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12Texture.h" />
-    <ClInclude Include="..\Sources\Engine\Objects\D3D12TextureBuffer.h" />
+    <ClInclude Include="..\Sources\Engine\Objects\D3D12ShaderResourceBuffer.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12VertexBuffer.h" />
     <ClInclude Include="..\Sources\Engine\Objects\SkyboxMaterial.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\AbstractRenderPass.h" />
@@ -212,7 +212,7 @@
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Mesh.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\Model.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Texture.cpp" />
-    <ClCompile Include="..\Sources\Engine\Objects\D3D12TextureBuffer.cpp" />
+    <ClCompile Include="..\Sources\Engine\Objects\D3D12ShaderResourceBuffer.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12VertexBuffer.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\SkyboxMaterial.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\AbstractRenderPass.cpp" />

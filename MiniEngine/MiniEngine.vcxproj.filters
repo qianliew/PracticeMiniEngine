@@ -63,7 +63,7 @@
     <ClInclude Include="..\Sources\Engine\Objects\D3D12Texture.h">
       <Filter>Engine\Objects\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\Sources\Engine\Objects\D3D12TextureBuffer.h">
+    <ClInclude Include="..\Sources\Engine\Objects\D3D12ShaderResourceBuffer.h">
       <Filter>Engine\Objects\Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Sources\Engine\Objects\D3D12VertexBuffer.h">
@@ -177,7 +177,7 @@
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Texture.cpp">
       <Filter>Engine\Objects\Sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\Sources\Engine\Objects\D3D12TextureBuffer.cpp">
+    <ClCompile Include="..\Sources\Engine\Objects\D3D12ShaderResourceBuffer.cpp">
       <Filter>Engine\Objects\Sources</Filter>
     </ClCompile>
     <ClCompile Include="..\Sources\Engine\Objects\D3D12VertexBuffer.cpp">

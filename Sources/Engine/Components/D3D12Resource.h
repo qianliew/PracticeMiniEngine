@@ -22,15 +22,23 @@ public:
 	inline ID3D12Resource* GetResource() const { return resourceLocation.Resource.Get(); }
 };
 
-template<typename TView>
+template<typename TView, typename TViewDesc>
 class TD3D12Resource : public D3D12Resource
 {
 protected:
 	TView* view;
+	TViewDesc viewDesc;
 
 public:
-	TD3D12Resource(const D3D12_RESOURCE_DESC& desc)
-		: D3D12Resource(desc)
+	TD3D12Resource(const D3D12_RESOURCE_DESC& desc) :
+		D3D12Resource(desc)
+	{
+
+	}
+
+	TD3D12Resource(const D3D12_RESOURCE_DESC& desc, const TViewDesc& viewDesc) :
+		D3D12Resource(desc),
+		viewDesc(viewDesc)
 	{
 
 	}

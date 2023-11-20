@@ -1,6 +1,7 @@
 #pragma once
 #include "D3D12VertexBuffer.h"
 #include "D3D12IndexBuffer.h"
+#include "D3D12ShaderResourceBuffer.h"
 
 using namespace DirectX;
 
@@ -24,8 +25,8 @@ private:
     UINT indicesSize;
     UINT indicesNum;
 
-    D3D12VertexBuffer* vertexBuffer;
-    D3D12IndexBuffer* indexBuffer;
+    D3D12VertexBuffer* pVertexBuffer;
+    D3D12IndexBuffer* pIndexBuffer;
 
 public:
     D3D12Mesh();
@@ -35,7 +36,7 @@ public:
     void SetIndices(UINT16* triangleIndices, UINT size);
     void CopyVertices(void* destination);
     void CopyIndices(void* destination);
-    void CreateView(BOOL isDXR);
+    void CreateView();;
 
     void AddGeometryBuffer(std::vector<D3D12_RAYTRACING_GEOMETRY_DESC>&);
 
@@ -46,6 +47,6 @@ public:
     inline const void* GetVerticesData() const { return pVertices; }
     inline const void* GetIndicesData() const { return pIndices; }
 
-    inline D3D12VertexBuffer* GetVertexBuffer() const { return vertexBuffer; }
-    inline D3D12IndexBuffer* GetIndexBuffer() const { return indexBuffer; }
+    inline D3D12VertexBuffer* GetVertexBuffer() const { return pVertexBuffer; }
+    inline D3D12IndexBuffer* GetIndexBuffer() const { return pIndexBuffer; }
 };

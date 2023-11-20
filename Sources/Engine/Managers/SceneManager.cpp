@@ -74,8 +74,8 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
 
         if (isDXR)
         {
-            model->GetMesh()->AddGeometryBuffer(geometryDescs);
             LoadObjectVertexBufferAndIndexBuffer(pCommandList, model);
+            model->GetMesh()->AddGeometryBuffer(geometryDescs);
         }
         else
         {
@@ -333,7 +333,7 @@ void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*& pComm
     pDevice->GetBufferManager()->AllocateDefaultBuffer(object->GetMesh()->GetIndexBuffer());
     tempIndexBuffer->CopyData(object->GetMesh()->GetIndicesData(), object->GetMesh()->GetIndicesSize());
 
-    object->GetMesh()->CreateView(FALSE);
+    object->GetMesh()->CreateView();
     pCommandList->CopyBufferRegion(object->GetMesh()->GetVertexBuffer()->GetResource(),
         tempVertexBuffer->ResourceLocation.Resource.Get(),
         object->GetMesh()->GetVerticesSize());
@@ -347,24 +347,6 @@ void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*& pComm
     pCommandList->AddTransitionResourceBarriers(object->GetMesh()->GetIndexBuffer()->GetResource(),
         D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
     pCommandList->FlushResourceBarriers();
-}
-
-void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*&, Model* object)
-{
-    UINT id = object->GetObjectID();
-
-    // Create the vertex buffer and index buffer and their view.
-    D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(tempVertexBuffer, object->GetMesh()->GetVerticesSize());
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(object->GetMesh()->GetVertexBuffer());
-    tempVertexBuffer->CopyData(object->GetMesh()->GetVerticesData(), object->GetMesh()->GetVerticesSize());
-
-    D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(tempIndexBuffer, object->GetMesh()->GetIndicesSize());
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(object->GetMesh()->GetIndexBuffer());
-    tempIndexBuffer->CopyData(object->GetMesh()->GetIndicesData(), object->GetMesh()->GetIndicesSize());
-
-    object->GetMesh()->CreateView(TRUE);
 }
 
 void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList*& pCommandList, D3D12Texture* texture)

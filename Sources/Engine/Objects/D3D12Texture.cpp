@@ -87,7 +87,27 @@ void D3D12Texture::CreateTexture(D3D12TextureType inType)
     {
         desc.Format = dxgiFormat;
         desc.Flags = D3D12_RESOURCE_FLAG_NONE;
-        pTextureBuffer = new D3D12ShaderResourceBuffer(desc, srvDimension);
+
+        D3D12_SHADER_RESOURCE_VIEW_DESC viewDesc;
+        viewDesc.Format = dxgiFormat;
+        viewDesc.ViewDimension = srvDimension;
+        viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+        if (srvDimension == D3D12_SRV_DIMENSION_TEXTURE2D)
+        {
+            viewDesc.Texture2D.MostDetailedMip = 0;
+            viewDesc.Texture2D.MipLevels = mipLevel;
+            viewDesc.Texture2D.PlaneSlice = 0;
+            viewDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+        }
+        else if (srvDimension == D3D12_SRV_DIMENSION_TEXTURECUBE)
+        {
+            viewDesc.TextureCube.MostDetailedMip = 0;
+            viewDesc.TextureCube.MipLevels = mipLevel;
+            viewDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+        }
+
+        pTextureBuffer = new D3D12ShaderResourceBuffer(desc, viewDesc);
     }
     else if (type == D3D12TextureType::RenderTarget)
     {
@@ -97,7 +117,14 @@ void D3D12Texture::CreateTexture(D3D12TextureType inType)
         desc.MipLevels = 1;
         desc.SampleDesc.Count = 1;
         desc.SampleDesc.Quality = 0;
-        pTextureBuffer = new D3D12RenderTargetBuffer(desc);
+
+        D3D12_RENDER_TARGET_VIEW_DESC viewDesc;
+        viewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        viewDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+        viewDesc.Texture2D.MipSlice = 0;
+        viewDesc.Texture2D.PlaneSlice = 0;
+
+        pTextureBuffer = new D3D12RenderTargetBuffer(desc, viewDesc);
     }
     else if (type == D3D12TextureType::DepthStencil)
     {
@@ -107,7 +134,14 @@ void D3D12Texture::CreateTexture(D3D12TextureType inType)
         desc.MipLevels = 1;
         desc.SampleDesc.Count = 1;
         desc.SampleDesc.Quality = 0;
-        pTextureBuffer = new D3D12DepthStencilBuffer(desc);
+
+        D3D12_DEPTH_STENCIL_VIEW_DESC viewDesc;
+        viewDesc.Format = DXGI_FORMAT_D32_FLOAT;
+        viewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+        viewDesc.Flags = D3D12_DSV_FLAG_NONE;
+        viewDesc.Texture2D.MipSlice = 0;
+
+        pTextureBuffer = new D3D12DepthStencilBuffer(desc, viewDesc);
     }
     else if (type == D3D12TextureType::UnorderedAccess)
     {
@@ -117,7 +151,14 @@ void D3D12Texture::CreateTexture(D3D12TextureType inType)
         desc.MipLevels = 1;
         desc.SampleDesc.Count = 1;
         desc.SampleDesc.Quality = 0;
-        pTextureBuffer = new D3D12UnorderedAccessBuffer(desc);
+
+        D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc;
+        viewDesc.Format = dxgiFormat;
+        viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+        viewDesc.Texture2D.MipSlice = 0;
+        viewDesc.Texture2D.PlaneSlice = 0;
+
+        pTextureBuffer = new D3D12UnorderedAccessBuffer(desc, viewDesc);
     }
 
     if (oldBuffer != nullptr)

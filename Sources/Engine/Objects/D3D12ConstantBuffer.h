@@ -1,6 +1,6 @@
 #pragma once
 
-class D3D12ConstantBuffer : public TD3D12Resource<D3D12CBV>
+class D3D12ConstantBuffer : public TD3D12Resource<D3D12CBV, D3D12_CONSTANT_BUFFER_VIEW_DESC>
 {
 private:
 	void* startLocation;
