@@ -18,7 +18,14 @@
 
 RaytracingAccelerationStructure Scene : register(t0, space0);
 RWTexture2D<float4> RenderTarget : register(u0);
-ConstantBuffer<RayGenConstantBuffer> g_rayGenCB : register(b0);
+ConstantBuffer<RayGenConstantBuffer> lRayGenCB : register(b1);
+
+cbuffer GlobalConstants : register(b0)
+{
+    float4x4 WorldToProjectionMatrix;
+    float4x4 ProjectionToWorldMatrix;
+    float3 CameraPositionWS;
+};
 
 typedef BuiltInTriangleIntersectionAttributes MyAttributes;
 struct RayPayload
@@ -35,7 +42,8 @@ bool IsInsideViewport(float2 p, Viewport viewport)
 [shader("raygeneration")]
 void MyRaygenShader()
 {
-    float3 origin = g_rayGenCB.cameraPosition.xyz;
+    // Orthographic projection since we're raytracing in screen space.
+    float3 origin = CameraPositionWS.xyz;
 
     float2 xy = DispatchRaysIndex().xy + 0.5f; // center in the middle of the pixel.
     float2 screenPos = xy / DispatchRaysDimensions().xy * 2.0 - 1.0;
@@ -44,7 +52,7 @@ void MyRaygenShader()
     screenPos.y = -screenPos.y;
 
     // Unproject the pixel coordinate into a world positon.
-    float4 world = mul(g_rayGenCB.projectionToWorld, float4(screenPos, 0, 1));
+    float4 world = mul(ProjectionToWorldMatrix, float4(screenPos, 0, 1));
     world.xyz /= world.w;
 
     // Trace the ray.
@@ -54,12 +62,12 @@ void MyRaygenShader()
     ray.Direction = normalize(world.xyz - origin);
     // Set TMin to a non-zero small value to avoid aliasing issues due to floating - point errors.
     // TMin should be kept small to prevent missing geometry at close contact areas.
-    ray.TMin = 0.03f;
-    ray.TMax = 50.0f;
+    ray.TMin = 0.001;
+    ray.TMax = 10000.0;
     RayPayload payload = { float4(0, 0, 0, 0) };
 
-    uint flags = RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH |
-        RAY_FLAG_SKIP_CLOSEST_HIT_SHADER;
+    // uint flags = RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH;
+    uint flags = RAY_FLAG_NONE;
 
     TraceRay(Scene, flags, 0xFF, 0, 0, 0, ray, payload);
 
@@ -70,13 +78,14 @@ void MyRaygenShader()
 [shader("closesthit")]
 void MyClosestHitShader(inout RayPayload payload, in MyAttributes attr)
 {
-    payload.color = attr.barycentrics.xyxy;
+    float3 barycentrics = float3(1 - attr.barycentrics.x - attr.barycentrics.y, attr.barycentrics.x, attr.barycentrics.y);
+    payload.color = float4(barycentrics, 1);
 }
 
 [shader("miss")]
 void MyMissShader(inout RayPayload payload)
 {
-    payload.color = float4(1, 1, 1, 1);
+    payload.color = float4(0, 1, 1, 1);
 }
 
 #endif // RAYTRACING_HLSL

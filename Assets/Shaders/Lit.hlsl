@@ -2,6 +2,7 @@
 cbuffer GlobalConstants : register(b0)
 {
     float4x4 WorldToProjectionMatrix;
+    float4x4 ProjectionToWorldMatrix;
     float3 CameraPositionWS;
 };
 

@@ -85,12 +85,11 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
 
     if (isDXR)
     {
-        // Get required sizes for an acceleration structure.
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS buildFlags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS topLevelInputs = {};
         topLevelInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
         topLevelInputs.Flags = buildFlags;
-        topLevelInputs.NumDescs = numModels;
+        topLevelInputs.NumDescs = 1;
         topLevelInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
 
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO topLevelPrebuildInfo = {};
@@ -100,7 +99,7 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS bottomLevelInputs = {};
         bottomLevelInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
         bottomLevelInputs.Flags = buildFlags;
-        bottomLevelInputs.NumDescs = numModels;
+        bottomLevelInputs.NumDescs = 2;
         bottomLevelInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
         bottomLevelInputs.pGeometryDescs = geometryDescs.data();
 
@@ -129,20 +128,18 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
 
         const UINT64 instanceDescSize = sizeof(D3D12_RAYTRACING_INSTANCE_DESC);
         pInstanceDescBuffer = new D3D12UploadBuffer();
-        pDevice->GetBufferManager()->AllocateUploadBuffer(pInstanceDescBuffer, instanceDescSize * numModels);
+        pDevice->GetBufferManager()->AllocateUploadBuffer(pInstanceDescBuffer, instanceDescSize);
 
-        for (UINT i = 0; i < numModels; i++)
-        {
-            D3D12_RAYTRACING_INSTANCE_DESC desc = {};
-            // Create an instance desc for the bottom-level acceleration structure.
-            desc.Transform[0][0] = desc.Transform[1][1] = desc.Transform[2][2] = 1;
-            desc.InstanceID = 0;
-            desc.InstanceMask = 0xFF;
-            desc.InstanceContributionToHitGroupIndex = 0;
-            desc.AccelerationStructure = pBottomLevelAccelerationStructure->GetGPUVirtualAddress();
+        D3D12_RAYTRACING_INSTANCE_DESC desc = {};
+        // Create an instance desc for the bottom-level acceleration structure.
+        desc.Transform[0][0] = desc.Transform[1][1] = desc.Transform[2][2] = 1;
+        desc.InstanceID = 0;
+        desc.InstanceMask = 0xFF;
+        desc.InstanceContributionToHitGroupIndex = 0;
+        desc.Flags = 0;
+        desc.AccelerationStructure = pBottomLevelAccelerationStructure->GetGPUVirtualAddress();
 
-            pInstanceDescBuffer->CopyData(&desc, sizeof(desc), instanceDescSize * i);
-        }
+        pInstanceDescBuffer->CopyData(&desc, sizeof(desc), 0);
 
         // Bottom Level Acceleration Structure desc
         bottomLevelBuildDesc.DestAccelerationStructureData = pBottomLevelAccelerationStructure->GetGPUVirtualAddress();

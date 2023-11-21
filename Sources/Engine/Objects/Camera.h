@@ -14,6 +14,7 @@ using namespace DirectX;
 struct CameraConstant
 {
     XMFLOAT4X4 WorldToProjectionMatrix;
+    XMFLOAT4X4 ProjectionToWorldMatrix;
     XMFLOAT3 CameraWorldPosition;
 };
 

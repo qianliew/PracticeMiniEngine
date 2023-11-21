@@ -59,6 +59,7 @@ void Camera::UpdateCameraConstant()
 
     rayGenCB.cameraPosition = GetWorldPosition();
     rayGenCB.projectionToWorld = XMMatrixInverse(nullptr, GetVPMatrix());
+    XMStoreFloat4x4(&cameraConstant.ProjectionToWorldMatrix, rayGenCB.projectionToWorld);
 }
 
 const XMMATRIX Camera::GetVPMatrix()
