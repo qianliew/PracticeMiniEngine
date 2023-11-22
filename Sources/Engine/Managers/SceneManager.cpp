@@ -12,8 +12,10 @@ SceneManager::SceneManager(shared_ptr<D3D12Device>& device, BOOL isDXR) :
 {
     pTempVertexBuffer = new D3D12UploadBuffer();
     pDevice->GetBufferManager()->AllocateUploadBuffer(pTempVertexBuffer, 1024 * 1024);
-    pIndexBuffer = new D3D12UploadBuffer(TRUE);
-    pDevice->GetBufferManager()->AllocateUploadBuffer(pIndexBuffer, 1024 * 1024);
+    pTempIndexBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateUploadBuffer(pTempIndexBuffer, 1024 * 1024);
+    pTempOffsetBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateUploadBuffer(pTempOffsetBuffer, 1024);
 }
 
 SceneManager::~SceneManager()
@@ -25,8 +27,9 @@ SceneManager::~SceneManager()
     // delete pFullScreenMesh;
     delete pCamera;
 
-    // delete pVertexBuffer;
-    // delete pIndexBuffer;
+    delete pVertexBuffer;
+    delete pIndexBuffer;
+    delete pOffsetBuffer;
 }
 
 void SceneManager::InitFBXImporter()
@@ -65,7 +68,7 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
     }
 
     // Parse FBX from the scene file.
-    UINT numModels = 0;
+    UINT numModels = 0, offset = 0;
     inFile >> numModels;
 
     for (UINT i = 0; i < numModels; i++)
@@ -80,7 +83,7 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
 
         if (isDXR)
         {
-            LoadObjectVertexBufferAndIndexBufferDXR(pCommandList, model);
+            LoadObjectVertexBufferAndIndexBufferDXR(pCommandList, model, offset);
         }
         else
         {
@@ -90,13 +93,29 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
 
     if (isDXR)
     {
-        // Create the SRV.
+        // Create the SRV of indices and vertices.
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Format = DXGI_FORMAT_UNKNOWN;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
         srvDesc.Buffer.NumElements = pTempVertexBuffer->GetBufferUsage() / sizeof(Vertex);
         srvDesc.Buffer.StructureByteStride = sizeof(Vertex);
+        srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+        pIndexBuffer = new D3D12ShaderResourceBuffer(pTempIndexBuffer->GetResourceDesc(), srvDesc);
+        pDevice->GetBufferManager()->AllocateDefaultBuffer(pIndexBuffer);
+        pIndexBuffer->CreateView(pDevice->GetDevice(),
+            pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_GLOBAL, 1));
+        pCommandList->CopyBufferRegion(pIndexBuffer->GetResource(),
+            pTempIndexBuffer->ResourceLocation.Resource.Get(),
+            pTempIndexBuffer->GetBufferUsage());
+
+        srvDesc = {};
+        srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Buffer.NumElements = pTempVertexBuffer->GetBufferUsage() / sizeof(UINT16);
+        srvDesc.Buffer.StructureByteStride = sizeof(UINT16);
         srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
         pVertexBuffer = new D3D12ShaderResourceBuffer(pTempVertexBuffer->GetResourceDesc(), srvDesc);
@@ -106,6 +125,22 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
         pCommandList->CopyBufferRegion(pVertexBuffer->GetResource(),
             pTempVertexBuffer->ResourceLocation.Resource.Get(),
             pTempVertexBuffer->GetBufferUsage());
+
+        srvDesc = {};
+        srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Buffer.NumElements = numModels;
+        srvDesc.Buffer.StructureByteStride = sizeof(UINT);
+        srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+        pOffsetBuffer = new D3D12ShaderResourceBuffer(pTempOffsetBuffer->GetResourceDesc(), srvDesc);
+        pDevice->GetBufferManager()->AllocateDefaultBuffer(pOffsetBuffer);
+        pOffsetBuffer->CreateView(pDevice->GetDevice(),
+            pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_GLOBAL, 3));
+        pCommandList->CopyBufferRegion(pOffsetBuffer->GetResource(),
+            pTempOffsetBuffer->ResourceLocation.Resource.Get(),
+            pTempOffsetBuffer->GetBufferUsage());
 
         // Create the input of TLAS.
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS buildFlags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
@@ -370,7 +405,7 @@ void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*& pComm
     pCommandList->FlushResourceBarriers();
 }
 
-void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*& pCommandList, Model* object)
+void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*& pCommandList, Model* object, UINT& offset)
 {
     // Create the perObject constant buffer and its view.
     UINT id = object->GetObjectID();
@@ -389,7 +424,7 @@ void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*& pC
     geometryDesc.Triangles.IndexCount = object->GetMesh()->GetIndicesNum();
     geometryDesc.Triangles.VertexCount = object->GetMesh()->GetVerticesNum();
     geometryDesc.Triangles.IndexBuffer =
-        pIndexBuffer->ResourceLocation.Resource->GetGPUVirtualAddress() + pIndexBuffer->GetBufferUsage();
+        pTempIndexBuffer->ResourceLocation.Resource->GetGPUVirtualAddress() + pTempIndexBuffer->GetBufferUsage();
     geometryDesc.Triangles.VertexBuffer.StartAddress =
         pTempVertexBuffer->ResourceLocation.Resource->GetGPUVirtualAddress() + pTempVertexBuffer->GetBufferUsage();
     geometryDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(Vertex);
@@ -402,10 +437,16 @@ void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*& pC
         object->GetMesh()->GetVerticesSize(),
         pTempVertexBuffer->GetBufferUsage());
 
-    pIndexBuffer->CopyData(
+    pTempIndexBuffer->CopyData(
         object->GetMesh()->GetIndicesData(),
         object->GetMesh()->GetIndicesSize(),
-        pIndexBuffer->GetBufferUsage());
+        pTempIndexBuffer->GetBufferUsage());
+
+    pTempOffsetBuffer->CopyData(
+        &offset,
+        sizeof(UINT),
+        pTempOffsetBuffer->GetBufferUsage());
+    offset += object->GetMesh()->GetIndicesNum();
 }
 
 void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList*& pCommandList, D3D12Texture* texture)

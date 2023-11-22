@@ -185,8 +185,14 @@ void RayTracingPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
         DXR_CONSTANT_BUFFER_VIEW_GLOBAL,
         pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
     pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
+        DXR_SHADER_RESOURCE_VIEW_INDEX,
+        pSceneManager->GetIndexBuffer()->GetResource()->GetGPUVirtualAddress());
+    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
         DXR_SHADER_RESOURCE_VIEW_VERTEX,
         pSceneManager->GetVertexBuffer()->GetResource()->GetGPUVirtualAddress());
+    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
+        DXR_SHADER_RESOURCE_VIEW_OFFSET,
+        pSceneManager->GetStrideBuffer()->GetResource()->GetGPUVirtualAddress());
 
     // Dispatch rays.    
     D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};

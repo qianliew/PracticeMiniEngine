@@ -31,13 +31,17 @@ private:
 
 	D3D12ShaderResourceBuffer* pVertexBuffer;
 	D3D12UploadBuffer* pTempVertexBuffer;
-	D3D12UploadBuffer* pIndexBuffer;
+	D3D12ShaderResourceBuffer* pIndexBuffer;
+	D3D12UploadBuffer* pTempIndexBuffer;
+	D3D12ShaderResourceBuffer* pOffsetBuffer;
+	D3D12UploadBuffer* pTempOffsetBuffer;
+
 	std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> geometryDescs;
 	D3D12UploadBuffer* pInstanceDescBuffer;
 
 	// Helper functions.
 	void LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*&, Model* object);
-	void LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*&, Model* object);
+	void LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*&, Model* object, UINT& offset);
 	void LoadTextureBufferAndSampler(D3D12CommandList*&, D3D12Texture* texture);
 
 public:
@@ -66,6 +70,7 @@ public:
 	inline Model* GetSkybox() const { return pSkyboxMesh; }
 
 	inline ComPtr<ID3D12Resource>& GetTLAS() { return pTopLevelAccelerationStructure; }
-	inline D3D12UploadBuffer* GetIndexBuffer() { return pIndexBuffer; }
+	inline D3D12ShaderResourceBuffer* GetIndexBuffer() { return pIndexBuffer; }
 	inline D3D12ShaderResourceBuffer* GetVertexBuffer() { return pVertexBuffer; }
+	inline D3D12ShaderResourceBuffer* GetStrideBuffer() { return pOffsetBuffer; }
 };
