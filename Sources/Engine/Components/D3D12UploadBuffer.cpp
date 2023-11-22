@@ -2,6 +2,7 @@
 #include "D3D12UploadBuffer.h"
 
 D3D12UploadBuffer::D3D12UploadBuffer(BOOL inIsConstant) :
+	D3D12Buffer(),
 	isConstant(inIsConstant)
 {
 
@@ -50,9 +51,11 @@ void D3D12UploadBuffer::CreateConstantBuffer(ID3D12Device* device, UINT64 size)
 void D3D12UploadBuffer::CopyData(void const* source, UINT64 size)
 {
 	memcpy(startLocation, source, size);
+	bufferUsage += size;
 }
 
 void D3D12UploadBuffer::CopyData(void const* source, UINT64 size, UINT64 offset)
 {
 	memcpy((BYTE*)startLocation + offset, source, size);
+	bufferUsage += size;
 }

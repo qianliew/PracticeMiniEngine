@@ -9,7 +9,8 @@ class D3D12Buffer
 {
 protected:
 	void* startLocation;
-	UINT bufferSize;
+	UINT64 bufferSize;
+	UINT64 bufferUsage;
 
 public:
 	D3D12ResourceLocation ResourceLocation;
@@ -17,5 +18,6 @@ public:
 	virtual ~D3D12Buffer();
 
 	inline void* GetStartLocation() { return startLocation; }
-	inline const UINT GetBufferSize() const { return bufferSize; }
+	inline const UINT64 GetBufferSize() const { return bufferSize; }
+	inline const UINT64 GetBufferUsage() const { return bufferUsage; }
 };

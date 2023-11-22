@@ -36,9 +36,7 @@ public:
     void SetIndices(UINT16* triangleIndices, UINT size);
     void CopyVertices(void* destination);
     void CopyIndices(void* destination);
-    void CreateView();;
-
-    void AddGeometryBuffer(std::vector<D3D12_RAYTRACING_GEOMETRY_DESC>&);
+    void CreateView();
 
     inline const UINT GetVerticesSize() const { return verticesSize; }
     inline const UINT GetVerticesNum() const { return verticesNum; }

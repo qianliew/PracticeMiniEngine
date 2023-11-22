@@ -10,7 +10,10 @@ SceneManager::SceneManager(shared_ptr<D3D12Device>& device, BOOL isDXR) :
     objectID(0),
     isDXR(isDXR)
 {
-
+    pVertexBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateUploadBuffer(pVertexBuffer, 1024 * 1024);
+    pIndexBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateUploadBuffer(pIndexBuffer, 1024 * 1024);
 }
 
 SceneManager::~SceneManager()
@@ -21,6 +24,9 @@ SceneManager::~SceneManager()
     delete pSkyboxMesh;
     // delete pFullScreenMesh;
     delete pCamera;
+
+    // delete pVertexBuffer;
+    // delete pIndexBuffer;
 }
 
 void SceneManager::InitFBXImporter()
@@ -74,8 +80,7 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
 
         if (isDXR)
         {
-            LoadObjectVertexBufferAndIndexBuffer(pCommandList, model);
-            model->GetMesh()->AddGeometryBuffer(geometryDescs);
+            LoadObjectVertexBufferAndIndexBufferDXR(pCommandList, model);
         }
         else
         {
@@ -85,6 +90,7 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
 
     if (isDXR)
     {
+        // Create the input of TLAS.
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS buildFlags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS topLevelInputs = {};
         topLevelInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
@@ -96,6 +102,7 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
         pDevice->GetDXRDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&topLevelInputs, &topLevelPrebuildInfo);
         ThrowIfFalse(topLevelPrebuildInfo.ResultDataMaxSizeInBytes > 0);
 
+        // Create the input of BLAS.
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS bottomLevelInputs = {};
         bottomLevelInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
         bottomLevelInputs.Flags = buildFlags;
@@ -344,6 +351,44 @@ void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*& pComm
     pCommandList->AddTransitionResourceBarriers(object->GetMesh()->GetIndexBuffer()->GetResource(),
         D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
     pCommandList->FlushResourceBarriers();
+}
+
+void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*& pCommandList, Model* object)
+{
+    // Create the perObject constant buffer and its view.
+    UINT id = object->GetObjectID();
+    pDevice->GetBufferManager()->AllocatePerObjectConstantBuffers(id);
+    pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->CreateView(pDevice->GetDevice(),
+        pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_PEROBJECT, id));
+
+    // Create the geometry desc for this object.
+    D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = {};
+    geometryDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+    geometryDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
+
+    geometryDesc.Triangles.Transform3x4 = 0;
+    geometryDesc.Triangles.IndexFormat = DXGI_FORMAT_R16_UINT;
+    geometryDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
+    geometryDesc.Triangles.IndexCount = object->GetMesh()->GetIndicesNum();
+    geometryDesc.Triangles.VertexCount = object->GetMesh()->GetVerticesNum();
+    geometryDesc.Triangles.IndexBuffer =
+        pIndexBuffer->ResourceLocation.Resource->GetGPUVirtualAddress() + pIndexBuffer->GetBufferUsage();
+    geometryDesc.Triangles.VertexBuffer.StartAddress =
+        pVertexBuffer->ResourceLocation.Resource->GetGPUVirtualAddress() + pVertexBuffer->GetBufferUsage();
+    geometryDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(Vertex);
+
+    geometryDescs.push_back(geometryDesc);
+
+    // Copy vertex and index data to a common buffer.
+    pVertexBuffer->CopyData(
+        object->GetMesh()->GetVerticesData(),
+        object->GetMesh()->GetVerticesSize(),
+        pVertexBuffer->GetBufferUsage());
+
+    pIndexBuffer->CopyData(
+        object->GetMesh()->GetIndicesData(),
+        object->GetMesh()->GetIndicesSize(),
+        pIndexBuffer->GetBufferUsage());
 }
 
 void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList*& pCommandList, D3D12Texture* texture)

@@ -18,6 +18,8 @@ private:
 	Model* pFullScreenMesh;
 
 	UINT objectID;
+
+	// DXR member variables.
 	BOOL isDXR;
 
 	ComPtr<ID3D12Resource> pScratchResource;
@@ -27,6 +29,8 @@ private:
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC bottomLevelBuildDesc;
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC topLevelBuildDesc;
 
+	D3D12UploadBuffer* pVertexBuffer;
+	D3D12UploadBuffer* pIndexBuffer;
 	std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> geometryDescs;
 	D3D12UploadBuffer* pInstanceDescBuffer;
 

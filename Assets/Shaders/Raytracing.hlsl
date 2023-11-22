@@ -67,7 +67,7 @@ void MyRaygenShader()
     RayPayload payload = { float4(0, 0, 0, 0) };
 
     // uint flags = RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH;
-    uint flags = RAY_FLAG_NONE;
+    uint flags = RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
 
     TraceRay(Scene, flags, 0xFF, 0, 0, 0, ray, payload);
 
