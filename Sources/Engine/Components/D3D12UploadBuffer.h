@@ -8,6 +8,8 @@ class D3D12UploadBuffer : public D3D12Buffer
 {
 private:
 	bool isConstant;
+	D3D12_RESOURCE_DESC resourceDesc;
+
 public:
 	D3D12UploadBuffer(BOOL inIsConstant = FALSE);
 	~D3D12UploadBuffer();
@@ -18,4 +20,5 @@ public:
 	void CopyData(void const* source, UINT64 size, UINT64 offset);
 
 	inline const BOOL IsConstant() const { return isConstant; }
+	inline const D3D12_RESOURCE_DESC GetResourceDesc() const { return resourceDesc; }
 };

@@ -49,7 +49,7 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
     // This is a root signature that enables a shader to have unique arguments that come from shader tables.
     {
         CD3DX12_ROOT_PARAMETER rootParameters[1];
-        rootParameters[0].InitAsConstants(SizeOfInUint32(RayGenConstantBuffer), 1, 0);
+        rootParameters[0].InitAsConstants(SizeOfInUint32(RayGenConstantBuffer), 0, 0);
         CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
         localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
 
@@ -169,20 +169,26 @@ void RayTracingPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
         commandList->DispatchRays(dispatchDesc);
     };
 
-    // Bind the heaps, acceleration structure and dispatch rays.    
-    D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
+    // Bind the heap of TLAS.
     pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
         DXR_SHADER_RESOURCE_VIEW_GLOBAL,
         pSceneManager->GetTLAS()->GetGPUVirtualAddress());
+
+    // Bind the UAV heap for the output.
     pDevice->GetDescriptorHeapManager()->SetComputeViews(
         pCommandList->GetCommandList(),
         UNORDERED_ACCESS_VIEW, DXR_UNORDERED_ACCESS_VIEW,
         0);
 
-    // Set the global views.
+    // Bind the global heaps.
     pCommandList->SetComputeRootConstantBufferView(
         DXR_CONSTANT_BUFFER_VIEW_GLOBAL,
         pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
+    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
+        DXR_SHADER_RESOURCE_VIEW_VERTEX,
+        pSceneManager->GetVertexBuffer()->GetResource()->GetGPUVirtualAddress());
 
+    // Dispatch rays.    
+    D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
     DispatchRays(pCommandList->GetDXRCommandList().Get(), pDXRStateObject.Get(), &dispatchDesc);
 }

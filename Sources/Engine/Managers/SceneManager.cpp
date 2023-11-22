@@ -10,9 +10,9 @@ SceneManager::SceneManager(shared_ptr<D3D12Device>& device, BOOL isDXR) :
     objectID(0),
     isDXR(isDXR)
 {
-    pVertexBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(pVertexBuffer, 1024 * 1024);
-    pIndexBuffer = new D3D12UploadBuffer();
+    pTempVertexBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateUploadBuffer(pTempVertexBuffer, 1024 * 1024);
+    pIndexBuffer = new D3D12UploadBuffer(TRUE);
     pDevice->GetBufferManager()->AllocateUploadBuffer(pIndexBuffer, 1024 * 1024);
 }
 
@@ -90,6 +90,23 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
 
     if (isDXR)
     {
+        // Create the SRV.
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Buffer.NumElements = pTempVertexBuffer->GetBufferUsage() / sizeof(Vertex);
+        srvDesc.Buffer.StructureByteStride = sizeof(Vertex);
+        srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+        pVertexBuffer = new D3D12ShaderResourceBuffer(pTempVertexBuffer->GetResourceDesc(), srvDesc);
+        pDevice->GetBufferManager()->AllocateDefaultBuffer(pVertexBuffer);
+        pVertexBuffer->CreateView(pDevice->GetDevice(),
+            pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_GLOBAL, 2));
+        pCommandList->CopyBufferRegion(pVertexBuffer->GetResource(),
+            pTempVertexBuffer->ResourceLocation.Resource.Get(),
+            pTempVertexBuffer->GetBufferUsage());
+
         // Create the input of TLAS.
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS buildFlags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS topLevelInputs = {};
@@ -106,7 +123,7 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS bottomLevelInputs = {};
         bottomLevelInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
         bottomLevelInputs.Flags = buildFlags;
-        bottomLevelInputs.NumDescs = 2;
+        bottomLevelInputs.NumDescs = numModels;
         bottomLevelInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
         bottomLevelInputs.pGeometryDescs = geometryDescs.data();
 
@@ -374,16 +391,16 @@ void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*& pC
     geometryDesc.Triangles.IndexBuffer =
         pIndexBuffer->ResourceLocation.Resource->GetGPUVirtualAddress() + pIndexBuffer->GetBufferUsage();
     geometryDesc.Triangles.VertexBuffer.StartAddress =
-        pVertexBuffer->ResourceLocation.Resource->GetGPUVirtualAddress() + pVertexBuffer->GetBufferUsage();
+        pTempVertexBuffer->ResourceLocation.Resource->GetGPUVirtualAddress() + pTempVertexBuffer->GetBufferUsage();
     geometryDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(Vertex);
 
     geometryDescs.push_back(geometryDesc);
 
     // Copy vertex and index data to a common buffer.
-    pVertexBuffer->CopyData(
+    pTempVertexBuffer->CopyData(
         object->GetMesh()->GetVerticesData(),
         object->GetMesh()->GetVerticesSize(),
-        pVertexBuffer->GetBufferUsage());
+        pTempVertexBuffer->GetBufferUsage());
 
     pIndexBuffer->CopyData(
         object->GetMesh()->GetIndicesData(),

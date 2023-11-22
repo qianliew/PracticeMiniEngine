@@ -18,16 +18,28 @@
 
 RaytracingAccelerationStructure Scene : register(t0, space0);
 RWTexture2D<float4> RenderTarget : register(u0);
-ConstantBuffer<RayGenConstantBuffer> lRayGenCB : register(b1);
+ConstantBuffer<RayGenConstantBuffer> lRayGenCB : register(b0);
 
-cbuffer GlobalConstants : register(b0)
+cbuffer GlobalConstants : register(b1)
 {
     float4x4 WorldToProjectionMatrix;
     float4x4 ProjectionToWorldMatrix;
     float3 CameraPositionWS;
 };
 
+struct Vertex
+{
+    float3 position;
+    float3 normal;
+    float4 tangent;
+    float2 texCoord;
+    float4 color;
+};
+
+StructuredBuffer<Vertex> Vertices : register(t2);
+
 typedef BuiltInTriangleIntersectionAttributes MyAttributes;
+
 struct RayPayload
 {
     float4 color;
@@ -79,7 +91,11 @@ void MyRaygenShader()
 void MyClosestHitShader(inout RayPayload payload, in MyAttributes attr)
 {
     float3 barycentrics = float3(1 - attr.barycentrics.x - attr.barycentrics.y, attr.barycentrics.x, attr.barycentrics.y);
-    payload.color = float4(barycentrics, 1);
+    uint vertId = 3 * PrimitiveIndex();
+    float3 hitColor = Vertices[vertId + 0].normal * barycentrics.x +
+        Vertices[vertId + 1].normal * barycentrics.y +
+        Vertices[vertId + 2].normal * barycentrics.z;
+    payload.color = float4(hitColor, 1);
 }
 
 [shader("miss")]

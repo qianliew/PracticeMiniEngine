@@ -29,7 +29,8 @@ private:
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC bottomLevelBuildDesc;
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC topLevelBuildDesc;
 
-	D3D12UploadBuffer* pVertexBuffer;
+	D3D12ShaderResourceBuffer* pVertexBuffer;
+	D3D12UploadBuffer* pTempVertexBuffer;
 	D3D12UploadBuffer* pIndexBuffer;
 	std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> geometryDescs;
 	D3D12UploadBuffer* pInstanceDescBuffer;
@@ -65,4 +66,6 @@ public:
 	inline Model* GetSkybox() const { return pSkyboxMesh; }
 
 	inline ComPtr<ID3D12Resource>& GetTLAS() { return pTopLevelAccelerationStructure; }
+	inline D3D12UploadBuffer* GetIndexBuffer() { return pIndexBuffer; }
+	inline D3D12ShaderResourceBuffer* GetVertexBuffer() { return pVertexBuffer; }
 };
