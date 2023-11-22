@@ -28,6 +28,9 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
         lib->DefineExport(kRaygenShaderName);
         lib->DefineExport(kClosestHitShaderName);
         lib->DefineExport(kMissShaderName);
+        lib->DefineExport(kAORaygenShaderName);
+        lib->DefineExport(kAOClosestHitShaderName);
+        lib->DefineExport(kAOMissShaderName);
     }
 
     // Triangle hit group
@@ -36,6 +39,11 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
     auto hitGroup = raytracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
     hitGroup->SetClosestHitShaderImport(kClosestHitShaderName);
     hitGroup->SetHitGroupExport(kHitGroupName);
+    hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
+
+    hitGroup = raytracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
+    hitGroup->SetClosestHitShaderImport(kAOClosestHitShaderName);
+    hitGroup->SetHitGroupExport(kAOHitGroupName);
     hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
 
     // Shader config

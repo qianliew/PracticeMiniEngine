@@ -53,42 +53,6 @@ bool IsInsideViewport(float2 p, Viewport viewport)
         && (p.y >= viewport.top && p.y <= viewport.bottom);
 }
 
-[shader("raygeneration")]
-void MyRaygenShader()
-{
-    // Orthographic projection since we're raytracing in screen space.
-    float3 origin = CameraPositionWS.xyz;
-
-    float2 xy = DispatchRaysIndex().xy + 0.5f; // center in the middle of the pixel.
-    float2 screenPos = xy / DispatchRaysDimensions().xy * 2.0 - 1.0;
-
-    // Invert Y for DirectX-style coordinates.
-    screenPos.y = -screenPos.y;
-
-    // Unproject the pixel coordinate into a world positon.
-    float4 world = mul(ProjectionToWorldMatrix, float4(screenPos, 0, 1));
-    world.xyz /= world.w;
-
-    // Trace the ray.
-    // Set the ray's extents.
-    RayDesc ray;
-    ray.Origin = origin;
-    ray.Direction = normalize(world.xyz - origin);
-    // Set TMin to a non-zero small value to avoid aliasing issues due to floating - point errors.
-    // TMin should be kept small to prevent missing geometry at close contact areas.
-    ray.TMin = 0.001;
-    ray.TMax = 10000.0;
-    RayPayload payload = { float4(0, 0, 0, 0) };
-
-    // uint flags = RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH;
-    uint flags = RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
-
-    TraceRay(Scene, flags, 0xFF, 0, 0, 0, ray, payload);
-
-    // Write the raytraced color to the output texture.
-    RenderTarget[DispatchRaysIndex().xy] = payload.color;
-}
-
 uint initRand(uint val0, uint val1, uint backoff = 16)
 {
     uint v0 = val0, v1 = val1, s0 = 0;
@@ -134,8 +98,50 @@ float3 getCosHemisphereSample(inout uint randSeed, float3 hitNorm)
     return tangent * (r * cos(phi).x) + bitangent * (r * sin(phi)) + hitNorm.xyz * sqrt(1 - randVal.x);
 }
 
+[shader("raygeneration")]
+void RaygenShader()
+{
+    // Orthographic projection since we're raytracing in screen space.
+    float3 origin = CameraPositionWS.xyz;
+
+    float2 xy = DispatchRaysIndex().xy + 0.5f; // center in the middle of the pixel.
+    float2 screenPos = xy / DispatchRaysDimensions().xy * 2.0 - 1.0;
+
+    // Invert Y for DirectX-style coordinates.
+    screenPos.y = -screenPos.y;
+
+    // Unproject the pixel coordinate into a world positon.
+    float4 world = mul(ProjectionToWorldMatrix, float4(screenPos, 0, 1));
+    world.xyz /= world.w;
+
+    // Trace the ray.
+    // Set the ray's extents.
+    RayDesc ray;
+    ray.Origin = origin;
+    ray.Direction = normalize(world.xyz - origin);
+    // Set TMin to a non-zero small value to avoid aliasing issues due to floating - point errors.
+    // TMin should be kept small to prevent missing geometry at close contact areas.
+    ray.TMin = 0.001;
+    ray.TMax = 10000.0;
+    RayPayload payload = { float4(0, 0, 0, 0) };
+
+    // uint flags = RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH;
+    uint flags = RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
+
+    TraceRay(Scene, flags, 0xFF, 0, 0, 0, ray, payload);
+
+    // Write the raytraced color to the output texture.
+    RenderTarget[DispatchRaysIndex().xy] = payload.color;
+}
+
+[shader("raygeneration")]
+void AORaygenShader()
+{
+
+}
+
 [shader("closesthit")]
-void MyClosestHitShader(inout RayPayload payload, in MyAttributes attr)
+void ClosestHitShader(inout RayPayload payload, in MyAttributes attr)
 {
     float3 barycentrics = float3(1 - attr.barycentrics.x - attr.barycentrics.y, attr.barycentrics.x, attr.barycentrics.y);
     uint vertId = 3 * PrimitiveIndex() + Offsets[GeometryIndex()];
@@ -145,10 +151,22 @@ void MyClosestHitShader(inout RayPayload payload, in MyAttributes attr)
     payload.color = float4(hitColor, 1);
 }
 
+[shader("closesthit")]
+void AOClosestHitShader(inout RayPayload payload, in MyAttributes attr)
+{
+
+}
+
 [shader("miss")]
-void MyMissShader(inout RayPayload payload)
+void MissShader(inout RayPayload payload)
 {
     payload.color = float4(0, 1, 1, 1);
+}
+
+[shader("miss")]
+void AOMissShader(inout RayPayload payload)
+{
+    payload.color = float4(1, 1, 1, 1);
 }
 
 #endif // RAYTRACING_HLSL
