@@ -71,7 +71,7 @@ void D3D12RootSignature::CreateDXRRootSignature()
     CD3DX12_ROOT_PARAMETER rootParameters[6];
     rootParameters[DXR_SHADER_RESOURCE_VIEW_GLOBAL].InitAsShaderResourceView(0);
     rootParameters[DXR_UNORDERED_ACCESS_VIEW].InitAsDescriptorTable(1, &descriptorTableRanges[0]);
-    rootParameters[DXR_CONSTANT_BUFFER_VIEW_GLOBAL].InitAsConstantBufferView(1);
+    rootParameters[DXR_CONSTANT_BUFFER_VIEW_GLOBAL].InitAsConstantBufferView(0);
     rootParameters[DXR_SHADER_RESOURCE_VIEW_INDEX].InitAsShaderResourceView(1);
     rootParameters[DXR_SHADER_RESOURCE_VIEW_VERTEX].InitAsShaderResourceView(2);
     rootParameters[DXR_SHADER_RESOURCE_VIEW_OFFSET].InitAsShaderResourceView(3);

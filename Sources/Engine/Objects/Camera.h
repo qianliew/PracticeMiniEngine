@@ -28,7 +28,6 @@ private:
     CD3DX12_RECT* pScissorRect;
 
     CameraConstant cameraConstant;
-    RayGenConstantBuffer rayGenCB;
 
     FLOAT width;
     FLOAT height;
@@ -53,5 +52,4 @@ public:
     inline const D3D12_VIEWPORT* GetViewport() const { return pViewport; }
     inline const D3D12_RECT* GetScissorRect() const { return pScissorRect; }
     inline CameraConstant& GetCameraConstant() { return cameraConstant; }
-    inline RayGenConstantBuffer& GetRayGenConstant() { return rayGenCB; }
 };

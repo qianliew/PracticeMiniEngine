@@ -13,28 +13,21 @@
 #define RAYTRACINGHLSLCOMPAT_H
 
 #ifdef HLSL
+typedef float2 XMFLOAT2;
+typedef float3 XMFLOAT3;
+typedef float4 XMFLOAT4;
 typedef float4 XMVECTOR;
 typedef float4x4 XMMATRIX;
+typedef uint UINT;
 
 #else
 using namespace DirectX;
 
 #endif
 
-struct Viewport
+namespace RaytracingConstants
 {
-    float left;
-    float top;
-    float right;
-    float bottom;
-};
-
-struct RayGenConstantBuffer
-{
-    XMMATRIX projectionToWorld;
-    XMVECTOR cameraPosition;
-    Viewport viewport;
-    Viewport stencil;
-};
+	static const UINT MaxRayRecursiveDepth = 2;
+}
 
 #endif // RAYTRACINGHLSLCOMPAT_H

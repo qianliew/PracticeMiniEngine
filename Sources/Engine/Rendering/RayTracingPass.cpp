@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "RayTracingPass.h"
+#include "RaytracingHlslCompat.h"
 #include "CompiledShaders\Raytracing.hlsl.h"
 
 RayTracingPass::RayTracingPass(
@@ -46,7 +47,7 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
     // This is a root signature that enables a shader to have unique arguments that come from shader tables.
     {
         CD3DX12_ROOT_PARAMETER rootParameters[1];
-        rootParameters[0].InitAsConstants(SizeOfInUint32(RayGenConstantBuffer), 0, 0);
+        rootParameters[0].InitAsConstants(32, 1, 0);
         CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
         localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
 
@@ -86,7 +87,7 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
     auto pipelineConfig = raytracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
     // PERFOMANCE TIP: Set max recursion depth as low as needed 
     // as drivers may apply optimization strategies for low recursion depths. 
-    UINT maxRecursionDepth = 2; // ~ primary rays only. 
+    UINT maxRecursionDepth = RaytracingConstants::MaxRayRecursiveDepth; // ~ primary rays only. 
     pipelineConfig->Config(maxRecursionDepth);
 
     // Create the state object.
@@ -120,10 +121,10 @@ void RayTracingPass::BuildShaderTables()
     // Ray gen shader table
     {
         UINT numShaderRecords = 1;
-        UINT shaderRecordSize = shaderIdentifierSize + sizeof(RayGenConstantBuffer);
+        UINT shaderRecordSize = shaderIdentifierSize;
         ShaderTable rayGenShaderTable(numShaderRecords, shaderRecordSize);
         rayGenShaderTable.CreateBuffer(pDevice->GetDevice().Get());
-        rayGenShaderTable.PushBack(ShaderRecord(rayGenShaderIdentifier[0], shaderIdentifierSize, &pSceneManager->GetCamera()->GetRayGenConstant(), sizeof(RayGenConstantBuffer)));
+        rayGenShaderTable.PushBack(ShaderRecord(rayGenShaderIdentifier[0], shaderIdentifierSize));
         pRayGenShaderTable = rayGenShaderTable.ResourceLocation.Resource;
     }
 

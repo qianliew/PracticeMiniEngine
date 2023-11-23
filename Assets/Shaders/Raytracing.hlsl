@@ -12,16 +12,13 @@
 #ifndef RAYTRACING_HLSL
 #define RAYTRACING_HLSL
 
-
 #define HLSL
 #include "RaytracingHlslCompat.h"
 
-#define MAX_RAY_RECURSION_DEPTH 2
-
-RaytracingAccelerationStructure Scene : register(t0, space0);
+RaytracingAccelerationStructure Scene : register(t0);
 RWTexture2D<float4> RenderTarget : register(u0);
 
-cbuffer GlobalConstants : register(b1)
+cbuffer GlobalConstants : register(b0)
 {
     float4x4 WorldToProjectionMatrix;
     float4x4 ProjectionToWorldMatrix;
@@ -42,8 +39,6 @@ StructuredBuffer<uint16_t> Indices : register(t1);
 StructuredBuffer<Vertex> Vertices : register(t2);
 StructuredBuffer<uint> Offsets : register(t3);
 
-typedef BuiltInTriangleIntersectionAttributes MyAttributes;
-
 struct AORayPayload
 {
     float aoVal;
@@ -55,12 +50,6 @@ struct RayPayload
     uint depth;
     uint randomSeed;
 };
-
-bool IsInsideViewport(float2 p, Viewport viewport)
-{
-    return (p.x >= viewport.left && p.x <= viewport.right)
-        && (p.y >= viewport.top && p.y <= viewport.bottom);
-}
 
 uint initRand(uint val0, uint val1, uint backoff = 16)
 {
@@ -114,7 +103,7 @@ float3 HitWorldPosition()
 
 float TraceAORay(float3 origin, float3 direction, in uint currentRayRecursionDepth)
 {
-    if (currentRayRecursionDepth >= MAX_RAY_RECURSION_DEPTH)
+    if (currentRayRecursionDepth >= RaytracingConstants::MaxRayRecursiveDepth)
     {
         return false;
     }
@@ -174,9 +163,9 @@ void RaygenShader()
 }
 
 [shader("closesthit")]
-void ClosestHitShader(inout RayPayload payload, in MyAttributes attr)
+void ClosestHitShader(inout RayPayload payload, in BuiltInTriangleIntersectionAttributes attr)
 {
-    if (payload.depth > MAX_RAY_RECURSION_DEPTH)
+    if (payload.depth > RaytracingConstants::MaxRayRecursiveDepth)
     {
         return;
     }
@@ -188,7 +177,7 @@ void ClosestHitShader(inout RayPayload payload, in MyAttributes attr)
         Vertices[vertId + 2].normalWS * barycentrics.z;
 
     float3 hitPosition = HitWorldPosition();
-    const uint rayCount = 10;
+    const uint rayCount = 30;
     for (uint i = 0; i < rayCount; i++)
     {
         uint seed = initRand(payload.randomSeed * rayCount + i, FrameCount, 16);
@@ -198,7 +187,7 @@ void ClosestHitShader(inout RayPayload payload, in MyAttributes attr)
 }
 
 [shader("closesthit")]
-void AOClosestHitShader(inout AORayPayload payload, in MyAttributes attr)
+void AOClosestHitShader(inout AORayPayload payload, in BuiltInTriangleIntersectionAttributes attr)
 {
     payload.aoVal = 0.0f;
 }
