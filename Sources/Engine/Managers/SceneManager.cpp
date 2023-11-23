@@ -2,6 +2,7 @@
 #include "SceneManager.h"
 #include "LitMaterial.h"
 #include "SkyboxMaterial.h"
+#include "MiniEngine.h"
 
 UINT SceneManager::sTextureID = 0;
 
@@ -355,6 +356,7 @@ void SceneManager::UpdateTransforms()
 void SceneManager::UpdateCamera()
 {
     pCamera->UpdateCameraConstant();
+    pCamera->GetCameraConstant().FrameCount = MiniEngine::sFrameCount;
     pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CopyData(&pCamera->GetCameraConstant(), sizeof(CameraConstant));
 }
 

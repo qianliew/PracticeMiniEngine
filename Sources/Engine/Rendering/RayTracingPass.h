@@ -16,7 +16,6 @@ private:
 	const wchar_t* kMissShaderName = L"MissShader";
 	// AO
 	const wchar_t* kAOHitGroupName = L"AOHitGroup";
-	const wchar_t* kAORaygenShaderName = L"AORaygenShader";
 	const wchar_t* kAOClosestHitShaderName = L"AOClosestHitShader";
 	const wchar_t* kAOMissShaderName = L"AOMissShader";
 

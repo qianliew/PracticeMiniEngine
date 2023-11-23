@@ -14,17 +14,6 @@ using std::shared_ptr;
 
 class MiniEngine : public Window
 {
-public:
-    MiniEngine(UINT width, UINT height, std::wstring name);
-    ~MiniEngine();
-
-    void OnInit();
-    void OnUpdate();
-    void OnRender();
-    void OnDestroy();
-    void OnKeyDown(UINT8 /*key*/);
-    void OnKeyUp(UINT8 /*key*/);
-
 private:
     BOOL isDXR;
 
@@ -39,10 +28,10 @@ private:
     shared_ptr<RayTracingPass> pRayTracingPass;
 
     // Synchronization objects.
-    UINT frameIndex;
     HANDLE fenceEvent;
     ComPtr<ID3D12Fence> fence;
     UINT64 fenceValue;
+    UINT frameIndex;
 
     // Scene objects
     shared_ptr<SceneManager> pSceneManager;
@@ -54,4 +43,17 @@ private:
     void WaitForPreviousFrame();
     void WaitForGPU();
     UINT64 UpdateFence();
+
+public:
+    MiniEngine(UINT width, UINT height, std::wstring name);
+    ~MiniEngine();
+
+    static UINT sFrameCount;
+
+    void OnInit();
+    void OnUpdate();
+    void OnRender();
+    void OnDestroy();
+    void OnKeyDown(UINT8 /*key*/);
+    void OnKeyUp(UINT8 /*key*/);
 };

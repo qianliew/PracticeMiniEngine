@@ -21,17 +21,6 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
     auto lib = raytracingPipeline.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
     D3D12_SHADER_BYTECODE libdxil = CD3DX12_SHADER_BYTECODE((void*)g_pRaytracing, ARRAYSIZE(g_pRaytracing));
     lib->SetDXILLibrary(&libdxil);
-    // Define which shader exports to surface from the library.
-    // If no shader exports are defined for a DXIL library subobject, all shaders will be surfaced.
-    // In this sample, this could be omitted for convenience since the sample uses all shaders in the library. 
-    {
-        lib->DefineExport(kRaygenShaderName);
-        lib->DefineExport(kClosestHitShaderName);
-        lib->DefineExport(kMissShaderName);
-        lib->DefineExport(kAORaygenShaderName);
-        lib->DefineExport(kAOClosestHitShaderName);
-        lib->DefineExport(kAOMissShaderName);
-    }
 
     // Triangle hit group
     // A hit group specifies closest hit, any hit and intersection shaders to be executed when a ray intersects the geometry's triangle/AABB.
@@ -49,7 +38,7 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
     // Shader config
     // Defines the maximum sizes in bytes for the ray payload and attribute structure.
     auto shaderConfig = raytracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
-    UINT payloadSize = 4 * sizeof(float);   // float4 color
+    UINT payloadSize = 4 * sizeof(float) + 2 * sizeof(UINT);   // float4 color + uint depth + uint randomSeed
     UINT attributeSize = 2 * sizeof(float); // float2 barycentrics
     shaderConfig->Config(payloadSize, attributeSize);
 
@@ -97,7 +86,7 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
     auto pipelineConfig = raytracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
     // PERFOMANCE TIP: Set max recursion depth as low as needed 
     // as drivers may apply optimization strategies for low recursion depths. 
-    UINT maxRecursionDepth = 1; // ~ primary rays only. 
+    UINT maxRecursionDepth = 2; // ~ primary rays only. 
     pipelineConfig->Config(maxRecursionDepth);
 
     // Create the state object.
@@ -106,15 +95,17 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
 
 void RayTracingPass::BuildShaderTables()
 {
-    void* rayGenShaderIdentifier;
-    void* missShaderIdentifier;
-    void* hitGroupShaderIdentifier;
+    void* rayGenShaderIdentifier[1];
+    void* missShaderIdentifier[2];
+    void* hitGroupShaderIdentifier[2];
 
     auto GetShaderIdentifiers = [&](auto* stateObjectProperties)
     {
-        rayGenShaderIdentifier = stateObjectProperties->GetShaderIdentifier(kRaygenShaderName);
-        missShaderIdentifier = stateObjectProperties->GetShaderIdentifier(kMissShaderName);
-        hitGroupShaderIdentifier = stateObjectProperties->GetShaderIdentifier(kHitGroupName);
+        rayGenShaderIdentifier[0] = stateObjectProperties->GetShaderIdentifier(kRaygenShaderName);
+        missShaderIdentifier[0] = stateObjectProperties->GetShaderIdentifier(kMissShaderName);
+        missShaderIdentifier[1] = stateObjectProperties->GetShaderIdentifier(kAOMissShaderName);
+        hitGroupShaderIdentifier[0] = stateObjectProperties->GetShaderIdentifier(kHitGroupName);
+        hitGroupShaderIdentifier[1] = stateObjectProperties->GetShaderIdentifier(kAOHitGroupName);
     };
 
     // Get shader identifiers.
@@ -132,27 +123,29 @@ void RayTracingPass::BuildShaderTables()
         UINT shaderRecordSize = shaderIdentifierSize + sizeof(RayGenConstantBuffer);
         ShaderTable rayGenShaderTable(numShaderRecords, shaderRecordSize);
         rayGenShaderTable.CreateBuffer(pDevice->GetDevice().Get());
-        rayGenShaderTable.PushBack(ShaderRecord(rayGenShaderIdentifier, shaderIdentifierSize, &pSceneManager->GetCamera()->GetRayGenConstant(), sizeof(RayGenConstantBuffer)));
+        rayGenShaderTable.PushBack(ShaderRecord(rayGenShaderIdentifier[0], shaderIdentifierSize, &pSceneManager->GetCamera()->GetRayGenConstant(), sizeof(RayGenConstantBuffer)));
         pRayGenShaderTable = rayGenShaderTable.ResourceLocation.Resource;
     }
 
     // Miss shader table
     {
-        UINT numShaderRecords = 1;
+        UINT numShaderRecords = 2;
         UINT shaderRecordSize = shaderIdentifierSize;
         ShaderTable missShaderTable(numShaderRecords, shaderRecordSize);
         missShaderTable.CreateBuffer(pDevice->GetDevice().Get());
-        missShaderTable.PushBack(ShaderRecord(missShaderIdentifier, shaderIdentifierSize));
+        missShaderTable.PushBack(ShaderRecord(missShaderIdentifier[0], shaderIdentifierSize));
+        missShaderTable.PushBack(ShaderRecord(missShaderIdentifier[1], shaderIdentifierSize));
         pMissShaderTable = missShaderTable.ResourceLocation.Resource;
     }
 
     // Hit group shader table
     {
-        UINT numShaderRecords = 1;
+        UINT numShaderRecords = 2;
         UINT shaderRecordSize = shaderIdentifierSize;
         ShaderTable hitGroupShaderTable(numShaderRecords, shaderRecordSize);
         hitGroupShaderTable.CreateBuffer(pDevice->GetDevice().Get());
-        hitGroupShaderTable.PushBack(ShaderRecord(hitGroupShaderIdentifier, shaderIdentifierSize));
+        hitGroupShaderTable.PushBack(ShaderRecord(hitGroupShaderIdentifier[0], shaderIdentifierSize));
+        hitGroupShaderTable.PushBack(ShaderRecord(hitGroupShaderIdentifier[1], shaderIdentifierSize));
         pHitGroupShaderTable = hitGroupShaderTable.ResourceLocation.Resource;
     }
 }
@@ -164,10 +157,10 @@ void RayTracingPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
         // Since each shader table has only one shader record, the stride is same as the size.
         dispatchDesc->HitGroupTable.StartAddress = pHitGroupShaderTable->GetGPUVirtualAddress();
         dispatchDesc->HitGroupTable.SizeInBytes = pHitGroupShaderTable->GetDesc().Width;
-        dispatchDesc->HitGroupTable.StrideInBytes = dispatchDesc->HitGroupTable.SizeInBytes;
+        dispatchDesc->HitGroupTable.StrideInBytes = dispatchDesc->HitGroupTable.SizeInBytes / 2;
         dispatchDesc->MissShaderTable.StartAddress = pMissShaderTable->GetGPUVirtualAddress();
         dispatchDesc->MissShaderTable.SizeInBytes = pMissShaderTable->GetDesc().Width;
-        dispatchDesc->MissShaderTable.StrideInBytes = dispatchDesc->MissShaderTable.SizeInBytes;
+        dispatchDesc->MissShaderTable.StrideInBytes = dispatchDesc->MissShaderTable.SizeInBytes / 2;
         dispatchDesc->RayGenerationShaderRecord.StartAddress = pRayGenShaderTable->GetGPUVirtualAddress();
         dispatchDesc->RayGenerationShaderRecord.SizeInBytes = pRayGenShaderTable->GetDesc().Width;
         dispatchDesc->Width = 1920;

@@ -3,6 +3,8 @@
 
 using namespace Microsoft::WRL;
 
+UINT MiniEngine::sFrameCount = 0;
+
 MiniEngine::MiniEngine(UINT width, UINT height, std::wstring name) :
     Window(width, height, name),
     isDXR(TRUE),
@@ -247,6 +249,7 @@ void MiniEngine::WaitForPreviousFrame()
     }
 
     frameIndex = pViewManager->GetSwapChain()->GetCurrentBackBufferIndex();
+    sFrameCount += 1;
 
     // Release upload buffers from last frame.
     pDevice->GetBufferManager()->ReleaseUploadBuffer();
