@@ -25,4 +25,11 @@ struct AORayPayload
     FLOAT aoVal;
 };
 
+struct GIRayPayload
+{
+    XMFLOAT4 color;
+    UINT depth;
+    UINT randomSeed;
+};
+
 #endif // !SHARED_TYPES_H

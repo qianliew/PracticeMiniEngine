@@ -35,10 +35,15 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
     hitGroup->SetHitGroupExport(kAOHitGroupName);
     hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
 
+    hitGroup = raytracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
+    hitGroup->SetClosestHitShaderImport(kGIClosestHitShaderName);
+    hitGroup->SetHitGroupExport(kGIHitGroupName);
+    hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
+
     // Shader config
     // Defines the maximum sizes in bytes for the ray payload and attribute structure.
     auto shaderConfig = raytracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
-    UINT payloadSize = max(sizeof(RayPayload), sizeof(AORayPayload));
+    UINT payloadSize = max(sizeof(RayPayload), sizeof(AORayPayload), sizeof(GIRayPayload));
     UINT attributeSize = 2 * sizeof(float); // float2 barycentrics
     shaderConfig->Config(payloadSize, attributeSize);
 
@@ -102,10 +107,12 @@ void RayTracingPass::BuildShaderTables()
     auto GetShaderIdentifiers = [&](auto* stateObjectProperties)
     {
         rayGenShaderIdentifier[0] = stateObjectProperties->GetShaderIdentifier(kRaygenShaderName);
-        missShaderIdentifier[RayType::Radiance] = stateObjectProperties->GetShaderIdentifier(kMissShaderName);
-        missShaderIdentifier[RayType::AO] = stateObjectProperties->GetShaderIdentifier(kAOMissShaderName);
         hitGroupShaderIdentifier[RayType::Radiance] = stateObjectProperties->GetShaderIdentifier(kHitGroupName);
         hitGroupShaderIdentifier[RayType::AO] = stateObjectProperties->GetShaderIdentifier(kAOHitGroupName);
+        hitGroupShaderIdentifier[RayType::GI] = stateObjectProperties->GetShaderIdentifier(kGIHitGroupName);
+        missShaderIdentifier[RayType::Radiance] = stateObjectProperties->GetShaderIdentifier(kMissShaderName);
+        missShaderIdentifier[RayType::AO] = stateObjectProperties->GetShaderIdentifier(kAOMissShaderName);
+        missShaderIdentifier[RayType::GI] = stateObjectProperties->GetShaderIdentifier(kGIMissShaderName);
     };
 
     // Get shader identifiers.

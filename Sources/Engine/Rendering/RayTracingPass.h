@@ -14,10 +14,16 @@ private:
 	const wchar_t* kRaygenShaderName = L"RaygenShader";
 	const wchar_t* kClosestHitShaderName = L"ClosestHitShader";
 	const wchar_t* kMissShaderName = L"MissShader";
+
 	// AO
 	const wchar_t* kAOHitGroupName = L"AOHitGroup";
 	const wchar_t* kAOClosestHitShaderName = L"AOClosestHitShader";
 	const wchar_t* kAOMissShaderName = L"AOMissShader";
+
+	// GI
+	const wchar_t* kGIHitGroupName = L"GIHitGroup";
+	const wchar_t* kGIClosestHitShaderName = L"GIClosestHitShader";
+	const wchar_t* kGIMissShaderName = L"GIMissShader";
 
 	shared_ptr<D3D12Device> pDevice;
 	shared_ptr<SceneManager> pSceneManager;

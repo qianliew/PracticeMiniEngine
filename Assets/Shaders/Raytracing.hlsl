@@ -77,6 +77,11 @@ float3 HitWorldPosition()
     return WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
 }
 
+inline float3 GetBarycentrics(float2 barycentrics)
+{
+    return float3(1 - barycentrics.x - barycentrics.y, barycentrics.x, barycentrics.y);
+}
+
 float4 TraceRadianceRay(float3 origin, float3 direction, in uint currentRayRecursionDepth)
 {
     if (currentRayRecursionDepth >= RaytracingConstants::MaxRayRecursiveDepth)
@@ -127,6 +132,33 @@ float TraceAORay(float3 origin, float3 direction, in uint currentRayRecursionDep
     return aoRayPayload.aoVal;
 }
 
+float3 TraceGIRay(float3 origin, float3 direction, in uint currentRayRecursionDepth)
+{
+    if (currentRayRecursionDepth >= RaytracingConstants::MaxRayRecursiveDepth)
+    {
+        return false;
+    }
+
+    RayDesc rayDesc;
+    rayDesc.Origin = origin;
+    rayDesc.Direction = direction;
+    rayDesc.TMin = 0.001;
+    rayDesc.TMax = 10000.0;
+
+    uint flags = RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH
+        | RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
+
+    GIRayPayload payload =
+    {
+        float4(0, 0, 0, 0),
+        currentRayRecursionDepth,
+        DispatchRaysIndex().x + DispatchRaysIndex().y * DispatchRaysDimensions().x
+    };
+    TraceRay(Scene, flags, 0xFF, RayType::GI, 0, RayType::GI, rayDesc, payload);
+
+    return payload.color.rgb;
+}
+
 [shader("raygeneration")]
 void RaygenShader()
 {
@@ -148,36 +180,48 @@ void RaygenShader()
         TraceRadianceRay(origin, normalize(world.xyz - origin), currentRayRecursionDepth);
 }
 
-float4 Lambert(float2 uv)
+float4 Lambert(float3 normalWS, float3 lightDirWS, float2 uv)
 {
-    return BaseTexture0.SampleLevel(BaseTextureSampler0, uv, 0.0f);
+    float NdotL = dot(normalWS, lightDirWS);
+    return BaseTexture0.SampleLevel(BaseTextureSampler0, uv, 0.0f) * NdotL;
 }
 
 [shader("closesthit")]
 void ClosestHitShader(inout RayPayload payload, in BuiltInTriangleIntersectionAttributes attr)
 {
-    float3 barycentrics = float3(1 - attr.barycentrics.x - attr.barycentrics.y, attr.barycentrics.x, attr.barycentrics.y);
+    float3 barycentrics = GetBarycentrics(attr.barycentrics);
     uint vertId = 3 * PrimitiveIndex() + Offsets[GeometryIndex()];
-    float3 positionOS = Vertices[vertId + 0].normalOS * barycentrics.x +
-        Vertices[vertId + 1].normalOS * barycentrics.y +
-        Vertices[vertId + 2].normalOS * barycentrics.z;
+
+    float3 hitPosition = HitWorldPosition();
     float3 normalOS = Vertices[vertId + 0].normalOS * barycentrics.x +
         Vertices[vertId + 1].normalOS * barycentrics.y +
         Vertices[vertId + 2].normalOS * barycentrics.z;
-
     float2 uv = Vertices[vertId + 0].texCoord * barycentrics.x +
         Vertices[vertId + 1].texCoord * barycentrics.y +
         Vertices[vertId + 2].texCoord * barycentrics.z;
-    payload.color = Lambert(uv % 1.0f);
 
-    float3 hitPosition = HitWorldPosition();
-    const uint rayCount = 30;
-    float aoVal = 0.0f;
-    for (uint i = 0; i < rayCount; i++)
+    const float3 lightDirWS = float3(1.0f, 1.0f, 0.0f);
+    payload.color = Lambert(normalOS, lightDirWS, uv % 1.0f);
+
+    // Calculate GI.
+    const uint GIRayCount = 100;
+    float3 gi = 0.0f;
+    for (uint i = 0; i < GIRayCount; i++)
     {
-        uint seed = initRand(payload.randomSeed * rayCount + i, FrameCount, 16);
+        uint seed = initRand(payload.randomSeed * GIRayCount + i, FrameCount, 16);
         float3 direction = normalize(getCosHemisphereSample(seed, normalOS));
-        aoVal += TraceAORay(hitPosition, direction, payload.depth) / rayCount;
+        gi += TraceGIRay(hitPosition, direction, payload.depth) / GIRayCount;
+    }
+    payload.color.rgb += gi;
+
+    // Calculate AO.
+    const uint aoRayCount = 30;
+    float aoVal = 0.0f;
+    for (uint i = 0; i < aoRayCount; i++)
+    {
+        uint seed = initRand(payload.randomSeed * aoRayCount + i, FrameCount, 16);
+        float3 direction = normalize(getCosHemisphereSample(seed, normalOS));
+        aoVal += TraceAORay(hitPosition, direction, payload.depth) / aoRayCount;
     }
     payload.color *= aoVal;
 }
@@ -188,16 +232,39 @@ void AOClosestHitShader(inout AORayPayload payload, in BuiltInTriangleIntersecti
     payload.aoVal = 0.0f;
 }
 
+[shader("closesthit")]
+void GIClosestHitShader(inout GIRayPayload payload, in BuiltInTriangleIntersectionAttributes attr)
+{
+    float3 barycentrics = GetBarycentrics(attr.barycentrics);
+    uint vertId = 3 * PrimitiveIndex() + Offsets[GeometryIndex()];
+
+    float3 normalOS = Vertices[vertId + 0].normalOS * barycentrics.x +
+        Vertices[vertId + 1].normalOS * barycentrics.y +
+        Vertices[vertId + 2].normalOS * barycentrics.z;
+    float2 uv = Vertices[vertId + 0].texCoord * barycentrics.x +
+        Vertices[vertId + 1].texCoord * barycentrics.y +
+        Vertices[vertId + 2].texCoord * barycentrics.z;
+
+    const float3 lightDirWS = float3(1.0f, 1.0f, 0.0f);
+    payload.color = Lambert(normalOS, lightDirWS, uv % 1.0f);
+}
+
 [shader("miss")]
 void MissShader(inout RayPayload payload)
 {
-    payload.color = float4(0, 0, 0, 1);
+    payload.color = float4(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 [shader("miss")]
 void AOMissShader(inout AORayPayload payload)
 {
     payload.aoVal = 1.0f;
+}
+
+[shader("miss")]
+void GIMissShader(inout GIRayPayload payload)
+{
+    payload.color = float4(0.0f, 0.0f, 1.0f, 1.0f);
 }
 
 #endif // RAYTRACING_HLSL
