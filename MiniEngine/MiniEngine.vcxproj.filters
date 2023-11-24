@@ -52,6 +52,9 @@
     <Filter Include="Engine\Objects\Material">
       <UniqueIdentifier>{cec1c197-f53e-4190-a31e-489113f30522}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shared">
+      <UniqueIdentifier>{6afc072a-5e8f-417f-b87f-9f2e24299052}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Sources\Engine\Objects\D3D12IndexBuffer.h">
@@ -157,14 +160,20 @@
     <ClInclude Include="..\Sources\Engine\Rendering\RayTracingPass.h">
       <Filter>Engine\Rendering\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\Assets\Shaders\RaytracingHlslCompat.h">
-      <Filter>Assets\Shaders</Filter>
-    </ClInclude>
     <ClInclude Include="..\Sources\Engine\Components\D3D12ShaderTable.h">
       <Filter>Engine\Components\Headers</Filter>
     </ClInclude>
     <ClInclude Include="D3D12RootSignature.h">
       <Filter>Engine\Components\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Shared\SharedTypes.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Shared\SharedPrimitives.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Shared\SharedConstants.h">
+      <Filter>Shared</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

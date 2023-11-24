@@ -23,6 +23,10 @@
 #include <map>
 #include <unordered_map>
 
+#include "SharedPrimitives.h"
+#include "SharedTypes.h"
+#include "SharedConstants.h"
+
 #include "Macros.h"
 #include "PathHelper.h"
 

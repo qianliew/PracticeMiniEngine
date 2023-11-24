@@ -1,19 +1,10 @@
-//*********************************************************
-//
-// Copyright (c) Microsoft. All rights reserved.
-// This code is licensed under the MIT License (MIT).
-// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
-// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
-// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
-//
-//*********************************************************
-
 #ifndef RAYTRACING_HLSL
 #define RAYTRACING_HLSL
 
 #define HLSL
-#include "RaytracingHlslCompat.h"
+#include "../../Sources/Shared/SharedPrimitives.h"
+#include "../../Sources/Shared/SharedTypes.h"
+#include "../../Sources/Shared/SharedConstants.h"
 
 RaytracingAccelerationStructure Scene : register(t0);
 RWTexture2D<float4> RenderTarget : register(u0);
@@ -26,30 +17,9 @@ cbuffer GlobalConstants : register(b0)
     uint FrameCount;
 };
 
-struct Vertex
-{
-    float3 positionWS;
-    float3 normalWS;
-    float4 tangentWS;
-    float2 texCoord;
-    float4 color;
-};
-
 StructuredBuffer<uint16_t> Indices : register(t1);
 StructuredBuffer<Vertex> Vertices : register(t2);
 StructuredBuffer<uint> Offsets : register(t3);
-
-struct AORayPayload
-{
-    float aoVal;
-};
-
-struct RayPayload
-{
-    float4 color;
-    uint depth;
-    uint randomSeed;
-};
 
 uint initRand(uint val0, uint val1, uint backoff = 16)
 {
@@ -172,16 +142,16 @@ void ClosestHitShader(inout RayPayload payload, in BuiltInTriangleIntersectionAt
 
     float3 barycentrics = float3(1 - attr.barycentrics.x - attr.barycentrics.y, attr.barycentrics.x, attr.barycentrics.y);
     uint vertId = 3 * PrimitiveIndex() + Offsets[GeometryIndex()];
-    float3 normalWS = Vertices[vertId + 0].normalWS * barycentrics.x +
-        Vertices[vertId + 1].normalWS * barycentrics.y +
-        Vertices[vertId + 2].normalWS * barycentrics.z;
+    float3 normalOS = Vertices[vertId + 0].normalOS * barycentrics.x +
+        Vertices[vertId + 1].normalOS * barycentrics.y +
+        Vertices[vertId + 2].normalOS * barycentrics.z;
 
     float3 hitPosition = HitWorldPosition();
     const uint rayCount = 30;
     for (uint i = 0; i < rayCount; i++)
     {
         uint seed = initRand(payload.randomSeed * rayCount + i, FrameCount, 16);
-        float3 direction = normalize(getCosHemisphereSample(seed, normalWS));
+        float3 direction = normalize(getCosHemisphereSample(seed, normalOS));
         payload.color += TraceAORay(hitPosition, direction, payload.depth) / rayCount;
     }
 }

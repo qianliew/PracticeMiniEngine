@@ -5,15 +5,6 @@
 
 using namespace DirectX;
 
-struct Vertex
-{
-    XMFLOAT3 position;
-    XMFLOAT3 normal;
-    XMFLOAT4 tangent;
-    XMFLOAT2 texCoord;
-    XMFLOAT4 color;
-};
-
 class D3D12Mesh
 {
 private:

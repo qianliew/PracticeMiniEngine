@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "RayTracingPass.h"
-#include "RaytracingHlslCompat.h"
 #include "CompiledShaders\Raytracing.hlsl.h"
 
 RayTracingPass::RayTracingPass(
@@ -39,7 +38,7 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
     // Shader config
     // Defines the maximum sizes in bytes for the ray payload and attribute structure.
     auto shaderConfig = raytracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
-    UINT payloadSize = 4 * sizeof(float) + 2 * sizeof(UINT);   // float4 color + uint depth + uint randomSeed
+    UINT payloadSize = max(sizeof(RayPayload), sizeof(AORayPayload));
     UINT attributeSize = 2 * sizeof(float); // float2 barycentrics
     shaderConfig->Config(payloadSize, attributeSize);
 

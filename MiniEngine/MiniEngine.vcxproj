@@ -118,7 +118,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)\obj\x64\Debug;$(ProjectDir)..\Assets\Shaders;$(ProjectDir)..\Plugins\FBXSDK\include;$(ProjectDir)..\Sources\Engine;$(ProjectDir)..\Sources\Engine\Components;$(ProjectDir)..\Sources\Engine\Managers;$(ProjectDir)..\Sources\Engine\Objects;$(ProjectDir)..\Sources\Engine\Rendering;$(ProjectDir)..\Sources\Utilities;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)\obj\x64\Debug;$(ProjectDir)..\Assets\Shaders;$(ProjectDir)..\Plugins\FBXSDK\include;$(ProjectDir)..\Sources\Engine;$(ProjectDir)..\Sources\Engine\Components;$(ProjectDir)..\Sources\Engine\Managers;$(ProjectDir)..\Sources\Engine\Objects;$(ProjectDir)..\Sources\Engine\Rendering;$(ProjectDir)..\Sources\Shared;$(ProjectDir)..\Sources\Utilities;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -151,7 +151,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\Assets\Shaders\RaytracingHlslCompat.h" />
     <ClInclude Include="..\Sources\Engine\Components\D3D12Buffer.h" />
     <ClInclude Include="..\Sources\Engine\Components\D3D12DefaultBuffer.h" />
     <ClInclude Include="..\Sources\Engine\Components\D3D12Resource.h" />
@@ -184,6 +183,9 @@
     <ClInclude Include="..\Sources\Engine\Rendering\DrawSkyboxPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\RayTracingPass.h" />
     <ClInclude Include="..\Sources\Engine\Window.h" />
+    <ClInclude Include="..\Sources\Shared\SharedConstants.h" />
+    <ClInclude Include="..\Sources\Shared\SharedPrimitives.h" />
+    <ClInclude Include="..\Sources\Shared\SharedTypes.h" />
     <ClInclude Include="..\Sources\Utilities\FBXImporter.h" />
     <ClInclude Include="..\Sources\Utilities\Macros.h" />
     <ClInclude Include="..\Sources\Utilities\PathHelper.h" />
