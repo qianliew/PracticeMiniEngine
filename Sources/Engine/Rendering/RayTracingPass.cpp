@@ -183,30 +183,31 @@ void RayTracingPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
 
     // Bind the heap of TLAS.
     pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
-        DXR_SHADER_RESOURCE_VIEW_GLOBAL,
+        (UINT)eDXRRootIndex::ShaderResourceViewGlobal,
         pSceneManager->GetTLAS()->GetGPUVirtualAddress());
+
+    // Bind the global heaps.
+    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
+        (UINT)eDXRRootIndex::ShaderResourceViewIndex,
+        pSceneManager->GetIndexBuffer()->GetResource()->GetGPUVirtualAddress());
+    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
+        (UINT)eDXRRootIndex::ShaderResourceViewVertex,
+        pSceneManager->GetVertexBuffer()->GetResource()->GetGPUVirtualAddress());
+    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
+        (UINT)eDXRRootIndex::ShaderResourceViewOffset,
+        pSceneManager->GetStrideBuffer()->GetResource()->GetGPUVirtualAddress());
+    pSceneManager->SetTexturesDXR(pCommandList);
+
+    pCommandList->SetComputeRootConstantBufferView(
+        (UINT)eDXRRootIndex::ConstantBufferViewGlobal,
+        pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
 
     // Bind the UAV heap for the output.
     pDevice->GetDescriptorHeapManager()->SetComputeViews(
         pCommandList->GetCommandList(),
         UNORDERED_ACCESS_VIEW,
-        DXR_UNORDERED_ACCESS_VIEW,
+        (UINT)eDXRRootIndex::UnorderedAccessViewGlobal,
         0);
-
-    // Bind the global heaps.
-    pCommandList->SetComputeRootConstantBufferView(
-        DXR_CONSTANT_BUFFER_VIEW_GLOBAL,
-        pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
-    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
-        DXR_SHADER_RESOURCE_VIEW_INDEX,
-        pSceneManager->GetIndexBuffer()->GetResource()->GetGPUVirtualAddress());
-    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
-        DXR_SHADER_RESOURCE_VIEW_VERTEX,
-        pSceneManager->GetVertexBuffer()->GetResource()->GetGPUVirtualAddress());
-    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
-        DXR_SHADER_RESOURCE_VIEW_OFFSET,
-        pSceneManager->GetStrideBuffer()->GetResource()->GetGPUVirtualAddress());
-    pSceneManager->SetTexturesDXR(pCommandList);
 
     // Dispatch rays.    
     D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};

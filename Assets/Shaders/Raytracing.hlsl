@@ -21,11 +21,11 @@ StructuredBuffer<uint16_t> Indices : register(t1);
 StructuredBuffer<Vertex> Vertices : register(t2);
 StructuredBuffer<uint> Offsets : register(t3);
 
-Texture2D BaseTexture0   : register(t4);
-Texture2D BaseTexture1   : register(t5);
+Texture2D BaseTexture0   : register(t5);
+Texture2D BaseTexture1   : register(t6);
 
-SamplerState BaseTextureSampler0     : register(s4);
-SamplerState BaseTextureSampler1     : register(s5);
+SamplerState BaseTextureSampler0     : register(s5);
+SamplerState BaseTextureSampler1     : register(s6);
 
 uint initRand(uint val0, uint val1, uint backoff = 16)
 {

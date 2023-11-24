@@ -67,18 +67,19 @@ void D3D12RootSignature::CreateDXRRootSignature()
 {
     CD3DX12_DESCRIPTOR_RANGE descriptorTableRanges[3];
     descriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
-    descriptorTableRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 4);
-    descriptorTableRanges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 2, 4);
+    descriptorTableRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 5);
+    descriptorTableRanges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 5, 1);
 
-    CD3DX12_ROOT_PARAMETER rootParameters[8];
-    rootParameters[DXR_SHADER_RESOURCE_VIEW_GLOBAL].InitAsShaderResourceView(0);
-    rootParameters[DXR_UNORDERED_ACCESS_VIEW].InitAsDescriptorTable(1, &descriptorTableRanges[0]);
-    rootParameters[DXR_CONSTANT_BUFFER_VIEW_GLOBAL].InitAsConstantBufferView(0);
-    rootParameters[DXR_SHADER_RESOURCE_VIEW_INDEX].InitAsShaderResourceView(1);
-    rootParameters[DXR_SHADER_RESOURCE_VIEW_VERTEX].InitAsShaderResourceView(2);
-    rootParameters[DXR_SHADER_RESOURCE_VIEW_OFFSET].InitAsShaderResourceView(3);
-    rootParameters[DXR_SHADER_RESOURCE_VIEW_TEXTURE].InitAsDescriptorTable(1, &descriptorTableRanges[1]);
-    rootParameters[DXR_SAMPLER].InitAsDescriptorTable(1, &descriptorTableRanges[2]);
+    CD3DX12_ROOT_PARAMETER rootParameters[(UINT)eDXRRootIndex::Count];
+    rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewGlobal].InitAsShaderResourceView(0);
+    rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewIndex].InitAsShaderResourceView(1);
+    rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewVertex].InitAsShaderResourceView(2);
+    rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewOffset].InitAsShaderResourceView(3);
+    rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewSkybox].InitAsShaderResourceView(4);
+    rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewTexture].InitAsDescriptorTable(1, &descriptorTableRanges[1]);
+    rootParameters[(UINT)eDXRRootIndex::Sampler].InitAsDescriptorTable(1, &descriptorTableRanges[2]);
+    rootParameters[(UINT)eDXRRootIndex::ConstantBufferViewGlobal].InitAsConstantBufferView(0);
+    rootParameters[(UINT)eDXRRootIndex::UnorderedAccessViewGlobal].InitAsDescriptorTable(1, &descriptorTableRanges[0]);
     CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
 
     ComPtr<ID3DBlob> signature;

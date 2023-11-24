@@ -1,5 +1,20 @@
 #pragma once
 
+// Root index in DXR pipeline
+enum class eDXRRootIndex
+{
+    ShaderResourceViewGlobal = 0,
+    ShaderResourceViewIndex,
+    ShaderResourceViewVertex,
+    ShaderResourceViewOffset,
+    ShaderResourceViewSkybox,
+    ShaderResourceViewTexture,
+    Sampler,
+    ConstantBufferViewGlobal,
+    UnorderedAccessViewGlobal,
+    Count,
+};
+
 class D3D12RootSignature
 {
 private:

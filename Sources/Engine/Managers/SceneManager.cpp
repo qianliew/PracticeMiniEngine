@@ -338,9 +338,19 @@ void SceneManager::SetTexturesDXR(D3D12CommandList*& pCommandList)
         pDevice->GetDescriptorHeapManager()->SetComputeViews(
             pCommandList->GetCommandList(),
             SHADER_RESOURCE_VIEW_PEROBJECT,
-            DXR_SHADER_RESOURCE_VIEW_TEXTURE,
+            (UINT)eDXRRootIndex::ShaderResourceViewTexture,
+            pObjects[i]->GetMaterial()->GetTexture()->GetTextureID());
+
+        pDevice->GetDescriptorHeapManager()->SetComputeViews(
+            pCommandList->GetCommandList(),
+            SAMPLER,
+            (UINT)eDXRRootIndex::Sampler,
             pObjects[i]->GetMaterial()->GetTexture()->GetTextureID());
     }
+
+    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
+        (UINT)eDXRRootIndex::ShaderResourceViewSkybox,
+        pSkyboxMaterial->GetTexture()->GetTextureBuffer()->GetResource()->GetGPUVirtualAddress());
 }
 
 void SceneManager::UpdateTransforms()
