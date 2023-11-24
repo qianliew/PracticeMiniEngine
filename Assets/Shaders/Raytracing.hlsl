@@ -89,7 +89,7 @@ float TraceAORay(float3 origin, float3 direction, in uint currentRayRecursionDep
         | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER; // ~skip closest hit shaders
 
     AORayPayload aoRayPayload = { 0.0f };
-    TraceRay(Scene, flags, 0xFF, 1, 0, 1, rayDesc, aoRayPayload);
+    TraceRay(Scene, flags, 0xFF, RayType::AO, 0, RayType::AO, rayDesc, aoRayPayload);
 
     return aoRayPayload.aoVal;
 }
@@ -126,7 +126,7 @@ void RaygenShader()
     // uint flags = RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH;
     uint flags = RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
 
-    TraceRay(Scene, flags, 0xFF, 0, 0, 0, ray, payload);
+    TraceRay(Scene, flags, 0xFF, RayType::Radiance, 0, RayType::Radiance, ray, payload);
 
     // Write the raytraced color to the output texture.
     RenderTarget[DispatchRaysIndex().xy] = payload.color;

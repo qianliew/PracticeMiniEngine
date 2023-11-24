@@ -8,4 +8,14 @@ namespace RaytracingConstants
 	static const UINT MaxRayRecursiveDepth = 2;
 }
 
+namespace RayType
+{
+	enum Enum
+	{
+		Radiance = 0,
+		AO = 1,
+		Count = 2,
+	};
+};
+
 #endif // !SHARED_CONSTANTS_H

@@ -96,16 +96,16 @@ void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
 void RayTracingPass::BuildShaderTables()
 {
     void* rayGenShaderIdentifier[1];
-    void* missShaderIdentifier[2];
-    void* hitGroupShaderIdentifier[2];
+    void* missShaderIdentifier[RayType::Count];
+    void* hitGroupShaderIdentifier[RayType::Count];
 
     auto GetShaderIdentifiers = [&](auto* stateObjectProperties)
     {
         rayGenShaderIdentifier[0] = stateObjectProperties->GetShaderIdentifier(kRaygenShaderName);
-        missShaderIdentifier[0] = stateObjectProperties->GetShaderIdentifier(kMissShaderName);
-        missShaderIdentifier[1] = stateObjectProperties->GetShaderIdentifier(kAOMissShaderName);
-        hitGroupShaderIdentifier[0] = stateObjectProperties->GetShaderIdentifier(kHitGroupName);
-        hitGroupShaderIdentifier[1] = stateObjectProperties->GetShaderIdentifier(kAOHitGroupName);
+        missShaderIdentifier[RayType::Radiance] = stateObjectProperties->GetShaderIdentifier(kMissShaderName);
+        missShaderIdentifier[RayType::AO] = stateObjectProperties->GetShaderIdentifier(kAOMissShaderName);
+        hitGroupShaderIdentifier[RayType::Radiance] = stateObjectProperties->GetShaderIdentifier(kHitGroupName);
+        hitGroupShaderIdentifier[RayType::AO] = stateObjectProperties->GetShaderIdentifier(kAOHitGroupName);
     };
 
     // Get shader identifiers.
@@ -129,23 +129,27 @@ void RayTracingPass::BuildShaderTables()
 
     // Miss shader table
     {
-        UINT numShaderRecords = 2;
+        UINT numShaderRecords = RayType::Count;
         UINT shaderRecordSize = shaderIdentifierSize;
         ShaderTable missShaderTable(numShaderRecords, shaderRecordSize);
         missShaderTable.CreateBuffer(pDevice->GetDevice().Get());
-        missShaderTable.PushBack(ShaderRecord(missShaderIdentifier[0], shaderIdentifierSize));
-        missShaderTable.PushBack(ShaderRecord(missShaderIdentifier[1], shaderIdentifierSize));
+        for (UINT i = 0; i < RayType::Count; i++)
+        {
+            missShaderTable.PushBack(ShaderRecord(missShaderIdentifier[i], shaderIdentifierSize));
+        }
         pMissShaderTable = missShaderTable.ResourceLocation.Resource;
     }
 
     // Hit group shader table
     {
-        UINT numShaderRecords = 2;
+        UINT numShaderRecords = RayType::Count;
         UINT shaderRecordSize = shaderIdentifierSize;
         ShaderTable hitGroupShaderTable(numShaderRecords, shaderRecordSize);
         hitGroupShaderTable.CreateBuffer(pDevice->GetDevice().Get());
-        hitGroupShaderTable.PushBack(ShaderRecord(hitGroupShaderIdentifier[0], shaderIdentifierSize));
-        hitGroupShaderTable.PushBack(ShaderRecord(hitGroupShaderIdentifier[1], shaderIdentifierSize));
+        for (UINT i = 0; i < RayType::Count; i++)
+        {
+            hitGroupShaderTable.PushBack(ShaderRecord(hitGroupShaderIdentifier[i], shaderIdentifierSize));
+        }
         pHitGroupShaderTable = hitGroupShaderTable.ResourceLocation.Resource;
     }
 }
@@ -157,10 +161,10 @@ void RayTracingPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
         // Since each shader table has only one shader record, the stride is same as the size.
         dispatchDesc->HitGroupTable.StartAddress = pHitGroupShaderTable->GetGPUVirtualAddress();
         dispatchDesc->HitGroupTable.SizeInBytes = pHitGroupShaderTable->GetDesc().Width;
-        dispatchDesc->HitGroupTable.StrideInBytes = dispatchDesc->HitGroupTable.SizeInBytes / 2;
+        dispatchDesc->HitGroupTable.StrideInBytes = dispatchDesc->HitGroupTable.SizeInBytes / RayType::Count;
         dispatchDesc->MissShaderTable.StartAddress = pMissShaderTable->GetGPUVirtualAddress();
         dispatchDesc->MissShaderTable.SizeInBytes = pMissShaderTable->GetDesc().Width;
-        dispatchDesc->MissShaderTable.StrideInBytes = dispatchDesc->MissShaderTable.SizeInBytes / 2;
+        dispatchDesc->MissShaderTable.StrideInBytes = dispatchDesc->MissShaderTable.SizeInBytes / RayType::Count;
         dispatchDesc->RayGenerationShaderRecord.StartAddress = pRayGenShaderTable->GetGPUVirtualAddress();
         dispatchDesc->RayGenerationShaderRecord.SizeInBytes = pRayGenShaderTable->GetDesc().Width;
         dispatchDesc->Width = 1920;
