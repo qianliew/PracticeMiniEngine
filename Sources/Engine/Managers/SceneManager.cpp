@@ -59,8 +59,8 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
         material->LoadTexture();
 
         LoadTextureBufferAndSampler(pCommandList, material->GetTexture());
-        // LoadTextureBufferAndSampler(pCommandList, material->GetMRATexture());
-        // LoadTextureBufferAndSampler(pCommandList, material->GetNormalTexture());
+        LoadTextureBufferAndSampler(pCommandList, material->GetMRATexture());
+        LoadTextureBufferAndSampler(pCommandList, material->GetNormalTexture());
         pMaterialPool[EraseSuffix(materialName)] = material;
     }
 
@@ -333,24 +333,23 @@ void SceneManager::DrawFullScreenMesh(D3D12CommandList*& pCommandList)
 
 void SceneManager::SetTexturesDXR(D3D12CommandList*& pCommandList)
 {
-    for (UINT i = 0; i < pObjects.size(); i++)
-    {
-        pDevice->GetDescriptorHeapManager()->SetComputeViews(
-            pCommandList->GetCommandList(),
-            SHADER_RESOURCE_VIEW_PEROBJECT,
-            (UINT)eDXRRootIndex::ShaderResourceViewTexture,
-            pObjects[i]->GetMaterial()->GetTexture()->GetTextureID());
+    pDevice->GetDescriptorHeapManager()->SetComputeViews(
+        pCommandList->GetCommandList(),
+        SHADER_RESOURCE_VIEW_PEROBJECT,
+        (UINT)eDXRRootIndex::ShaderResourceViewTexture,
+        pObjects[0]->GetMaterial()->GetTexture()->GetTextureID());
 
-        pDevice->GetDescriptorHeapManager()->SetComputeViews(
-            pCommandList->GetCommandList(),
-            SAMPLER,
-            (UINT)eDXRRootIndex::Sampler,
-            pObjects[i]->GetMaterial()->GetTexture()->GetTextureID());
-    }
+    pDevice->GetDescriptorHeapManager()->SetComputeViews(
+        pCommandList->GetCommandList(),
+        SAMPLER,
+        (UINT)eDXRRootIndex::Sampler,
+        pObjects[0]->GetMaterial()->GetTexture()->GetTextureID());
 
-    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
+    pDevice->GetDescriptorHeapManager()->SetComputeViews(
+        pCommandList->GetCommandList(),
+        SHADER_RESOURCE_VIEW_PEROBJECT,
         (UINT)eDXRRootIndex::ShaderResourceViewSkybox,
-        pSkyboxMaterial->GetTexture()->GetTextureBuffer()->GetResource()->GetGPUVirtualAddress());
+        pSkyboxMaterial->GetTexture()->GetTextureID());
 }
 
 void SceneManager::UpdateTransforms()

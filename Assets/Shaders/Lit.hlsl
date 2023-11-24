@@ -14,6 +14,7 @@ cbuffer PerObjectConstants : register(b1)
 Texture2D BaseTexture   : register(t1);
 Texture2D MRATexture    : register(t2);
 Texture2D NormalTexture : register(t3);
+TextureCube SkyboxCube  : register(t4);
 
 SamplerState BaseTextureSampler     : register(s1);
 SamplerState MRATextureSampler      : register(s2);

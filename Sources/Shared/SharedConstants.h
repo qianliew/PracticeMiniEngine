@@ -5,7 +5,7 @@
 
 namespace RaytracingConstants
 {
-	static const UINT MaxRayRecursiveDepth = 3;
+	static const UINT MaxRayRecursiveDepth = 5;
 }
 
 namespace RayType

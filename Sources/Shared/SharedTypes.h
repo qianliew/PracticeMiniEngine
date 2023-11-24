@@ -15,7 +15,7 @@ struct Vertex
 struct RayPayload
 {
     XMFLOAT4 color;
-    XMFLOAT3 origin;
+    XMFLOAT3 direction;
     UINT depth;
     UINT randomSeed;
 };
@@ -28,6 +28,7 @@ struct AORayPayload
 struct GIRayPayload
 {
     XMFLOAT4 color;
+    XMFLOAT3 direction;
     UINT depth;
     UINT randomSeed;
 };
