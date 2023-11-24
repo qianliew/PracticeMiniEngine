@@ -15,6 +15,7 @@ struct Vertex
 struct RayPayload
 {
     XMFLOAT4 color;
+    XMFLOAT3 origin;
     UINT depth;
     UINT randomSeed;
 };

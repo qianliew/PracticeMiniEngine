@@ -58,17 +58,10 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
         LitMaterial* material = new LitMaterial(materialName);
         material->LoadTexture();
 
-        if (isDXR)
-        {
-
-        }
-        else
-        {
-            LoadTextureBufferAndSampler(pCommandList, material->GetTexture());
-            LoadTextureBufferAndSampler(pCommandList, material->GetMRATexture());
-            LoadTextureBufferAndSampler(pCommandList, material->GetNormalTexture());
-            pMaterialPool[EraseSuffix(materialName)] = material;
-        }
+        LoadTextureBufferAndSampler(pCommandList, material->GetTexture());
+        // LoadTextureBufferAndSampler(pCommandList, material->GetMRATexture());
+        // LoadTextureBufferAndSampler(pCommandList, material->GetNormalTexture());
+        pMaterialPool[EraseSuffix(materialName)] = material;
     }
 
     // Parse FBX from the scene file.
@@ -336,6 +329,18 @@ void SceneManager::DrawFullScreenMesh(D3D12CommandList*& pCommandList)
     pCommandList->SetVertexBuffers(0, 1, &pFullScreenMesh->GetMesh()->GetVertexBuffer()->VertexBufferView);
     pCommandList->SetIndexBuffer(&pFullScreenMesh->GetMesh()->GetIndexBuffer()->IndexBufferView);
     pCommandList->DrawIndexedInstanced(pFullScreenMesh->GetMesh()->GetIndicesNum());
+}
+
+void SceneManager::SetTexturesDXR(D3D12CommandList*& pCommandList)
+{
+    for (UINT i = 0; i < pObjects.size(); i++)
+    {
+        pDevice->GetDescriptorHeapManager()->SetComputeViews(
+            pCommandList->GetCommandList(),
+            SHADER_RESOURCE_VIEW_PEROBJECT,
+            DXR_SHADER_RESOURCE_VIEW_TEXTURE,
+            pObjects[i]->GetMaterial()->GetTexture()->GetTextureID());
+    }
 }
 
 void SceneManager::UpdateTransforms()

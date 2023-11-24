@@ -21,6 +21,12 @@ StructuredBuffer<uint16_t> Indices : register(t1);
 StructuredBuffer<Vertex> Vertices : register(t2);
 StructuredBuffer<uint> Offsets : register(t3);
 
+Texture2D BaseTexture0   : register(t4);
+Texture2D BaseTexture1   : register(t5);
+
+SamplerState BaseTextureSampler0     : register(s4);
+SamplerState BaseTextureSampler1     : register(s5);
+
 uint initRand(uint val0, uint val1, uint backoff = 16)
 {
     uint v0 = val0, v1 = val1, s0 = 0;
@@ -71,6 +77,33 @@ float3 HitWorldPosition()
     return WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
 }
 
+float4 TraceRadianceRay(float3 origin, float3 direction, in uint currentRayRecursionDepth)
+{
+    if (currentRayRecursionDepth >= RaytracingConstants::MaxRayRecursiveDepth)
+    {
+        return false;
+    }
+
+    RayDesc rayDesc;
+    rayDesc.Origin = origin;
+    rayDesc.Direction = direction;
+    rayDesc.TMin = 0.001;
+    rayDesc.TMax = 10000.0;
+
+    uint flags = RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
+
+    RayPayload payload = 
+    {
+        float4(0, 0, 0, 0),
+        origin,
+        currentRayRecursionDepth,
+        DispatchRaysIndex().x + DispatchRaysIndex().y * DispatchRaysDimensions().x
+    };
+    TraceRay(Scene, flags, 0xFF, RayType::Radiance, 0, RayType::Radiance, rayDesc, payload);
+
+    return payload.color;
+}
+
 float TraceAORay(float3 origin, float3 direction, in uint currentRayRecursionDepth)
 {
     if (currentRayRecursionDepth >= RaytracingConstants::MaxRayRecursiveDepth)
@@ -110,50 +143,43 @@ void RaygenShader()
     float4 world = mul(ProjectionToWorldMatrix, float4(screenPos, 0, 1));
     world.xyz /= world.w;
 
-    // Trace the ray.
-    // Set the ray's extents.
-    RayDesc ray;
-    ray.Origin = origin;
-    ray.Direction = normalize(world.xyz - origin);
-    // Set TMin to a non-zero small value to avoid aliasing issues due to floating - point errors.
-    // TMin should be kept small to prevent missing geometry at close contact areas.
-    ray.TMin = 0.001;
-    ray.TMax = 10000.0;
+    uint currentRayRecursionDepth = 0;
+    RenderTarget[DispatchRaysIndex().xy] =
+        TraceRadianceRay(origin, normalize(world.xyz - origin), currentRayRecursionDepth);
+}
 
-    uint currentRecursionDepth = 0;
-    RayPayload payload = { float4(0, 0, 0, 0), currentRecursionDepth, xy.x + xy.y * DispatchRaysDimensions().x };
-
-    // uint flags = RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH;
-    uint flags = RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
-
-    TraceRay(Scene, flags, 0xFF, RayType::Radiance, 0, RayType::Radiance, ray, payload);
-
-    // Write the raytraced color to the output texture.
-    RenderTarget[DispatchRaysIndex().xy] = payload.color;
+float4 Lambert(float2 uv)
+{
+    return BaseTexture0.SampleLevel(BaseTextureSampler0, uv, 0.0f);
 }
 
 [shader("closesthit")]
 void ClosestHitShader(inout RayPayload payload, in BuiltInTriangleIntersectionAttributes attr)
 {
-    if (payload.depth > RaytracingConstants::MaxRayRecursiveDepth)
-    {
-        return;
-    }
-
     float3 barycentrics = float3(1 - attr.barycentrics.x - attr.barycentrics.y, attr.barycentrics.x, attr.barycentrics.y);
     uint vertId = 3 * PrimitiveIndex() + Offsets[GeometryIndex()];
+    float3 positionOS = Vertices[vertId + 0].normalOS * barycentrics.x +
+        Vertices[vertId + 1].normalOS * barycentrics.y +
+        Vertices[vertId + 2].normalOS * barycentrics.z;
     float3 normalOS = Vertices[vertId + 0].normalOS * barycentrics.x +
         Vertices[vertId + 1].normalOS * barycentrics.y +
         Vertices[vertId + 2].normalOS * barycentrics.z;
 
+    float2 uv = Vertices[vertId + 0].texCoord * barycentrics.x +
+        Vertices[vertId + 1].texCoord * barycentrics.y +
+        Vertices[vertId + 2].texCoord * barycentrics.z;
+    payload.color = Lambert(uv % 1.0f);
+
     float3 hitPosition = HitWorldPosition();
     const uint rayCount = 30;
+    float aoVal = 0.0f;
     for (uint i = 0; i < rayCount; i++)
     {
         uint seed = initRand(payload.randomSeed * rayCount + i, FrameCount, 16);
         float3 direction = normalize(getCosHemisphereSample(seed, normalOS));
-        payload.color += TraceAORay(hitPosition, direction, payload.depth) / rayCount;
+        aoVal += TraceAORay(hitPosition, direction, payload.depth) / rayCount;
     }
+    payload.color *= aoVal;
 }
 
 [shader("closesthit")]

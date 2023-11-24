@@ -59,6 +59,7 @@ public:
 	void DrawObjects(D3D12CommandList*&);
 	void DrawSkybox(D3D12CommandList*&);
 	void DrawFullScreenMesh(D3D12CommandList*&);
+	void SetTexturesDXR(D3D12CommandList*&);
 
 	void UpdateTransforms();
 	void UpdateCamera();

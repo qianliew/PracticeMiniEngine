@@ -182,7 +182,8 @@ void RayTracingPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
     // Bind the UAV heap for the output.
     pDevice->GetDescriptorHeapManager()->SetComputeViews(
         pCommandList->GetCommandList(),
-        UNORDERED_ACCESS_VIEW, DXR_UNORDERED_ACCESS_VIEW,
+        UNORDERED_ACCESS_VIEW,
+        DXR_UNORDERED_ACCESS_VIEW,
         0);
 
     // Bind the global heaps.
@@ -198,6 +199,7 @@ void RayTracingPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
     pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
         DXR_SHADER_RESOURCE_VIEW_OFFSET,
         pSceneManager->GetStrideBuffer()->GetResource()->GetGPUVirtualAddress());
+    pSceneManager->SetTexturesDXR(pCommandList);
 
     // Dispatch rays.    
     D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};

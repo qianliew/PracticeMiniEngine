@@ -7,7 +7,7 @@ UINT MiniEngine::sFrameCount = 0;
 
 MiniEngine::MiniEngine(UINT width, UINT height, std::wstring name) :
     Window(width, height, name),
-    isDXR(FALSE),
+    isDXR(TRUE),
     frameIndex(0)
 {
 
