@@ -28,9 +28,12 @@ SceneManager::~SceneManager()
     // delete pFullScreenMesh;
     delete pCamera;
 
-    delete pVertexBuffer;
-    delete pIndexBuffer;
-    delete pOffsetBuffer;
+    if (isDXR)
+    {
+        delete pVertexBuffer;
+        delete pIndexBuffer;
+        delete pOffsetBuffer;
+    }
 }
 
 void SceneManager::InitFBXImporter()
