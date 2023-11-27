@@ -181,22 +181,7 @@ void RayTracingPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
         commandList->DispatchRays(dispatchDesc);
     };
 
-    // Bind the heap of TLAS.
-    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
-        (UINT)eDXRRootIndex::ShaderResourceViewGlobal,
-        pSceneManager->GetTLAS()->GetGPUVirtualAddress());
-
-    // Bind the global heaps.
-    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
-        (UINT)eDXRRootIndex::ShaderResourceViewIndex,
-        pSceneManager->GetIndexBuffer()->GetResource()->GetGPUVirtualAddress());
-    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
-        (UINT)eDXRRootIndex::ShaderResourceViewVertex,
-        pSceneManager->GetVertexBuffer()->GetResource()->GetGPUVirtualAddress());
-    pCommandList->GetCommandList()->SetComputeRootShaderResourceView(
-        (UINT)eDXRRootIndex::ShaderResourceViewOffset,
-        pSceneManager->GetStrideBuffer()->GetResource()->GetGPUVirtualAddress());
-    pSceneManager->SetTexturesDXR(pCommandList);
+    pSceneManager->SetDXRResources(pCommandList);
 
     pCommandList->SetComputeRootConstantBufferView(
         (UINT)eDXRRootIndex::ConstantBufferViewGlobal,

@@ -59,7 +59,7 @@ public:
 	void DrawObjects(D3D12CommandList*&);
 	void DrawSkybox(D3D12CommandList*&);
 	void DrawFullScreenMesh(D3D12CommandList*&);
-	void SetTexturesDXR(D3D12CommandList*&);
+	void SetDXRResources(D3D12CommandList*&);
 
 	void UpdateTransforms();
 	void UpdateCamera();
@@ -69,9 +69,4 @@ public:
 	inline const std::vector<Model*>& GetObjects() const { return pObjects; }
 	inline Camera* GetCamera() const { return pCamera; }
 	inline Model* GetSkybox() const { return pSkyboxMesh; }
-
-	inline ComPtr<ID3D12Resource>& GetTLAS() { return pTopLevelAccelerationStructure; }
-	inline D3D12ShaderResourceBuffer* GetIndexBuffer() { return pIndexBuffer; }
-	inline D3D12ShaderResourceBuffer* GetVertexBuffer() { return pVertexBuffer; }
-	inline D3D12ShaderResourceBuffer* GetStrideBuffer() { return pOffsetBuffer; }
 };

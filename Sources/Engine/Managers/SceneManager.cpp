@@ -331,8 +331,25 @@ void SceneManager::DrawFullScreenMesh(D3D12CommandList*& pCommandList)
     pCommandList->DrawIndexedInstanced(pFullScreenMesh->GetMesh()->GetIndicesNum());
 }
 
-void SceneManager::SetTexturesDXR(D3D12CommandList*& pCommandList)
+void SceneManager::SetDXRResources(D3D12CommandList*& pCommandList)
 {
+    // Bind the heap of TLAS.
+    pCommandList->SetComputeRootShaderResourceView(
+        (UINT)eDXRRootIndex::ShaderResourceViewGlobal,
+        pTopLevelAccelerationStructure->GetGPUVirtualAddress());
+
+    // Bind the global heaps.
+    pCommandList->SetComputeRootShaderResourceView(
+        (UINT)eDXRRootIndex::ShaderResourceViewIndex,
+        pIndexBuffer->GetResource()->GetGPUVirtualAddress());
+    pCommandList->SetComputeRootShaderResourceView(
+        (UINT)eDXRRootIndex::ShaderResourceViewVertex,
+        pVertexBuffer->GetResource()->GetGPUVirtualAddress());
+    pCommandList->SetComputeRootShaderResourceView(
+        (UINT)eDXRRootIndex::ShaderResourceViewOffset,
+        pOffsetBuffer->GetResource()->GetGPUVirtualAddress());
+
+    // Bind textures.
     pDevice->GetDescriptorHeapManager()->SetComputeViews(
         pCommandList->GetCommandList(),
         SHADER_RESOURCE_VIEW_PEROBJECT,

@@ -207,7 +207,7 @@ void ClosestHitShader(inout RayPayload payload, in BuiltInTriangleIntersectionAt
     payload.color = Lambert(normalOS, lightDirWS, uv % 1.0f);
 
     // Calculate GI.
-    const uint GIRayCount = 50;
+    const uint GIRayCount = 10;
     float3 gi = 0.0f;
     for (uint i = 0; i < GIRayCount; i++)
     {
@@ -218,7 +218,7 @@ void ClosestHitShader(inout RayPayload payload, in BuiltInTriangleIntersectionAt
     payload.color.rgb += gi / 2;
 
     // Calculate AO.
-    const uint aoRayCount = 20;
+    const uint aoRayCount = 10;
     float aoVal = 0.0f;
     for (uint i = 0; i < aoRayCount; i++)
     {
