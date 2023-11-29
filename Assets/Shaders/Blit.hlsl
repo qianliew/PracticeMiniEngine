@@ -1,4 +1,13 @@
 
+cbuffer GlobalConstants : register(b0)
+{
+    float4x4 WorldToProjectionMatrix;
+    float4x4 ProjectionToWorldMatrix;
+    float4x4 IdentityProjectionMatrix;
+    float3 CameraPositionWS;
+    uint FrameCount;
+};
+
 Texture2D SourceTexture : register(t0);
 SamplerState SourceTextureSampler : register(s0);
 
@@ -18,10 +27,7 @@ PSInput VSMain(VSInput input)
 {
     PSInput result;
 
-    input.positionOS /= 100;
-    input.positionOS.z = 0;
-    input.positionOS.w = 1;
-    result.positionCS = input.positionOS;
+    result.positionCS = mul(IdentityProjectionMatrix, input.positionOS);
     result.texCoord = input.texCoord;
 
     return result;

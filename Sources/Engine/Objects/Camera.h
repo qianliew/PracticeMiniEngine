@@ -14,6 +14,7 @@ struct CameraConstant
 {
     XMFLOAT4X4 WorldToProjectionMatrix;
     XMFLOAT4X4 ProjectionToWorldMatrix;
+    XMFLOAT4X4 IdentityProjectionMatrix;
     XMFLOAT3 CameraWorldPosition;
     UINT FrameCount;
 };

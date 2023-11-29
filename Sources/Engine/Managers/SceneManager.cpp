@@ -226,8 +226,8 @@ void SceneManager::LoadScene(D3D12CommandList*& pCommandList)
     ParseScene(pCommandList);
 
     // Create static data.
-    pFullScreenMesh = new Model(objectID++, L"plane.fbx");
-    pFullScreenMesh->LoadModel(pFBXImporter);
+    pFullScreenMesh = new Model(objectID++, L"");
+    pFullScreenMesh->CreatePlane();
     LoadObjectVertexBufferAndIndexBuffer(pCommandList, pFullScreenMesh);
 
     // Create assets of the skybox.
