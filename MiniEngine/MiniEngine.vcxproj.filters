@@ -55,6 +55,9 @@
     <Filter Include="Shared">
       <UniqueIdentifier>{6afc072a-5e8f-417f-b87f-9f2e24299052}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Assets\Shaders\Library">
+      <UniqueIdentifier>{68753798-e197-4aa0-b5a8-8760c26244d2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Sources\Engine\Objects\D3D12IndexBuffer.h">
@@ -281,9 +284,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\Assets\Shaders\Blit.hlsl">
-      <Filter>Assets\Shaders</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\Assets\Shaders\Unlit.hlsl">
       <Filter>Assets\Shaders</Filter>
     </CustomBuild>
@@ -293,10 +293,18 @@
     <CustomBuild Include="..\Assets\Shaders\Skybox.hlsl">
       <Filter>Assets\Shaders</Filter>
     </CustomBuild>
+    <CustomBuild Include="..\Assets\Shaders\Blit.hlsl">
+      <Filter>Assets\Shaders</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Assets\Shaders\Raytracing.hlsl">
       <Filter>Assets\Shaders</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Assets\Shaders\Library\Common.hlsli">
+      <Filter>Assets\Shaders\Library</Filter>
+    </None>
   </ItemGroup>
 </Project>

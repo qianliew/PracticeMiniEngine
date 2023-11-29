@@ -1,12 +1,7 @@
+#ifndef BLIT_HLSL
+#define BLIT_HLSL
 
-cbuffer GlobalConstants : register(b0)
-{
-    float4x4 WorldToProjectionMatrix;
-    float4x4 ProjectionToWorldMatrix;
-    float4x4 IdentityProjectionMatrix;
-    float3 CameraPositionWS;
-    uint FrameCount;
-};
+#include "Library/Common.hlsli"
 
 Texture2D SourceTexture : register(t0);
 SamplerState SourceTextureSampler : register(s0);
@@ -37,3 +32,5 @@ float4 PSMain(PSInput input) : SV_TARGET
 {
     return SourceTexture.Sample(SourceTextureSampler, input.texCoord);
 }
+
+#endif

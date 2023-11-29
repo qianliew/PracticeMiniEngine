@@ -2,6 +2,7 @@
 #define RAYTRACING_HLSL
 
 #define HLSL
+
 #include "../../Sources/Shared/SharedPrimitives.h"
 #include "../../Sources/Shared/SharedTypes.h"
 #include "../../Sources/Shared/SharedConstants.h"

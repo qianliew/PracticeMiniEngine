@@ -1,6 +1,8 @@
 #pragma once
 #include "SceneManager.h"
 
+#define D3D_COMPILE_STANDARD_FILE_INCLUDE ((ID3DInclude*)(UINT_PTR)1)
+
 class AbstractRenderPass
 {
 protected:

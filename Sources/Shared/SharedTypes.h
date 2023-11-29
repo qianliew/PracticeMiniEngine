@@ -3,6 +3,15 @@
 #ifndef SHARED_TYPES_H
 #define SHARED_TYPES_H
 
+struct CameraConstant
+{
+    XMMATRIX WorldToProjectionMatrix;
+    XMMATRIX ProjectionToWorldMatrix;
+    XMMATRIX IdentityProjectionMatrix;
+    XMFLOAT3 CameraWorldPosition;
+    UINT FrameCount;
+};
+
 struct Vertex
 {
     XMFLOAT3 positionOS;

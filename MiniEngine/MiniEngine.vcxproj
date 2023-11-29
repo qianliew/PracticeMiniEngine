@@ -275,6 +275,9 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/enable-16bit-types %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Assets\Shaders\Library\Common.hlsli" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

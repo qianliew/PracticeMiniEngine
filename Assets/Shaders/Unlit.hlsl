@@ -1,8 +1,7 @@
+#ifndef UNLIT_HLSL
+#define UNLIT_HLSL
 
-cbuffer GlobalConstants : register(b0)
-{
-    float4x4 WorldToProjectionMatrix;
-};
+#include "Library/Common.hlsli"
 
 cbuffer PerObjectConstants : register(b1)
 {
@@ -48,3 +47,5 @@ float4 PSMain(PSInput input) : SV_TARGET
 {
     return t1.Sample(s1, input.texCoord);
 }
+
+#endif

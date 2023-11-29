@@ -13,7 +13,7 @@ Camera::Camera(UINT id, FLOAT width, FLOAT height) :
     pViewport = new CD3DX12_VIEWPORT(0.0f, 0.0f, width, height);
     pScissorRect = new CD3DX12_RECT(0.0f, 0.0f, static_cast<LONG>(width), static_cast<LONG>(height));
     worldPosition = DefaultCameraWorldPosition;
-    XMStoreFloat4x4(&cameraConstant.IdentityProjectionMatrix, XMMatrixIdentity());
+    cameraConstant.IdentityProjectionMatrix = XMMatrixIdentity();
 }
 
 Camera::~Camera()
@@ -51,9 +51,9 @@ void Camera::SetScissorRect(const LONG width, const LONG height)
 
 void Camera::UpdateCameraConstant()
 {
-    XMStoreFloat4x4(&cameraConstant.WorldToProjectionMatrix, GetVPMatrix());
+    cameraConstant.WorldToProjectionMatrix = GetVPMatrix();
     XMStoreFloat3(&cameraConstant.CameraWorldPosition, worldPosition);
-    XMStoreFloat4x4(&cameraConstant.ProjectionToWorldMatrix, XMMatrixInverse(nullptr, GetVPMatrix()));
+    cameraConstant.ProjectionToWorldMatrix = XMMatrixInverse(nullptr, GetVPMatrix());
 }
 
 const XMMATRIX Camera::GetVPMatrix()

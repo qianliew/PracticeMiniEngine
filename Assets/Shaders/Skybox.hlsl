@@ -1,9 +1,7 @@
+#ifndef SKYBOX_HLSL
+#define SKYBOX_HLSL
 
-cbuffer GlobalConstants : register(b0)
-{
-    float4x4 WorldToProjectionMatrix;
-    float3 CameraPositionWS;
-};
+#include "Library/Common.hlsli"
 
 cbuffer PerObjectConstants : register(b1)
 {
@@ -40,3 +38,5 @@ float4 PSMain(PSInput input) : SV_TARGET
 {
     return SkyboxCube.Sample(SkyboxSampler, input.texCoord);
 }
+
+#endif

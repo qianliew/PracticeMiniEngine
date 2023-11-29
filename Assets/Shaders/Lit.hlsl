@@ -1,11 +1,7 @@
+#ifndef LIT_HLSL
+#define LIT_HLSL
 
-cbuffer GlobalConstants : register(b0)
-{
-    float4x4 WorldToProjectionMatrix;
-    float4x4 ProjectionToWorldMatrix;
-    float4x4 IdentityProjectionMatrix;
-    float3 CameraPositionWS;
-};
+#include "Library/Common.hlsli"
 
 cbuffer PerObjectConstants : register(b1)
 {
@@ -106,3 +102,5 @@ float4 PSMain(PSInput input) : SV_TARGET
 
     return float4((diffuse * diffuseTerm + specular * specularTerm) * clampedNdotL, 1.0f);
 }
+
+#endif
