@@ -22,19 +22,19 @@ void LitMaterial::LoadTexture()
 	// Load the diffuse texture.
 	UINT id = SceneManager::sTextureID++;
 	pTexture = new D3D12Texture(id);
-	pTexture->LoadTexture(texturePath, 3);
+	pTexture->LoadTexture(texturePath, 1);
 	pTexture->CreateTexture(D3D12TextureType::ShaderResource);
 
 	// Load the MRA texture.
 	id = SceneManager::sTextureID++;
 	pMRATexture = new D3D12Texture(id);
-	pMRATexture->LoadTexture(GetMRATexturePath(texturePath), 3);
+	pMRATexture->LoadTexture(GetMRATexturePath(texturePath), 1);
 	pMRATexture->CreateTexture(D3D12TextureType::ShaderResource);
 
 	// Load the normal texture.
 	id = SceneManager::sTextureID++;
 	pNormalTexture = new D3D12Texture(id);
-	pNormalTexture->LoadTexture(GetNormalTexturePath(texturePath), 3);
+	pNormalTexture->LoadTexture(GetNormalTexturePath(texturePath), 1);
 	pNormalTexture->CreateTexture(D3D12TextureType::ShaderResource);
 }
 

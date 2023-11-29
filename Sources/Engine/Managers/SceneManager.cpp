@@ -306,8 +306,6 @@ void SceneManager::DrawObjects(D3D12CommandList*& pCommandList)
 
 void SceneManager::DrawSkybox(D3D12CommandList*& pCommandList)
 {
-    pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
     // Set views for the skybox.
     UINT id = pSkyboxMesh->GetObjectID();
     pCommandList->SetRootConstantBufferView(CONSTANT_BUFFER_VIEW_PEROBJECT,
@@ -316,6 +314,8 @@ void SceneManager::DrawSkybox(D3D12CommandList*& pCommandList)
         pSkyboxMaterial->GetTexture()->GetTextureID());
     pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList(),
         pSkyboxMaterial->GetTexture()->GetTextureID());
+
+    pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     pCommandList->SetVertexBuffers(0, 1, &pSkyboxMesh->GetMesh()->GetVertexBuffer()->VertexBufferView);
     pCommandList->SetIndexBuffer(&pSkyboxMesh->GetMesh()->GetIndexBuffer()->IndexBufferView);

@@ -27,7 +27,6 @@ PSInput VSMain(VSInput input)
 {
     PSInput result;
 
-    input.positionOS.w = 1;
     result.positionCS = mul(WorldToProjectionMatrix, mul(ObjectToWorldMatrix, input.positionOS));
     result.texCoord = input.positionOS.xyz;
 
