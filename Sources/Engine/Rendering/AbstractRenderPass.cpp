@@ -3,9 +3,11 @@
 
 AbstractRenderPass::AbstractRenderPass(
     shared_ptr<D3D12Device>& device,
-    shared_ptr<SceneManager>& sceneManager) :
+    shared_ptr<SceneManager>& sceneManager,
+    shared_ptr<ViewManager>& viewManager) :
     pDevice(device),
-    pSceneManager(sceneManager)
+    pSceneManager(sceneManager),
+    pViewManager(viewManager)
 {
 
 }

@@ -3,8 +3,9 @@
 
 BlitPass::BlitPass(
     shared_ptr<D3D12Device>& device,
-    shared_ptr<SceneManager>& sceneManager) :
-    AbstractRenderPass(device, sceneManager)
+    shared_ptr<SceneManager>& sceneManager,
+    shared_ptr<ViewManager>& viewManager) :
+    AbstractRenderPass(device, sceneManager, viewManager)
 {
 
 }
@@ -51,7 +52,7 @@ void BlitPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSignature
     ThrowIfFailed(pDevice->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pPipelineState.GetAddressOf())));
 }
 
-void BlitPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
+void BlitPass::Execute(D3D12CommandList*& pCommandList)
 {
     pCommandList->SetPipelineState(pPipelineState.Get());
 
@@ -62,7 +63,8 @@ void BlitPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
     pCommandList->SetViewports(pSceneManager->GetCamera()->GetViewport());
     pCommandList->SetScissorRects(pSceneManager->GetCamera()->GetScissorRect());
 
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW, frameIndex);
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW,
+        pViewManager->GetFrameIndex());
     pCommandList->SetRenderTargets(1, &rtvHandle, nullptr);
 
     const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };

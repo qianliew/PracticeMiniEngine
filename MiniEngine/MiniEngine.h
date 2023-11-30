@@ -33,7 +33,6 @@ private:
     HANDLE fenceEvent;
     ComPtr<ID3D12Fence> fence;
     UINT64 fenceValue;
-    UINT frameIndex;
 
     // Scene objects
     shared_ptr<SceneManager> pSceneManager;

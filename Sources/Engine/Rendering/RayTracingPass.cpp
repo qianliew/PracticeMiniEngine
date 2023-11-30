@@ -4,9 +4,11 @@
 
 RayTracingPass::RayTracingPass(
     shared_ptr<D3D12Device>& device,
-    shared_ptr<SceneManager>& sceneManager) :
+    shared_ptr<SceneManager>& sceneManager,
+    shared_ptr<ViewManager>& viewManager) :
     pDevice(device),
-    pSceneManager(sceneManager)
+    pSceneManager(sceneManager),
+    pViewManager(viewManager)
 {
 
 }
@@ -161,7 +163,7 @@ void RayTracingPass::BuildShaderTables()
     }
 }
 
-void RayTracingPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
+void RayTracingPass::Execute(D3D12CommandList*& pCommandList)
 {
     auto DispatchRays = [&](auto* commandList, auto* stateObject, auto* dispatchDesc)
     {

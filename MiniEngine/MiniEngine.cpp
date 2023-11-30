@@ -7,8 +7,7 @@ UINT MiniEngine::sFrameCount = 0;
 
 MiniEngine::MiniEngine(UINT width, UINT height, std::wstring name) :
     Window(width, height, name),
-    isDXR(FALSE),
-    frameIndex(0)
+    isDXR(FALSE)
 {
 
 }
@@ -40,7 +39,6 @@ void MiniEngine::LoadPipeline()
     {
         pViewManager->CreateDXRUAV();
     }
-    frameIndex = pViewManager->GetSwapChain()->GetCurrentBackBufferIndex();
 
     // Create the command list.
     pCommandList = new D3D12CommandList(pDevice);
@@ -83,22 +81,22 @@ void MiniEngine::LoadAssets()
     pCommandList->Reset(pDevice->GetCommandAllocator());
     if (isDXR)
     {
-        pRayTracingPass = make_shared<RayTracingPass>(pDevice, pSceneManager);
+        pRayTracingPass = make_shared<RayTracingPass>(pDevice, pSceneManager, pViewManager);
         pRayTracingPass->Setup(pCommandList, pRootSignature->GetRootSignature());
         pRayTracingPass->BuildShaderTables();
     }
     else
     {
-        pDrawObjectPass = make_shared<DrawObjectsPass>(pDevice, pSceneManager);
+        pDrawObjectPass = make_shared<DrawObjectsPass>(pDevice, pSceneManager, pViewManager);
         pDrawObjectPass->Setup(pCommandList, pRootSignature->GetRootSignature());
 
-        pDrawSkyboxPass = make_shared<DrawSkyboxPass>(pDevice, pSceneManager);
+        pDrawSkyboxPass = make_shared<DrawSkyboxPass>(pDevice, pSceneManager, pViewManager);
         pDrawSkyboxPass->Setup(pCommandList, pRootSignature->GetRootSignature());
 
-        pTemporalAAPass = make_shared<TemporalAAPass>(pDevice, pSceneManager);
+        pTemporalAAPass = make_shared<TemporalAAPass>(pDevice, pSceneManager, pViewManager);
         pTemporalAAPass->Setup(pCommandList, pRootSignature->GetRootSignature());
 
-        pBlitPass = make_shared<BlitPass>(pDevice, pSceneManager);
+        pBlitPass = make_shared<BlitPass>(pDevice, pSceneManager, pViewManager);
         pBlitPass->Setup(pCommandList, pRootSignature->GetRootSignature());
     }
 
@@ -189,7 +187,7 @@ void MiniEngine::PopulateCommandList()
     pCommandList->Reset(pDevice->GetCommandAllocator());
 
     // Indicate that the back buffer will be used as a render target.
-    pCommandList->AddTransitionResourceBarriers(pViewManager->GetBackBufferAt(frameIndex),
+    pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBackBuffer(),
         D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     pCommandList->FlushResourceBarriers();
 
@@ -198,17 +196,17 @@ void MiniEngine::PopulateCommandList()
         pCommandList->SetComputeRootSignature(pRootSignature->GetRootSignature());
 
         // Execute the ray tracing path.
-        pRayTracingPass->Execute(pCommandList, frameIndex);
+        pRayTracingPass->Execute(pCommandList);
 
-        pCommandList->AddTransitionResourceBarriers(pViewManager->GetBackBufferAt(frameIndex),
+        pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBackBuffer(),
             D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
         pCommandList->AddTransitionResourceBarriers(pViewManager->GetRayTracingOutput(),
             D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
         pCommandList->FlushResourceBarriers();
 
-        pCommandList->CopyResource(pViewManager->GetBackBufferAt(frameIndex), pViewManager->GetRayTracingOutput());
+        pCommandList->CopyResource(pViewManager->GetCurrentBackBuffer(), pViewManager->GetRayTracingOutput());
 
-        pCommandList->AddTransitionResourceBarriers(pViewManager->GetBackBufferAt(frameIndex),
+        pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBackBuffer(),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
         pCommandList->AddTransitionResourceBarriers(pViewManager->GetRayTracingOutput(),
             D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
@@ -218,16 +216,16 @@ void MiniEngine::PopulateCommandList()
     {
         pCommandList->SetRootSignature(pRootSignature->GetRootSignature());
 
-        pDrawObjectPass->Execute(pCommandList, frameIndex);
-        pDrawSkyboxPass->Execute(pCommandList, frameIndex);
+        pDrawObjectPass->Execute(pCommandList);
+        pDrawSkyboxPass->Execute(pCommandList);
         // pTemporalAAPass->Execute(pCommandList, frameIndex);
 
         pViewManager->EmplaceRenderTarget(pCommandList, D3D12TextureType::ShaderResource);
-        pBlitPass->Execute(pCommandList, frameIndex);
+        pBlitPass->Execute(pCommandList);
         pViewManager->EmplaceRenderTarget(pCommandList, D3D12TextureType::RenderTarget);
 
         // Indicate that the back buffer will now be used to present.
-        pCommandList->AddTransitionResourceBarriers(pViewManager->GetBackBufferAt(frameIndex),
+        pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBackBuffer(),
             D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
         pCommandList->FlushResourceBarriers();
     }
@@ -252,7 +250,8 @@ void MiniEngine::WaitForPreviousFrame()
         WaitForSingleObject(fenceEvent, INFINITE);
     }
 
-    frameIndex = pViewManager->GetSwapChain()->GetCurrentBackBufferIndex();
+    // Update the frame index.
+    pViewManager->UpdateFrameIndex();
     sFrameCount += 1;
 
     // Release upload buffers from last frame.

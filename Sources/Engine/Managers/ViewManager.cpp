@@ -33,6 +33,9 @@ ViewManager::ViewManager(std::shared_ptr<D3D12Device>& device, UINT inWidth, UIN
     ThrowIfFailed(pDevice->GetFactory()->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
     ThrowIfFailed(swapChain1.As(&pSwapChain));
 
+    // Setup the frame index.
+    frameIndex = pSwapChain->GetCurrentBackBufferIndex();
+
     // Create frame resources.
     // Create a RTV for each frame.
     for (UINT n = 0; n < FRAME_COUNT; n++)

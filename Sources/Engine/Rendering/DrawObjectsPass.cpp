@@ -3,8 +3,9 @@
 
 DrawObjectsPass::DrawObjectsPass(
     shared_ptr<D3D12Device>& device,
-    shared_ptr<SceneManager>& sceneManager) :
-    AbstractRenderPass(device, sceneManager)
+    shared_ptr<SceneManager>& sceneManager,
+    shared_ptr<ViewManager>& viewManager) :
+    AbstractRenderPass(device, sceneManager, viewManager)
 {
 
 }
@@ -55,7 +56,7 @@ void DrawObjectsPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSi
     ThrowIfFailed(pDevice->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pPipelineState.GetAddressOf())));
 }
 
-void DrawObjectsPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
+void DrawObjectsPass::Execute(D3D12CommandList*& pCommandList)
 {
     // Set the pipeline state.
     pCommandList->SetPipelineState(pPipelineState.Get());
