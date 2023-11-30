@@ -45,22 +45,8 @@ ViewManager::ViewManager(std::shared_ptr<D3D12Device>& device, UINT inWidth, UIN
             pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW, n));
     }
 
-    // Create a render target buffer.
-    pRenderTarget = new D3D12Texture(globalSRVID++, rtvID++, width, height);
-    pRenderTarget->CreateTexture(D3D12TextureType::RenderTarget);
-
-    D3D12_CLEAR_VALUE renderTargetClearValue = {};
-    renderTargetClearValue.Color[0] = 0.0f;
-    renderTargetClearValue.Color[1] = 0.2f;
-    renderTargetClearValue.Color[2] = 0.4f;
-    renderTargetClearValue.Color[3] = 1.0f;
-    renderTargetClearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(
-        pRenderTarget->GetTextureBuffer(),
-        D3D12_RESOURCE_STATE_RENDER_TARGET,
-        &renderTargetClearValue);
-    pRenderTarget->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW, 2));
+    // Create a render target for the color buffer.
+    colorHandle = CreateRenderTarget();
 
     // Create a depth stencil buffer.
     pDepthStencil = new D3D12Texture(-1, -1, width, height);
@@ -81,8 +67,36 @@ ViewManager::ViewManager(std::shared_ptr<D3D12Device>& device, UINT inWidth, UIN
 
 ViewManager::~ViewManager()
 {
-    delete pRenderTarget;
+    for (auto it = pRenderTargets.begin(); it != pRenderTargets.end(); it++)
+    {
+        delete it->second;
+    }
     delete pDepthStencil;
+}
+
+UINT ViewManager::CreateRenderTarget()
+{
+    D3D12Texture* pRenderTarget = new D3D12Texture(globalSRVID++, rtvID++, width, height);
+    pRenderTarget->CreateTexture(D3D12TextureType::RenderTarget);
+
+    D3D12_CLEAR_VALUE renderTargetClearValue = {};
+    renderTargetClearValue.Color[0] = 0.0f;
+    renderTargetClearValue.Color[1] = 0.0f;
+    renderTargetClearValue.Color[2] = 0.0f;
+    renderTargetClearValue.Color[3] = 1.0f;
+    renderTargetClearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(
+        pRenderTarget->GetTextureBuffer(),
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        &renderTargetClearValue);
+
+    const UINT rtid = pRenderTarget->GetRenderTargetID();
+    pRenderTarget->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
+        pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW, rtid));
+
+    pRenderTargets[rtid] = pRenderTarget;
+
+    return rtid;
 }
 
 void ViewManager::CreateDXRUAV()
@@ -99,16 +113,20 @@ void ViewManager::CreateDXRUAV()
         pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, 0));
 }
 
-void ViewManager::EmplaceRenderTarget(D3D12CommandList*& pCommandList, D3D12TextureType type)
+void ViewManager::EmplaceRenderTarget(D3D12CommandList*& pCommandList, UINT handleID, D3D12TextureType type)
 {
-    D3D12_RESOURCE_STATES stateBefore = GetResourceState(pRenderTarget->GetType());
-    UINT heapMapIndex = type == D3D12TextureType::ShaderResource ? SHADER_RESOURCE_VIEW_GLOBAL : RENDER_TARGET_VIEW;
-    UINT offset = type == D3D12TextureType::ShaderResource ? pRenderTarget->GetTextureID() : pRenderTarget->GetRenderTargetID();
+    D3D12_RESOURCE_STATES stateBefore = GetResourceState(pRenderTargets[handleID]->GetType());
+    UINT heapMapIndex = type == D3D12TextureType::ShaderResource ? SHADER_RESOURCE_VIEW_GLOBAL
+        : RENDER_TARGET_VIEW;
+    UINT offset = type == D3D12TextureType::ShaderResource ? pRenderTargets[handleID]->GetTextureID() : handleID;
 
-    pRenderTarget->CreateTexture(type);
-    pRenderTarget->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
+    pRenderTargets[handleID]->CreateTexture(type);
+    pRenderTargets[handleID]->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(heapMapIndex, offset));
-    pCommandList->AddTransitionResourceBarriers(pRenderTarget->GetTextureBuffer()->GetResource(), stateBefore, GetResourceState(type));
+    pCommandList->AddTransitionResourceBarriers(
+        pRenderTargets[handleID]->GetTextureBuffer()->GetResource(),
+        stateBefore,
+        GetResourceState(type));
     pCommandList->FlushResourceBarriers();
 }
 

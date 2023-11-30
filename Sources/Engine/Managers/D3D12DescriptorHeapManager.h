@@ -9,8 +9,6 @@
 #define RENDER_TARGET_VIEW 6
 #define DEPTH_STENCIL_VIEW 7
 
-#define FRAME_COUNT 2
-
 class D3D12DescriptorHeapManager
 {
 private:

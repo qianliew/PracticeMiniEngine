@@ -219,10 +219,7 @@ void MiniEngine::PopulateCommandList()
         pDrawObjectPass->Execute(pCommandList);
         pDrawSkyboxPass->Execute(pCommandList);
         // pTemporalAAPass->Execute(pCommandList, frameIndex);
-
-        pViewManager->EmplaceRenderTarget(pCommandList, D3D12TextureType::ShaderResource);
         pBlitPass->Execute(pCommandList);
-        pViewManager->EmplaceRenderTarget(pCommandList, D3D12TextureType::RenderTarget);
 
         // Indicate that the back buffer will now be used to present.
         pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBackBuffer(),
