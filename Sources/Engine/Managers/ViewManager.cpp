@@ -130,6 +130,16 @@ void ViewManager::EmplaceRenderTarget(D3D12CommandList*& pCommandList, UINT hand
     pCommandList->FlushResourceBarriers();
 }
 
+UINT ViewManager::GetTheSRVHandle(UINT rtHandle)
+{
+    if (pRenderTargets[rtHandle] != nullptr)
+    {
+        pRenderTargets[rtHandle]->GetTextureID();
+
+    }
+    return 0;
+}
+
 // Helper functions
 D3D12_RESOURCE_STATES ViewManager::GetResourceState(D3D12TextureType type)
 {

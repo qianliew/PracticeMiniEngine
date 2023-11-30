@@ -28,6 +28,7 @@ public:
     UINT CreateRenderTarget();
     void CreateDXRUAV();
     void EmplaceRenderTarget(D3D12CommandList*& pCommandList, UINT handleID, D3D12TextureType type);
+    UINT GetTheSRVHandle(UINT rtHandle);
 
     inline void UpdateFrameIndex() { frameIndex = pSwapChain->GetCurrentBackBufferIndex(); }
     inline IDXGISwapChain3* GetSwapChain() const { return pSwapChain.Get(); }
