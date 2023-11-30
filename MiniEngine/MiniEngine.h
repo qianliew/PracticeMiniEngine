@@ -5,6 +5,7 @@
 #include "DrawObjecstPass.h"
 #include "DrawSkyboxPass.h"
 #include "BlitPass.h"
+#include "TemporalAAPass.h"
 #include "RayTracingPass.h"
 
 using namespace DirectX;
@@ -24,6 +25,7 @@ private:
 
     shared_ptr<DrawObjectsPass> pDrawObjectPass;
     shared_ptr<DrawSkyboxPass> pDrawSkyboxPass;
+    shared_ptr<TemporalAAPass> pTemporalAAPass;
     shared_ptr<BlitPass> pBlitPass;
     shared_ptr<RayTracingPass> pRayTracingPass;
 

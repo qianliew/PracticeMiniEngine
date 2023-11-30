@@ -178,6 +178,9 @@
     <ClInclude Include="..\Sources\Shared\SharedConstants.h">
       <Filter>Shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Rendering\TemporalAAPass.h">
+      <Filter>Engine\Rendering\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Sources\Engine\Objects\D3D12IndexBuffer.cpp">
@@ -282,6 +285,9 @@
     <ClCompile Include="D3D12RootSignature.cpp">
       <Filter>Engine\Components\Sources</Filter>
     </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Rendering\TemporalAAPass.cpp">
+      <Filter>Engine\Rendering\Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\Assets\Shaders\Unlit.hlsl">
@@ -296,6 +302,9 @@
     <CustomBuild Include="..\Assets\Shaders\Blit.hlsl">
       <Filter>Assets\Shaders</Filter>
     </CustomBuild>
+    <CustomBuild Include="..\Assets\Shaders\TemporalAA.hlsl">
+      <Filter>Assets\Shaders</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Assets\Shaders\Raytracing.hlsl">
@@ -304,6 +313,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Assets\Shaders\Library\Common.hlsli">
+      <Filter>Assets\Shaders\Library</Filter>
+    </None>
+    <None Include="..\Assets\Shaders\Library\Inputs.hlsli">
       <Filter>Assets\Shaders\Library</Filter>
     </None>
   </ItemGroup>

@@ -182,6 +182,7 @@
     <ClInclude Include="..\Sources\Engine\Rendering\DrawObjecstPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\DrawSkyboxPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\RayTracingPass.h" />
+    <ClInclude Include="..\Sources\Engine\Rendering\TemporalAAPass.h" />
     <ClInclude Include="..\Sources\Engine\Window.h" />
     <ClInclude Include="..\Sources\Shared\SharedConstants.h" />
     <ClInclude Include="..\Sources\Shared\SharedPrimitives.h" />
@@ -225,6 +226,7 @@
     <ClCompile Include="..\Sources\Engine\Rendering\DrawObjectsPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\DrawSkyboxPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\RayTracingPass.cpp" />
+    <ClCompile Include="..\Sources\Engine\Rendering\TemporalAAPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Window.cpp" />
     <ClCompile Include="..\Sources\Utilities\FBXImporter.cpp" />
     <ClCompile Include="D3D12RootSignature.cpp" />
@@ -274,9 +276,17 @@
       </PreprocessorDefinitions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/enable-16bit-types %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
+    <CustomBuild Include="..\Assets\Shaders\TemporalAA.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <FileType>Document</FileType>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Assets\Shaders\Library\Common.hlsli" />
+    <None Include="..\Assets\Shaders\Library\Inputs.hlsli" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

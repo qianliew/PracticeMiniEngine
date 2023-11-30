@@ -1,5 +1,5 @@
-#ifndef BLIT_HLSL
-#define BLIT_HLSL
+#ifndef TEMPORALAA_HLSL
+#define TEMPORALAA_HLSL
 
 #include "Library/Common.hlsli"
 #include "Library/Inputs.hlsli"
@@ -7,7 +7,7 @@
 Texture2D SourceTexture : register(t0);
 SamplerState SourceTextureSampler : register(s0);
 
-PSFullScreenInput VSBlit(VSFullScreenInput input)
+PSFullScreenInput VSTemporalAA(VSFullScreenInput input)
 {
     PSFullScreenInput result;
 
@@ -17,7 +17,7 @@ PSFullScreenInput VSBlit(VSFullScreenInput input)
     return result;
 }
 
-float4 PSBlit(PSFullScreenInput input) : SV_TARGET
+float4 PSTemporalAA(PSFullScreenInput input) : SV_TARGET
 {
     return SourceTexture.Sample(SourceTextureSampler, input.texCoord);
 }

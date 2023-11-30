@@ -1,7 +1,7 @@
 #include "stdafx.h"
-#include "BlitPass.h"
+#include "TemporalAAPass.h"
 
-BlitPass::BlitPass(
+TemporalAAPass::TemporalAAPass(
     shared_ptr<D3D12Device>& device,
     shared_ptr<SceneManager>& sceneManager) :
     AbstractRenderPass(device, sceneManager)
@@ -9,7 +9,7 @@ BlitPass::BlitPass(
 
 }
 
-void BlitPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
+void TemporalAAPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
 {
     ComPtr<ID3DBlob> vertexShader;
     ComPtr<ID3DBlob> pixelShader;
@@ -21,8 +21,8 @@ void BlitPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSignature
     UINT compileFlags = 0;
 #endif
 
-    ThrowIfFailed(D3DCompileFromFile(GetShaderPath(L"Blit.hlsl").c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "VSBlit", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
-    ThrowIfFailed(D3DCompileFromFile(GetShaderPath(L"Blit.hlsl").c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "PSBlit", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
+    ThrowIfFailed(D3DCompileFromFile(GetShaderPath(L"TemporalAA.hlsl").c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "VSTemporalAA", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
+    ThrowIfFailed(D3DCompileFromFile(GetShaderPath(L"TemporalAA.hlsl").c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "PSTemporalAA", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
 
     // Define the vertex input layout.
     D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -51,7 +51,7 @@ void BlitPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSignature
     ThrowIfFailed(pDevice->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pPipelineState.GetAddressOf())));
 }
 
-void BlitPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
+void TemporalAAPass::Execute(D3D12CommandList*& pCommandList, UINT frameIndex)
 {
     pCommandList->SetPipelineState(pPipelineState.Get());
 
