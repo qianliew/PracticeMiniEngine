@@ -71,9 +71,6 @@ void BlitPass::Execute(D3D12CommandList*& pCommandList)
         pViewManager->GetFrameIndex());
     pCommandList->SetRenderTargets(1, &rtvHandle, nullptr);
 
-    const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-    pCommandList->ClearColor(rtvHandle, clearColor);
-
     pSceneManager->DrawFullScreenMesh(pCommandList);
     pViewManager->EmplaceRenderTarget(pCommandList, pViewManager->GetColorHandle(), D3D12TextureType::RenderTarget);
 }

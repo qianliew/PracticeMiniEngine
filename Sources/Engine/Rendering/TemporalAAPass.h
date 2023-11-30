@@ -4,6 +4,10 @@
 
 class TemporalAAPass : public AbstractRenderPass
 {
+private:
+	UINT taaHandle;
+	UINT taaHistoryHandle;
+
 public:
 	TemporalAAPass(shared_ptr<D3D12Device>&, shared_ptr<SceneManager>&, shared_ptr<ViewManager>&);
 

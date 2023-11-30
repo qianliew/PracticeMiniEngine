@@ -50,25 +50,46 @@ void TemporalAAPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
     psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
     psoDesc.SampleDesc.Count = 1;
     ThrowIfFailed(pDevice->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pPipelineState.GetAddressOf())));
+
+    // Create a render target for TAA and TAA history.
+    taaHandle = pViewManager->CreateRenderTarget();
+    taaHistoryHandle = pViewManager->CreateRenderTarget();
 }
 
 void TemporalAAPass::Execute(D3D12CommandList*& pCommandList)
 {
     pCommandList->SetPipelineState(pPipelineState.Get());
 
-    pDevice->GetDescriptorHeapManager()->SetViews(pCommandList->GetCommandList(), SHADER_RESOURCE_VIEW_GLOBAL, 0);
+    // Set color buffer to the SRV.
+    pViewManager->EmplaceRenderTarget(pCommandList, pViewManager->GetColorHandle(), D3D12TextureType::ShaderResource);
+    pDevice->GetDescriptorHeapManager()->SetViews(
+        pCommandList->GetCommandList(),
+        SHADER_RESOURCE_VIEW_GLOBAL,
+        pViewManager->GetTheSRVHandle(pViewManager->GetColorHandle()));
     pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList(), 0);
 
-    // Set camera relating state.
-    pCommandList->SetViewports(pSceneManager->GetCamera()->GetViewport());
-    pCommandList->SetScissorRects(pSceneManager->GetCamera()->GetScissorRect());
-
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW,
-        pViewManager->GetFrameIndex());
+    // Set the taa handle to the render targert, and draw. 
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle =
+        pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW, taaHandle);
     pCommandList->SetRenderTargets(1, &rtvHandle, nullptr);
 
-    const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-    pCommandList->ClearColor(rtvHandle, clearColor);
+    pSceneManager->DrawFullScreenMesh(pCommandList);
+
+    // Set color buffer back to RTV, and set taa buffer to SRV.
+    pViewManager->EmplaceRenderTarget(pCommandList, taaHandle, D3D12TextureType::ShaderResource);
+    pDevice->GetDescriptorHeapManager()->SetViews(
+        pCommandList->GetCommandList(),
+        SHADER_RESOURCE_VIEW_GLOBAL,
+        pViewManager->GetTheSRVHandle(taaHandle));
+    pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList(), 0);
+    pViewManager->EmplaceRenderTarget(pCommandList, pViewManager->GetColorHandle(), D3D12TextureType::RenderTarget);
+
+    // Set the color handle to the render target, and draw. 
+    rtvHandle = pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW, pViewManager->GetColorHandle());
+    pCommandList->SetRenderTargets(1, &rtvHandle, nullptr);
 
     pSceneManager->DrawFullScreenMesh(pCommandList);
+
+    // Set the taa handle back to RTV.
+    pViewManager->EmplaceRenderTarget(pCommandList, taaHandle, D3D12TextureType::RenderTarget);
 }

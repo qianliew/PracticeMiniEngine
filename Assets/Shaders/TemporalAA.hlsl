@@ -19,7 +19,7 @@ PSFullScreenInput VSTemporalAA(VSFullScreenInput input)
 
 float4 PSTemporalAA(PSFullScreenInput input) : SV_TARGET
 {
-    return SourceTexture.Sample(SourceTextureSampler, input.texCoord);
+    return SourceTexture.Sample(SourceTextureSampler, input.texCoord) + 0.1f;
 }
 
 #endif

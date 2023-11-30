@@ -218,7 +218,7 @@ void MiniEngine::PopulateCommandList()
 
         pDrawObjectPass->Execute(pCommandList);
         pDrawSkyboxPass->Execute(pCommandList);
-        // pTemporalAAPass->Execute(pCommandList, frameIndex);
+        pTemporalAAPass->Execute(pCommandList);
         pBlitPass->Execute(pCommandList);
 
         // Indicate that the back buffer will now be used to present.
