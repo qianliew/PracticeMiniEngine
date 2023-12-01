@@ -3,20 +3,13 @@
 
 #define HLSL
 
+#include "Library/Common.hlsli"
 #include "../../Sources/Shared/SharedPrimitives.h"
 #include "../../Sources/Shared/SharedTypes.h"
 #include "../../Sources/Shared/SharedConstants.h"
 
 RaytracingAccelerationStructure Scene : register(t0);
 RWTexture2D<float4> RenderTarget : register(u0);
-
-cbuffer GlobalConstants : register(b0)
-{
-    float4x4 WorldToProjectionMatrix;
-    float4x4 ProjectionToWorldMatrix;
-    float3 CameraPositionWS;
-    uint FrameCount;
-};
 
 StructuredBuffer<uint16_t> Indices : register(t1);
 StructuredBuffer<Vertex> Vertices : register(t2);
