@@ -56,11 +56,12 @@ void BlitPass::Execute(D3D12CommandList*& pCommandList)
 {
     pCommandList->SetPipelineState(pPipelineState.Get());
 
-    pViewManager->EmplaceRenderTarget(pCommandList, pViewManager->GetColorHandle(), D3D12TextureType::ShaderResource);
+    const UINT colorHandle = pViewManager->GetCurrentColorHandle();
+    pViewManager->EmplaceRenderTarget(pCommandList, colorHandle, D3D12TextureType::ShaderResource);
     pDevice->GetDescriptorHeapManager()->SetViews(
         pCommandList->GetCommandList(),
         SHADER_RESOURCE_VIEW_GLOBAL,
-        pViewManager->GetTheSRVHandle(pViewManager->GetColorHandle()));
+        pViewManager->GetTheSRVHandle(colorHandle));
     pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList(), 0);
 
     // Set camera relating state.
@@ -72,5 +73,5 @@ void BlitPass::Execute(D3D12CommandList*& pCommandList)
     pCommandList->SetRenderTargets(1, &rtvHandle, nullptr);
 
     pSceneManager->DrawFullScreenMesh(pCommandList);
-    pViewManager->EmplaceRenderTarget(pCommandList, pViewManager->GetColorHandle(), D3D12TextureType::RenderTarget);
+    pViewManager->EmplaceRenderTarget(pCommandList, colorHandle, D3D12TextureType::RenderTarget);
 }

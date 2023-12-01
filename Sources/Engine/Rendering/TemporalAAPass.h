@@ -5,7 +5,6 @@
 class TemporalAAPass : public AbstractRenderPass
 {
 private:
-	UINT taaHandle;
 	UINT taaHistoryHandle;
 
 public:

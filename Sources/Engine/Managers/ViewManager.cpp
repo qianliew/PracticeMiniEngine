@@ -46,7 +46,9 @@ ViewManager::ViewManager(std::shared_ptr<D3D12Device>& device, UINT inWidth, UIN
     }
 
     // Create a render target for the color buffer.
-    colorHandle = CreateRenderTarget();
+    colorHandles[0] = CreateRenderTarget();
+    colorHandles[1] = CreateRenderTarget();
+    useFirstHandle = TRUE;
 
     // Create a depth stencil buffer.
     pDepthStencil = new D3D12Texture(-1, -1, width, height);
@@ -113,6 +115,21 @@ void ViewManager::CreateDXRUAV()
         pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, 0));
 }
 
+UINT ViewManager::GetTheSRVHandle(UINT rtHandle)
+{
+    if (pRenderTargets[rtHandle] != nullptr)
+    {
+        return pRenderTargets[rtHandle]->GetTextureID();
+    }
+    return 0;
+}
+
+const UINT ViewManager::GetNextColorHandle()
+{
+    useFirstHandle = !useFirstHandle;
+    return GetCurrentColorHandle();
+}
+
 void ViewManager::EmplaceRenderTarget(D3D12CommandList*& pCommandList, UINT handleID, D3D12TextureType type)
 {
     D3D12_RESOURCE_STATES stateBefore = GetResourceState(pRenderTargets[handleID]->GetType());
@@ -128,16 +145,6 @@ void ViewManager::EmplaceRenderTarget(D3D12CommandList*& pCommandList, UINT hand
         stateBefore,
         GetResourceState(type));
     pCommandList->FlushResourceBarriers();
-}
-
-UINT ViewManager::GetTheSRVHandle(UINT rtHandle)
-{
-    if (pRenderTargets[rtHandle] != nullptr)
-    {
-        pRenderTargets[rtHandle]->GetTextureID();
-
-    }
-    return 0;
 }
 
 // Helper functions

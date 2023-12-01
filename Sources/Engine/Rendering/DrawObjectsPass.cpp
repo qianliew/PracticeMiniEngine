@@ -70,8 +70,9 @@ void DrawObjectsPass::Execute(D3D12CommandList*& pCommandList)
     pCommandList->SetScissorRects(pSceneManager->GetCamera()->GetScissorRect());
 
     // Set the rtv and the dsv.
+    UINT const colorHandle = pViewManager->GetCurrentColorHandle();
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle =
-        pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW, pViewManager->GetColorHandle());
+        pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW, colorHandle);
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle =
         pDevice->GetDescriptorHeapManager()->GetHandle(DEPTH_STENCIL_VIEW, 0);
     pCommandList->SetRenderTargets(1, &rtvHandle, &dsvHandle);
