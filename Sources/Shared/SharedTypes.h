@@ -9,6 +9,7 @@ struct CameraConstant
     XMMATRIX ProjectionToWorldMatrix;
     XMMATRIX IdentityProjectionMatrix;
     XMFLOAT3 CameraWorldPosition;
+    XMFLOAT2 TAAJitter;
     UINT FrameCount;
 };
 

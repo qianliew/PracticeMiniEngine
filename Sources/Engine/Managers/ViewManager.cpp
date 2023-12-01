@@ -76,6 +76,14 @@ ViewManager::~ViewManager()
     delete pDepthStencil;
 }
 
+UINT ViewManager::sFrameCount = 0;
+
+void ViewManager::UpdateFrameIndex()
+{
+    frameIndex = pSwapChain->GetCurrentBackBufferIndex();
+    sFrameCount++;
+}
+
 UINT ViewManager::CreateRenderTarget()
 {
     D3D12Texture* pRenderTarget = new D3D12Texture(globalSRVID++, rtvID++, width, height);

@@ -49,8 +49,6 @@ public:
     MiniEngine(UINT width, UINT height, std::wstring name);
     ~MiniEngine();
 
-    static UINT sFrameCount;
-
     void OnInit();
     void OnUpdate();
     void OnRender();

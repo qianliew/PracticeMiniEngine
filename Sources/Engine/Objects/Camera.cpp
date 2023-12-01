@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Camera.h"
+#include "ViewManager.h"
 
 Camera::Camera(UINT id, FLOAT width, FLOAT height) :
     Transform(id),
@@ -54,6 +55,9 @@ void Camera::UpdateCameraConstant()
     cameraConstant.WorldToProjectionMatrix = GetVPMatrix();
     XMStoreFloat3(&cameraConstant.CameraWorldPosition, worldPosition);
     cameraConstant.ProjectionToWorldMatrix = XMMatrixInverse(nullptr, GetVPMatrix());
+    cameraConstant.TAAJitter.x = ((INT)ViewManager::sFrameCount % 4 - 1.5f) / width / 4.0f;
+    cameraConstant.TAAJitter.y = ((INT)ViewManager::sFrameCount / 4 % 4 - 1.5f) / height / 4.0f;
+    cameraConstant.FrameCount = ViewManager::sFrameCount;
 }
 
 const XMMATRIX Camera::GetVPMatrix()

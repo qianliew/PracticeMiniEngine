@@ -26,13 +26,15 @@ public:
     ViewManager(std::shared_ptr<D3D12Device>&, UINT inWidth, UINT inHeight);
     ~ViewManager();
 
+    static UINT sFrameCount;
+
+    void UpdateFrameIndex();
     UINT CreateRenderTarget();
     void CreateDXRUAV();
     const UINT GetNextColorHandle();
     UINT GetTheSRVHandle(UINT rtHandle);
     void EmplaceRenderTarget(D3D12CommandList*& pCommandList, UINT handleID, D3D12TextureType type);
 
-    inline void UpdateFrameIndex() { frameIndex = pSwapChain->GetCurrentBackBufferIndex(); }
     inline IDXGISwapChain3* GetSwapChain() const { return pSwapChain.Get(); }
     inline ID3D12Resource* GetCurrentBackBuffer() const { return pBackBuffers[frameIndex].Get(); }
     inline ID3D12Resource* GetCurrentBuffer(UINT rtHandle) { return pRenderTargets[rtHandle]->GetTextureBuffer()->GetResource(); }

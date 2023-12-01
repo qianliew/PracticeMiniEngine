@@ -22,7 +22,7 @@ void D3D12RootSignature::CreateRootSignature()
     descriptorTableRanges[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 3, 5, 0);
 
     CD3DX12_ROOT_PARAMETER rootParameters[(UINT)eRootIndex::Count];
-    rootParameters[(UINT)eRootIndex::ConstantBufferViewGlobal].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+    rootParameters[(UINT)eRootIndex::ConstantBufferViewGlobal].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
     rootParameters[(UINT)eRootIndex::ConstantBufferViewPerObject].InitAsConstantBufferView(1, 0, D3D12_SHADER_VISIBILITY_VERTEX);
     rootParameters[(UINT)eRootIndex::ShaderResourceViewGlobal0].InitAsDescriptorTable(1, &descriptorTableRanges[0], D3D12_SHADER_VISIBILITY_PIXEL);
     rootParameters[(UINT)eRootIndex::ShaderResourceViewGlobal1].InitAsDescriptorTable(1, &descriptorTableRanges[1], D3D12_SHADER_VISIBILITY_PIXEL);
