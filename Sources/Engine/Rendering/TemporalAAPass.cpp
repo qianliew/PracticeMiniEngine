@@ -59,22 +59,44 @@ void TemporalAAPass::Execute(D3D12CommandList*& pCommandList)
 {
     pCommandList->SetPipelineState(pPipelineState.Get());
 
-    // Set color buffer to the SRV.
+    // Set the color buffer and the TAA history to the SRVs.
     const UINT colorHandle = pViewManager->GetCurrentColorHandle();
     const UINT taaHandle = pViewManager->GetNextColorHandle();
 
     pViewManager->EmplaceRenderTarget(pCommandList, colorHandle, D3D12TextureType::ShaderResource);
+    pViewManager->EmplaceRenderTarget(pCommandList, taaHistoryHandle, D3D12TextureType::ShaderResource);
     pDevice->GetDescriptorHeapManager()->SetViews(
         pCommandList->GetCommandList(),
         SHADER_RESOURCE_VIEW_GLOBAL,
         pViewManager->GetTheSRVHandle(colorHandle));
+    pDevice->GetDescriptorHeapManager()->SetViews(
+        pCommandList->GetCommandList(),
+        SHADER_RESOURCE_VIEW_PEROBJECT,
+        pViewManager->GetTheSRVHandle(taaHistoryHandle));
     pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList(), 0);
 
-    // Set the taa handle to the render targert, and draw. 
+    // Set the TAA handle to the render targert, and draw. 
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle =
         pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW, taaHandle);
     pCommandList->SetRenderTargets(1, &rtvHandle, nullptr);
 
     pSceneManager->DrawFullScreenMesh(pCommandList);
     pViewManager->EmplaceRenderTarget(pCommandList, colorHandle, D3D12TextureType::RenderTarget);
+    pViewManager->EmplaceRenderTarget(pCommandList, taaHistoryHandle, D3D12TextureType::RenderTarget);
+
+    // Copy the current TAA buffer to the history.
+    pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(taaHistoryHandle),
+        D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
+    pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(taaHandle),
+        D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
+    pCommandList->FlushResourceBarriers();
+
+    pCommandList->CopyResource(pViewManager->GetCurrentBuffer(taaHistoryHandle),
+        pViewManager->GetCurrentBuffer(taaHandle));
+
+    pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(taaHistoryHandle),
+        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(taaHandle),
+        D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    pCommandList->FlushResourceBarriers();
 }

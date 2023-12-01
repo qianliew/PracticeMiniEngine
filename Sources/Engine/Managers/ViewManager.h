@@ -35,6 +35,7 @@ public:
     inline void UpdateFrameIndex() { frameIndex = pSwapChain->GetCurrentBackBufferIndex(); }
     inline IDXGISwapChain3* GetSwapChain() const { return pSwapChain.Get(); }
     inline ID3D12Resource* GetCurrentBackBuffer() const { return pBackBuffers[frameIndex].Get(); }
+    inline ID3D12Resource* GetCurrentBuffer(UINT rtHandle) { return pRenderTargets[rtHandle]->GetTextureBuffer()->GetResource(); }
     inline const UINT GetCurrentColorHandle() const { return useFirstHandle == TRUE ? colorHandles[0] : colorHandles[1]; }
     inline const UINT GetFrameIndex() const { return frameIndex; }
     inline ID3D12Resource* GetRayTracingOutput() const { return pRayTracingOutput->GetTextureBuffer()->GetResource(); }
