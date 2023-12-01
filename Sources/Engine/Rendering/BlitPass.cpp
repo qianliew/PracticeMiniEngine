@@ -61,8 +61,8 @@ void BlitPass::Execute(D3D12CommandList*& pCommandList)
     pDevice->GetDescriptorHeapManager()->SetViews(
         pCommandList->GetCommandList(),
         SHADER_RESOURCE_VIEW_GLOBAL,
+        (UINT)eRootIndex::ShaderResourceViewGlobal0,
         pViewManager->GetTheSRVHandle(colorHandle));
-    pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList(), 0);
 
     // Set camera relating state.
     pCommandList->SetViewports(pSceneManager->GetCamera()->GetViewport());

@@ -285,15 +285,21 @@ void SceneManager::DrawObjects(D3D12CommandList*& pCommandList)
         UINT id = pObjects[i]->GetObjectID();
 
         // Set the per object views.
-        pCommandList->SetRootConstantBufferView(CONSTANT_BUFFER_VIEW_PEROBJECT,
+        pCommandList->SetRootConstantBufferView((UINT)eRootIndex::ConstantBufferViewPerObject,
             pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->GetResource()->GetGPUVirtualAddress());
 
         // Set the material relating views.
         LitMaterial* litMaterial = dynamic_cast<LitMaterial*>(model->GetMaterial());
 
-        pDevice->GetDescriptorHeapManager()->SetSRVs(pCommandList->GetCommandList(),
+        pDevice->GetDescriptorHeapManager()->SetViews(
+            pCommandList->GetCommandList(),
+            SHADER_RESOURCE_VIEW_PEROBJECT,
+            (UINT)eRootIndex::ShaderResourceViewPerObject,
             litMaterial->GetTexture()->GetTextureID());
-        pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList(),
+        pDevice->GetDescriptorHeapManager()->SetViews(
+            pCommandList->GetCommandList(),
+            SAMPLER,
+            (UINT)eRootIndex::Sampler,
             litMaterial->GetTexture()->GetTextureID());
 
         // Set buffers and draw the instance.
@@ -306,13 +312,21 @@ void SceneManager::DrawObjects(D3D12CommandList*& pCommandList)
 
 void SceneManager::DrawSkybox(D3D12CommandList*& pCommandList)
 {
-    // Set views for the skybox.
+    // Set the global CBV.
     UINT id = pSkyboxMesh->GetObjectID();
     pCommandList->SetRootConstantBufferView(CONSTANT_BUFFER_VIEW_PEROBJECT,
         pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->GetResource()->GetGPUVirtualAddress());
-    pDevice->GetDescriptorHeapManager()->SetSRVs(pCommandList->GetCommandList(),
+    
+    // Set SRVs.
+    pDevice->GetDescriptorHeapManager()->SetViews(
+        pCommandList->GetCommandList(),
+        SHADER_RESOURCE_VIEW_PEROBJECT,
+        (UINT)eRootIndex::ShaderResourceViewPerObject,
         pSkyboxMaterial->GetTexture()->GetTextureID());
-    pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList(),
+    pDevice->GetDescriptorHeapManager()->SetViews(
+        pCommandList->GetCommandList(),
+        SAMPLER,
+        (UINT)eRootIndex::Sampler,
         pSkyboxMaterial->GetTexture()->GetTextureID());
 
     pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

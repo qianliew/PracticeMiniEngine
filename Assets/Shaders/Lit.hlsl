@@ -8,14 +8,13 @@ cbuffer PerObjectConstants : register(b1)
     float4x4 ObjectToWorldMatrix;
 };
 
-Texture2D BaseTexture   : register(t1);
-Texture2D MRATexture    : register(t2);
-Texture2D NormalTexture : register(t3);
-TextureCube SkyboxCube  : register(t4);
+Texture2D BaseTexture   : register(t5);
+Texture2D MRATexture    : register(t6);
+Texture2D NormalTexture : register(t7);
 
-SamplerState BaseTextureSampler     : register(s1);
-SamplerState MRATextureSampler      : register(s2);
-SamplerState NormalTextureSampler   : register(s3);
+SamplerState BaseTextureSampler     : register(s5);
+SamplerState MRATextureSampler      : register(s6);
+SamplerState NormalTextureSampler   : register(s7);
 
 struct VSInput
 {

@@ -1,6 +1,19 @@
 #pragma once
 
-// Root index in DXR pipeline
+// Root index in Graphic pipelines.
+enum class eRootIndex
+{
+    ConstantBufferViewGlobal = 0,
+    ConstantBufferViewPerObject,
+    ShaderResourceViewGlobal0,
+    ShaderResourceViewGlobal1,
+    ShaderResourceViewPerObject,
+    UnorderedAccessViewGlobal,
+    Sampler,
+    Count,
+};
+
+// Root index in DXR pipelines.
 enum class eDXRRootIndex
 {
     ShaderResourceViewGlobal = 0,

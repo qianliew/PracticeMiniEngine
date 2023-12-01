@@ -21,8 +21,6 @@ public:
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetHandle(UINT index, INT offset);
 
-	void SetViews(ComPtr<ID3D12GraphicsCommandList>&, UINT index, INT offset);
+	void SetViews(ComPtr<ID3D12GraphicsCommandList>&, UINT index, UINT rootIndex, INT offset);
 	void SetComputeViews(ComPtr<ID3D12GraphicsCommandList>&, UINT index, UINT rootIndex, INT offset);
-	void SetSRVs(ComPtr<ID3D12GraphicsCommandList>&, INT offset);
-	void SetSamplers(ComPtr<ID3D12GraphicsCommandList>&, INT offset);
 };

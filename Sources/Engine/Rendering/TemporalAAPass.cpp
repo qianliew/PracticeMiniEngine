@@ -68,12 +68,13 @@ void TemporalAAPass::Execute(D3D12CommandList*& pCommandList)
     pDevice->GetDescriptorHeapManager()->SetViews(
         pCommandList->GetCommandList(),
         SHADER_RESOURCE_VIEW_GLOBAL,
+        (UINT)eRootIndex::ShaderResourceViewGlobal0,
         pViewManager->GetTheSRVHandle(colorHandle));
     pDevice->GetDescriptorHeapManager()->SetViews(
         pCommandList->GetCommandList(),
         SHADER_RESOURCE_VIEW_PEROBJECT,
+        (UINT)eRootIndex::ShaderResourceViewPerObject,
         pViewManager->GetTheSRVHandle(taaHistoryHandle));
-    pDevice->GetDescriptorHeapManager()->SetSamplers(pCommandList->GetCommandList(), 0);
 
     // Set the TAA handle to the render targert, and draw. 
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle =

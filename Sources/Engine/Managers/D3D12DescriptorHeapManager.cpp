@@ -79,7 +79,11 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12DescriptorHeapManager::GetHandle(UINT index, IN
     return handle;
 }
 
-void D3D12DescriptorHeapManager::SetViews(ComPtr<ID3D12GraphicsCommandList>& commandList, UINT index, INT offset)
+void D3D12DescriptorHeapManager::SetViews(
+    ComPtr<ID3D12GraphicsCommandList>& commandList,
+    UINT index,
+    UINT rootIndex,
+    INT offset)
 {
     ID3D12DescriptorHeap* heap[] = { heapTable[index].Get() };
     
@@ -87,7 +91,7 @@ void D3D12DescriptorHeapManager::SetViews(ComPtr<ID3D12GraphicsCommandList>& com
     handle.Offset(offset, sizeTable[index]);
 
     commandList->SetDescriptorHeaps(_countof(heap), heap);
-    commandList->SetGraphicsRootDescriptorTable(index, handle);
+    commandList->SetGraphicsRootDescriptorTable(rootIndex, handle);
 }
 
 void D3D12DescriptorHeapManager::SetComputeViews(
@@ -103,26 +107,4 @@ void D3D12DescriptorHeapManager::SetComputeViews(
 
     commandList->SetDescriptorHeaps(_countof(heap), heap);
     commandList->SetComputeRootDescriptorTable(rootIndex, handle);
-}
-
-void D3D12DescriptorHeapManager::SetSRVs(ComPtr<ID3D12GraphicsCommandList>& commandList, INT offset)
-{
-    ID3D12DescriptorHeap* heap[] = { heapTable[SHADER_RESOURCE_VIEW_PEROBJECT].Get() };
-
-    CD3DX12_GPU_DESCRIPTOR_HANDLE handle(heapTable[SHADER_RESOURCE_VIEW_PEROBJECT]->GetGPUDescriptorHandleForHeapStart());
-    handle.Offset(offset, sizeTable[SHADER_RESOURCE_VIEW_PEROBJECT]);
-
-    commandList->SetDescriptorHeaps(_countof(heap), heap);
-    commandList->SetGraphicsRootDescriptorTable(SHADER_RESOURCE_VIEW_PEROBJECT, handle);
-}
-
-void D3D12DescriptorHeapManager::SetSamplers(ComPtr<ID3D12GraphicsCommandList>& commandList, INT offset)
-{
-    ID3D12DescriptorHeap* heap[] = { heapTable[SAMPLER].Get() };
-
-    CD3DX12_GPU_DESCRIPTOR_HANDLE handle(heapTable[SAMPLER]->GetGPUDescriptorHandleForHeapStart());
-    handle.Offset(offset, sizeTable[SAMPLER]);
-
-    commandList->SetDescriptorHeaps(_countof(heap), heap);
-    commandList->SetGraphicsRootDescriptorTable(SAMPLER, handle);
 }
