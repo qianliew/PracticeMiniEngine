@@ -53,7 +53,7 @@ void Camera::SetScissorRect(const LONG width, const LONG height)
 void Camera::UpdateCameraConstant()
 {
     cameraConstant.WorldToProjectionMatrix = GetVPMatrix();
-    XMStoreFloat3(&cameraConstant.CameraWorldPosition, worldPosition);
+    XMStoreFloat4(&cameraConstant.CameraWorldPosition, worldPosition);
     cameraConstant.ProjectionToWorldMatrix = XMMatrixInverse(nullptr, GetVPMatrix());
     cameraConstant.TAAJitter.x = ((INT)ViewManager::sFrameCount % 4 - 1.5f) / width / 4.0f;
     cameraConstant.TAAJitter.y = ((INT)ViewManager::sFrameCount / 4 % 4 - 1.5f) / height / 4.0f;

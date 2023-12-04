@@ -20,9 +20,9 @@ PSFullScreenInput VSTemporalAA(VSFullScreenInput input)
 
 float4 PSTemporalAA(PSFullScreenInput input) : SV_TARGET
 {
-    const float alpha = 0.7f;
+    const float alpha = 0.65f;
     float4 history = TAAHistoryTexture.Sample(SourceTextureSampler, input.texCoord);
-    float4 color = SourceTexture.Sample(SourceTextureSampler, input.texCoord + TAAJitter);
+    float4 color = SourceTexture.Sample(SourceTextureSampler, input.texCoord + TAAJitter.xy);
 
     return lerp(color, history, alpha);
 }

@@ -6,8 +6,8 @@ cbuffer GlobalConstants : register(b0)
     float4x4 WorldToProjectionMatrix;
     float4x4 ProjectionToWorldMatrix;
     float4x4 IdentityProjectionMatrix;
-    float3 CameraPositionWS;
-    float2 TAAJitter;
+    float4 CameraPositionWS;
+    float4 TAAJitter;
     uint FrameCount;
 };
 
