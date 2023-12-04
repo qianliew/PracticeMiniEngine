@@ -16,7 +16,7 @@ enum class eRootIndex
 // Root index in DXR pipelines.
 enum class eDXRRootIndex
 {
-    ShaderResourceViewGlobal = 0,
+    ShaderResourceViewTLAS = 0,
     ShaderResourceViewIndex,
     ShaderResourceViewVertex,
     ShaderResourceViewOffset,
@@ -33,6 +33,7 @@ class D3D12RootSignature
 private:
     std::shared_ptr<D3D12Device>& pDevice;
     ComPtr<ID3D12RootSignature> pRootSignature;
+    ComPtr<ID3D12RootSignature> pDRXRootSignature;
 
 public:
     D3D12RootSignature(std::shared_ptr<D3D12Device>&);
@@ -42,4 +43,5 @@ public:
     void CreateDXRRootSignature();
 
     inline ComPtr<ID3D12RootSignature>& GetRootSignature() { return pRootSignature; }
+    inline ComPtr<ID3D12RootSignature>& GetDRXRootSignature() { return pDRXRootSignature; }
 };

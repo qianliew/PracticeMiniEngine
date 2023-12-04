@@ -74,7 +74,7 @@ void D3D12RootSignature::CreateDXRRootSignature()
     descriptorTableRanges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 2, 5);
 
     CD3DX12_ROOT_PARAMETER rootParameters[(UINT)eDXRRootIndex::Count];
-    rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewGlobal].InitAsShaderResourceView(0);
+    rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewTLAS].InitAsShaderResourceView(0);
     rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewIndex].InitAsShaderResourceView(1);
     rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewVertex].InitAsShaderResourceView(2);
     rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewOffset].InitAsShaderResourceView(3);
@@ -94,5 +94,5 @@ void D3D12RootSignature::CreateDXRRootSignature()
     ThrowIfFailed(pDevice->GetDevice()->CreateRootSignature(1,
         signature->GetBufferPointer(),
         signature->GetBufferSize(),
-        IID_PPV_ARGS(&pRootSignature)));
+        IID_PPV_ARGS(&pDRXRootSignature)));
 }

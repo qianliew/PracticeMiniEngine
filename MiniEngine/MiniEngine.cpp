@@ -5,7 +5,7 @@ using namespace Microsoft::WRL;
 
 MiniEngine::MiniEngine(UINT width, UINT height, std::wstring name) :
     Window(width, height, name),
-    isDXR(FALSE)
+    isDXR(TRUE)
 {
 
 }
@@ -33,23 +33,19 @@ void MiniEngine::LoadPipeline()
 
     // Create and init the view manager.
     pViewManager = make_shared<ViewManager>(pDevice, width, height);
-    if (isDXR)
-    {
-        pViewManager->CreateDXRUAV();
-    }
 
     // Create the command list.
     pCommandList = new D3D12CommandList(pDevice);
 
     // Create the root signature.
     pRootSignature = new D3D12RootSignature(pDevice);
+    pRootSignature->CreateRootSignature();
+
+    // Create features for DXR.
     if (isDXR)
     {
+        pViewManager->CreateDXRUAV();
         pRootSignature->CreateDXRRootSignature();
-    }
-    else
-    {
-        pRootSignature->CreateRootSignature();
     }
 }
 
@@ -80,23 +76,21 @@ void MiniEngine::LoadAssets()
     if (isDXR)
     {
         pRayTracingPass = make_shared<RayTracingPass>(pDevice, pSceneManager, pViewManager);
-        pRayTracingPass->Setup(pCommandList, pRootSignature->GetRootSignature());
+        pRayTracingPass->Setup(pCommandList, pRootSignature->GetDRXRootSignature());
         pRayTracingPass->BuildShaderTables();
     }
-    else
-    {
-        pDrawObjectPass = make_shared<DrawObjectsPass>(pDevice, pSceneManager, pViewManager);
-        pDrawObjectPass->Setup(pCommandList, pRootSignature->GetRootSignature());
 
-        pDrawSkyboxPass = make_shared<DrawSkyboxPass>(pDevice, pSceneManager, pViewManager);
-        pDrawSkyboxPass->Setup(pCommandList, pRootSignature->GetRootSignature());
+    pDrawObjectPass = make_shared<DrawObjectsPass>(pDevice, pSceneManager, pViewManager);
+    pDrawObjectPass->Setup(pCommandList, pRootSignature->GetRootSignature());
 
-        pTemporalAAPass = make_shared<TemporalAAPass>(pDevice, pSceneManager, pViewManager);
-        pTemporalAAPass->Setup(pCommandList, pRootSignature->GetRootSignature());
+    pDrawSkyboxPass = make_shared<DrawSkyboxPass>(pDevice, pSceneManager, pViewManager);
+    pDrawSkyboxPass->Setup(pCommandList, pRootSignature->GetRootSignature());
 
-        pBlitPass = make_shared<BlitPass>(pDevice, pSceneManager, pViewManager);
-        pBlitPass->Setup(pCommandList, pRootSignature->GetRootSignature());
-    }
+    pTemporalAAPass = make_shared<TemporalAAPass>(pDevice, pSceneManager, pViewManager);
+    pTemporalAAPass->Setup(pCommandList, pRootSignature->GetRootSignature());
+
+    pBlitPass = make_shared<BlitPass>(pDevice, pSceneManager, pViewManager);
+    pBlitPass->Setup(pCommandList, pRootSignature->GetRootSignature());
 
     pCommandList->ExecuteCommandList();
     WaitForGPU();
@@ -189,41 +183,48 @@ void MiniEngine::PopulateCommandList()
         D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     pCommandList->FlushResourceBarriers();
 
+    // Set the graphic root signature.
+    pCommandList->SetRootSignature(pRootSignature->GetRootSignature());
+
+    // Set the global views.
+    pCommandList->SetRootConstantBufferView((UINT)eRootIndex::ConstantBufferViewGlobal,
+        pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
+
     if (isDXR)
     {
-        pCommandList->SetComputeRootSignature(pRootSignature->GetRootSignature());
+        pCommandList->SetComputeRootSignature(pRootSignature->GetDRXRootSignature());
 
         // Execute the ray tracing path.
         pRayTracingPass->Execute(pCommandList);
 
-        pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBackBuffer(),
+        UINT colorHandle = pViewManager->GetCurrentColorHandle();
+        pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(colorHandle),
             D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
         pCommandList->AddTransitionResourceBarriers(pViewManager->GetRayTracingOutput(),
             D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
         pCommandList->FlushResourceBarriers();
 
-        pCommandList->CopyResource(pViewManager->GetCurrentBackBuffer(), pViewManager->GetRayTracingOutput());
+        pCommandList->CopyResource(pViewManager->GetCurrentBuffer(colorHandle), pViewManager->GetRayTracingOutput());
 
-        pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBackBuffer(),
-            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
+        pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(colorHandle),
+            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
         pCommandList->AddTransitionResourceBarriers(pViewManager->GetRayTracingOutput(),
             D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
         pCommandList->FlushResourceBarriers();
     }
     else
     {
-        pCommandList->SetRootSignature(pRootSignature->GetRootSignature());
-
         pDrawObjectPass->Execute(pCommandList);
         pDrawSkyboxPass->Execute(pCommandList);
-        pTemporalAAPass->Execute(pCommandList);
-        pBlitPass->Execute(pCommandList);
-
-        // Indicate that the back buffer will now be used to present.
-        pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBackBuffer(),
-            D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-        pCommandList->FlushResourceBarriers();
     }
+
+    pTemporalAAPass->Execute(pCommandList);
+    pBlitPass->Execute(pCommandList);
+
+    // Indicate that the back buffer will now be used to present.
+    pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBackBuffer(),
+        D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+    pCommandList->FlushResourceBarriers();
 
     pCommandList->ExecuteCommandList();
 }
