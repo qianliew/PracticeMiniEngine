@@ -348,7 +348,7 @@ void SceneManager::SetDXRResources(D3D12CommandList*& pCommandList)
 {
     // Bind the heap of TLAS.
     pCommandList->SetComputeRootShaderResourceView(
-        (UINT)eDXRRootIndex::ShaderResourceViewGlobal,
+        (UINT)eDXRRootIndex::ShaderResourceViewTLAS,
         pTopLevelAccelerationStructure->GetGPUVirtualAddress());
 
     // Bind the global heaps.
