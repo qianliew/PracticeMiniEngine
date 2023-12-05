@@ -81,6 +81,10 @@ void TemporalAAPass::Execute(D3D12CommandList*& pCommandList)
         pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW, taaHandle);
     pCommandList->SetRenderTargets(1, &rtvHandle, nullptr);
 
+    // Set camera relating state.
+    pCommandList->SetViewports(pSceneManager->GetCamera()->GetViewport());
+    pCommandList->SetScissorRects(pSceneManager->GetCamera()->GetScissorRect());
+
     pSceneManager->DrawFullScreenMesh(pCommandList);
     pViewManager->EmplaceRenderTarget(pCommandList, colorHandle, D3D12TextureType::RenderTarget);
     pViewManager->EmplaceRenderTarget(pCommandList, taaHistoryHandle, D3D12TextureType::RenderTarget);

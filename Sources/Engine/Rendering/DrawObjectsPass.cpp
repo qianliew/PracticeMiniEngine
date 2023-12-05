@@ -78,5 +78,5 @@ void DrawObjectsPass::Execute(D3D12CommandList*& pCommandList)
     pCommandList->ClearColor(rtvHandle, clearColor);
     pCommandList->ClearDepth(dsvHandle);
 
-    pSceneManager->DrawObjects(pCommandList);
+    // pSceneManager->DrawObjects(pCommandList);
 }
