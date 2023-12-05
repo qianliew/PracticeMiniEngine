@@ -57,6 +57,8 @@ void Camera::UpdateCameraConstant()
     cameraConstant.ProjectionToWorldMatrix = XMMatrixInverse(nullptr, GetVPMatrix());
     cameraConstant.TAAJitter.x = (GetHaltonSequence(((INT)ViewManager::sFrameCount & 511) + 1, 2) - 0.5f) / width;
     cameraConstant.TAAJitter.y = (GetHaltonSequence(((INT)ViewManager::sFrameCount & 511) + 1, 3) - 0.5f) / height;
+    cameraConstant.TAAJitter.z = 1.0f / width;
+    cameraConstant.TAAJitter.w = 1.0f / height;
     cameraConstant.FrameCount = ViewManager::sFrameCount;
 }
 

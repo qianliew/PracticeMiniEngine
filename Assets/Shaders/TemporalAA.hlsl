@@ -20,9 +20,20 @@ PSFullScreenInput VSTemporalAA(VSFullScreenInput input)
 
 float4 PSTemporalAA(PSFullScreenInput input) : SV_TARGET
 {
-    const float alpha = 0.6f;
+    const float alpha = 0.5f;
     float4 history = TAAHistoryTexture.Sample(SourceTextureSampler, input.texCoord);
-    float4 color = SourceTexture.Sample(SourceTextureSampler, input.texCoord + TAAJitter.xy);
+
+    // Upsample the color of the current frame.
+    float4 color = SourceTexture.Sample(SourceTextureSampler, input.texCoord + TAAJitter.xy + float2(TAAJitter.z, -TAAJitter.w));
+    color += SourceTexture.Sample(SourceTextureSampler, input.texCoord + TAAJitter.xy + float2(TAAJitter.z, 0.0f));
+    color += SourceTexture.Sample(SourceTextureSampler, input.texCoord + TAAJitter.xy + float2(TAAJitter.z, TAAJitter.w));
+    color += SourceTexture.Sample(SourceTextureSampler, input.texCoord + TAAJitter.xy + float2(0.0f, -TAAJitter.w));
+    color += SourceTexture.Sample(SourceTextureSampler, input.texCoord + TAAJitter.xy + float2(0.0f, 0.0f));
+    color += SourceTexture.Sample(SourceTextureSampler, input.texCoord + TAAJitter.xy + float2(0.0f, TAAJitter.w));
+    color += SourceTexture.Sample(SourceTextureSampler, input.texCoord + TAAJitter.xy + float2(-TAAJitter.z, -TAAJitter.w));
+    color += SourceTexture.Sample(SourceTextureSampler, input.texCoord + TAAJitter.xy + float2(-TAAJitter.z, 0.0f));
+    color += SourceTexture.Sample(SourceTextureSampler, input.texCoord + TAAJitter.xy + float2(-TAAJitter.z, TAAJitter.w));
+    color /= 9.0f;
 
     return lerp(color, history, alpha);
 }
