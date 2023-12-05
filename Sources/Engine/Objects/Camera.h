@@ -27,6 +27,9 @@ private:
     FLOAT nearZ;
     FLOAT farZ;
 
+    // Helper functions
+    float GetHaltonSequence(int index, int base);
+
 public:
     Camera(UINT id, FLOAT width, FLOAT height);
     ~Camera();

@@ -55,8 +55,8 @@ void Camera::UpdateCameraConstant()
     cameraConstant.WorldToProjectionMatrix = GetVPMatrix();
     XMStoreFloat4(&cameraConstant.CameraWorldPosition, worldPosition);
     cameraConstant.ProjectionToWorldMatrix = XMMatrixInverse(nullptr, GetVPMatrix());
-    cameraConstant.TAAJitter.x = ((INT)ViewManager::sFrameCount % 4 - 1.5f) / width / 4.0f;
-    cameraConstant.TAAJitter.y = ((INT)ViewManager::sFrameCount / 4 % 4 - 1.5f) / height / 4.0f;
+    cameraConstant.TAAJitter.x = (GetHaltonSequence(((INT)ViewManager::sFrameCount & 511) + 1, 2) - 0.5f) / width;
+    cameraConstant.TAAJitter.y = (GetHaltonSequence(((INT)ViewManager::sFrameCount & 511) + 1, 3) - 0.5f) / height;
     cameraConstant.FrameCount = ViewManager::sFrameCount;
 }
 
@@ -69,4 +69,19 @@ const XMMATRIX Camera::GetVPMatrix()
     XMMATRIX proj = XMMatrixPerspectiveFovRH(fov, aspectRatio, nearZ, farZ);
 
     return view * proj;
+}
+
+float Camera::GetHaltonSequence(int index, int base)
+{
+    float result = 0.0f;
+    float fraction = 1.0f;
+
+    while (index > 0)
+    {
+        fraction /= base;
+        result += fraction * (index % base);
+        index /= base;
+    }
+
+    return result;
 }
