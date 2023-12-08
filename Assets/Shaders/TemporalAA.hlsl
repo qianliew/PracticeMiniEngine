@@ -20,8 +20,12 @@ PSFullScreenInput VSTemporalAA(VSFullScreenInput input)
 
 float4 PSTemporalAA(PSFullScreenInput input) : SV_TARGET
 {
-    const float alpha = 0.5f;
-    float4 history = TAAHistoryTexture.Sample(SourceTextureSampler, input.texCoord);
+    float4 positionCS = float4(input.texCoord, 0, 1);
+    float4 positionWS = mul(ProjectionToWorldMatrix, positionCS);
+    float4 reprojectedUV = mul(PreviousWorldToProjectionMatrix, positionWS);
+
+    const float alpha = 0.9f;
+    float4 history = TAAHistoryTexture.Sample(SourceTextureSampler, reprojectedUV);
 
     // Upsample the color of the current frame.
     float4 color = SourceTexture.Sample(SourceTextureSampler, input.texCoord + TAAJitter.xy + float2(TAAJitter.z, -TAAJitter.w));

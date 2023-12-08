@@ -52,6 +52,7 @@ void Camera::SetScissorRect(const LONG width, const LONG height)
 
 void Camera::UpdateCameraConstant()
 {
+    cameraConstant.PreviousWorldToProjectionMatrix = cameraConstant.WorldToProjectionMatrix;
     cameraConstant.WorldToProjectionMatrix = GetVPMatrix();
     XMStoreFloat4(&cameraConstant.CameraWorldPosition, worldPosition);
     cameraConstant.ProjectionToWorldMatrix = XMMatrixInverse(nullptr, GetVPMatrix());
