@@ -45,5 +45,6 @@ public:
     inline const UINT GetGBufferHandle() const { return gBufferHandle; }
     inline const UINT GetGBufferSize() const { return kGBufferSize; }
     inline const UINT GetFrameIndex() const { return frameIndex; }
+    inline ID3D12Resource* GetDepthStencil() const { return pDepthStencil->GetTextureBuffer()->GetResource(); }
     inline ID3D12Resource* GetRayTracingOutput() const { return pRayTracingOutput->GetTextureBuffer()->GetResource(); }
 };

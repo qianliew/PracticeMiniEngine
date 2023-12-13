@@ -121,6 +121,11 @@ public:
         pCommandList->CopyResource(pDstResource, pSrcResource);
     }
 
+    inline void CopyTexture(D3D12_TEXTURE_COPY_LOCATION* pDstResource, D3D12_TEXTURE_COPY_LOCATION* pSrcResource)
+    {
+        pCommandList->CopyTextureRegion(pDstResource, 0, 0, 0, pSrcResource, nullptr);
+    }
+
     inline void AddTransitionResourceBarriers(ID3D12Resource* pResource,
         D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter)
     {
