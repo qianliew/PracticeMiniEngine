@@ -12,4 +12,24 @@ cbuffer GlobalConstants : register(b0)
     uint FrameCount;
 };
 
+cbuffer PerObjectConstants : register(b1)
+{
+    float4x4 ObjectToWorldMatrix;
+};
+
+inline float3 GetWorldSpaceNormal(float3 normalOS)
+{
+    return mul((float3x3)ObjectToWorldMatrix, normalOS);
+}
+
+inline float3 GetWorldSpaceTangent(float3 tangentOS)
+{
+    return mul((float3x3)ObjectToWorldMatrix, tangentOS);
+}
+
+inline float3 GetWorldSpaceViewDir(float3 positionWS)
+{
+    return CameraPositionWS - positionWS;
+}
+
 #endif

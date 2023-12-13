@@ -50,6 +50,10 @@ ViewManager::ViewManager(std::shared_ptr<D3D12Device>& device, UINT inWidth, UIN
     colorHandles[1] = CreateRenderTarget();
     useFirstHandle = TRUE;
 
+    // Create render targets for the GBuffer.
+    gBufferHandle = CreateRenderTarget();
+    CreateRenderTarget();
+
     // Create a depth stencil buffer.
     pDepthStencil = new D3D12Texture(-1, -1, width, height);
     pDepthStencil->CreateTexture(D3D12TextureType::DepthStencil);

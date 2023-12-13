@@ -181,6 +181,7 @@
     <ClInclude Include="..\Sources\Engine\Rendering\BlitPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\DrawObjecstPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\DrawSkyboxPass.h" />
+    <ClInclude Include="..\Sources\Engine\Rendering\GBufferPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\RayTracingPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\TemporalAAPass.h" />
     <ClInclude Include="..\Sources\Engine\Window.h" />
@@ -225,6 +226,7 @@
     <ClCompile Include="..\Sources\Engine\Rendering\BlitPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\DrawObjectsPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\DrawSkyboxPass.cpp" />
+    <ClCompile Include="..\Sources\Engine\Rendering\GBufferPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\RayTracingPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\TemporalAAPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Window.cpp" />
@@ -265,6 +267,13 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="..\Assets\Shaders\GBuffer.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <FileType>Document</FileType>
+    </CustomBuild>
     <FxCompile Include="..\Assets\Shaders\Raytracing.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </EntryPointName>

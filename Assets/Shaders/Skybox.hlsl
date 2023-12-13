@@ -3,11 +3,6 @@
 
 #include "Library/Common.hlsli"
 
-cbuffer PerObjectConstants : register(b1)
-{
-    float4x4 ObjectToWorldMatrix;
-};
-
 TextureCube SkyboxCube : register(t5);
 SamplerState SkyboxSampler : register(s5);
 

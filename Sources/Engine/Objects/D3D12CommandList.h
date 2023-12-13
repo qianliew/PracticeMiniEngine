@@ -70,7 +70,7 @@ public:
         const D3D12_CPU_DESCRIPTOR_HANDLE* pRenderTargetDescriptors,
         const D3D12_CPU_DESCRIPTOR_HANDLE* pDepthStencilDescriptor)
     {
-        pCommandList->OMSetRenderTargets(NumRenderTargetDescriptors, pRenderTargetDescriptors, FALSE, pDepthStencilDescriptor);
+        pCommandList->OMSetRenderTargets(NumRenderTargetDescriptors, pRenderTargetDescriptors, TRUE, pDepthStencilDescriptor);
     }
 
     inline void ClearColor(D3D12_CPU_DESCRIPTOR_HANDLE RenderTargetView, const FLOAT ColorRGBA[4])

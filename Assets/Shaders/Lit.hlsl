@@ -3,11 +3,6 @@
 
 #include "Library/Common.hlsli"
 
-cbuffer PerObjectConstants : register(b1)
-{
-    float4x4 ObjectToWorldMatrix;
-};
-
 Texture2D BaseTexture   : register(t5);
 Texture2D MRATexture    : register(t6);
 Texture2D NormalTexture : register(t7);
@@ -34,21 +29,6 @@ struct PSInput
     float3 viewDirWS    : TEXCOORD3;
     float4 color        : COLOR;
 };
-
-inline float3 GetWorldSpaceNormal(float3 normalOS)
-{
-    return mul((float3x3)ObjectToWorldMatrix, normalOS);
-}
-
-inline float3 GetWorldSpaceTangent(float3 tangentOS)
-{
-    return mul((float3x3)ObjectToWorldMatrix, tangentOS);
-}
-
-inline float3 GetWorldSpaceViewDir(float3 positionWS)
-{
-    return CameraPositionWS - positionWS;
-}
 
 PSInput VSMain(VSInput input)
 {

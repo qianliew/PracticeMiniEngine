@@ -77,14 +77,8 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
         model->SetMaterial(pMaterialPool[EraseSuffix(fileName)]);
         AddObject(model);
 
-        if (isDXR)
-        {
-            LoadObjectVertexBufferAndIndexBufferDXR(pCommandList, model, offset);
-        }
-        else
-        {
-            LoadObjectVertexBufferAndIndexBuffer(pCommandList, model);
-        }
+        LoadObjectVertexBufferAndIndexBufferDXR(pCommandList, model, offset);
+        LoadObjectVertexBufferAndIndexBuffer(pCommandList, model);
     }
 
     if (isDXR)

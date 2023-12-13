@@ -83,6 +83,9 @@ void MiniEngine::LoadAssets()
     pDrawObjectPass = make_shared<DrawObjectsPass>(pDevice, pSceneManager, pViewManager);
     pDrawObjectPass->Setup(pCommandList, pRootSignature->GetRootSignature());
 
+    pGBufferPass = make_shared<GBufferPass>(pDevice, pSceneManager, pViewManager);
+    pGBufferPass->Setup(pCommandList, pRootSignature->GetRootSignature());
+
     pDrawSkyboxPass = make_shared<DrawSkyboxPass>(pDevice, pSceneManager, pViewManager);
     pDrawSkyboxPass->Setup(pCommandList, pRootSignature->GetRootSignature());
 
@@ -192,25 +195,43 @@ void MiniEngine::PopulateCommandList()
 
     if (isDXR)
     {
-        pCommandList->SetComputeRootSignature(pRootSignature->GetDRXRootSignature());
-
-        // Execute the ray tracing path.
-        pRayTracingPass->Execute(pCommandList);
+        pGBufferPass->Execute(pCommandList);
 
         UINT colorHandle = pViewManager->GetCurrentColorHandle();
+        UINT gBufferHandle = pViewManager->GetGBufferHandle();
         pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(colorHandle),
             D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
-        pCommandList->AddTransitionResourceBarriers(pViewManager->GetRayTracingOutput(),
-            D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(gBufferHandle),
+            D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
         pCommandList->FlushResourceBarriers();
 
-        pCommandList->CopyResource(pViewManager->GetCurrentBuffer(colorHandle), pViewManager->GetRayTracingOutput());
+        pCommandList->CopyResource(pViewManager->GetCurrentBuffer(colorHandle), pViewManager->GetCurrentBuffer(gBufferHandle));
 
         pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(colorHandle),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        pCommandList->AddTransitionResourceBarriers(pViewManager->GetRayTracingOutput(),
-            D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+        pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(gBufferHandle),
+            D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
         pCommandList->FlushResourceBarriers();
+
+        //pCommandList->SetComputeRootSignature(pRootSignature->GetDRXRootSignature());
+
+        //// Execute the ray tracing path.
+        //pRayTracingPass->Execute(pCommandList);
+
+        //UINT colorHandle = pViewManager->GetCurrentColorHandle();
+        //pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(colorHandle),
+        //    D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
+        //pCommandList->AddTransitionResourceBarriers(pViewManager->GetRayTracingOutput(),
+        //    D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        //pCommandList->FlushResourceBarriers();
+
+        //pCommandList->CopyResource(pViewManager->GetCurrentBuffer(colorHandle), pViewManager->GetRayTracingOutput());
+
+        //pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(colorHandle),
+        //    D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        //pCommandList->AddTransitionResourceBarriers(pViewManager->GetRayTracingOutput(),
+        //    D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+        //pCommandList->FlushResourceBarriers();
     }
     else
     {

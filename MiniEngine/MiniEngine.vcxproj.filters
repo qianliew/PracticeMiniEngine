@@ -181,6 +181,9 @@
     <ClInclude Include="..\Sources\Engine\Rendering\TemporalAAPass.h">
       <Filter>Engine\Rendering\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Rendering\GBufferPass.h">
+      <Filter>Engine\Rendering\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Sources\Engine\Objects\D3D12IndexBuffer.cpp">
@@ -288,6 +291,9 @@
     <ClCompile Include="..\Sources\Engine\Rendering\TemporalAAPass.cpp">
       <Filter>Engine\Rendering\Sources</Filter>
     </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Rendering\GBufferPass.cpp">
+      <Filter>Engine\Rendering\Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\Assets\Shaders\Unlit.hlsl">
@@ -303,6 +309,9 @@
       <Filter>Assets\Shaders</Filter>
     </CustomBuild>
     <CustomBuild Include="..\Assets\Shaders\TemporalAA.hlsl">
+      <Filter>Assets\Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\Assets\Shaders\GBuffer.hlsl">
       <Filter>Assets\Shaders</Filter>
     </CustomBuild>
   </ItemGroup>
