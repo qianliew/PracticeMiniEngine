@@ -7,7 +7,7 @@ D3D12Texture::D3D12Texture(UINT inSRVID, UINT inRTVID) :
 
 }
 
-D3D12Texture::D3D12Texture(UINT inSRVID, UINT inRTVID, UINT inWidth, UINT inHeght) :
+D3D12Texture::D3D12Texture(UINT inSRVID, UINT inRTVID, UINT inWidth, UINT inHeght, DXGI_FORMAT format) :
     srvID(inSRVID),
     rtvID(inRTVID),
     width(inWidth),
@@ -15,7 +15,7 @@ D3D12Texture::D3D12Texture(UINT inSRVID, UINT inRTVID, UINT inWidth, UINT inHegh
     mipLevel(1),
     slice(1),
     srvDimension(D3D12_SRV_DIMENSION_TEXTURE2D),
-    dxgiFormat(DXGI_FORMAT_R8G8B8A8_UNORM)
+    dxgiFormat(format)
 {
     pTextureBuffer = nullptr;
 
@@ -89,7 +89,7 @@ void D3D12Texture::CreateTexture(D3D12TextureType inType)
         desc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
         D3D12_SHADER_RESOURCE_VIEW_DESC viewDesc;
-        viewDesc.Format = dxgiFormat;
+        viewDesc.Format = dxgiFormat == DXGI_FORMAT_R32_TYPELESS ? DXGI_FORMAT_R32_FLOAT : dxgiFormat;
         viewDesc.ViewDimension = srvDimension;
         viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 

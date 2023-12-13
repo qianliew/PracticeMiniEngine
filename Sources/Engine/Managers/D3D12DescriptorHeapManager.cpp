@@ -23,7 +23,7 @@ D3D12DescriptorHeapManager::D3D12DescriptorHeapManager(ComPtr<ID3D12Device> &dev
     srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     ThrowIfFailed(device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&heapTable[SHADER_RESOURCE_VIEW_PEROBJECT])));
 
-    srvHeapDesc.NumDescriptors = 5;
+    srvHeapDesc.NumDescriptors = 10;
     ThrowIfFailed(device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&heapTable[SHADER_RESOURCE_VIEW_GLOBAL])));
 
     sizeTable[SHADER_RESOURCE_VIEW_PEROBJECT] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -49,7 +49,7 @@ D3D12DescriptorHeapManager::D3D12DescriptorHeapManager(ComPtr<ID3D12Device> &dev
 
     // Describe and create a render target view (RTV) descriptor heap.
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-    rtvHeapDesc.NumDescriptors = FRAME_COUNT + 5;
+    rtvHeapDesc.NumDescriptors = FRAME_COUNT + 10;
     rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     ThrowIfFailed(device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&heapTable[RENDER_TARGET_VIEW])));

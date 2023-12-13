@@ -198,44 +198,20 @@ void MiniEngine::PopulateCommandList()
         pGBufferPass->Execute(pCommandList);
 
         UINT colorHandle = pViewManager->GetCurrentColorHandle();
+        UINT gBufferHandle = pViewManager->GetGBufferHandle();
         pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(colorHandle),
             D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
-        pCommandList->AddTransitionResourceBarriers(pViewManager->GetDepthStencil(),
-            D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(gBufferHandle),
+            D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
         pCommandList->FlushResourceBarriers();
 
-        D3D12_TEXTURE_COPY_LOCATION destination = {};
-        destination.pResource = pViewManager->GetCurrentBuffer(colorHandle);
-        destination.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-        destination.SubresourceIndex = 0;
-        D3D12_TEXTURE_COPY_LOCATION source = {};
-        source.pResource = pViewManager->GetDepthStencil();
-        source.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-        source.SubresourceIndex = 0;
-
-        pCommandList->CopyTexture(&destination, &source);
+        pCommandList->CopyResource(pViewManager->GetCurrentBuffer(colorHandle), pViewManager->GetCurrentBuffer(gBufferHandle));
 
         pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(colorHandle),
             D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        pCommandList->AddTransitionResourceBarriers(pViewManager->GetDepthStencil(),
-            D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+        pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(gBufferHandle),
+            D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
         pCommandList->FlushResourceBarriers();
-
-        //UINT colorHandle = pViewManager->GetCurrentColorHandle();
-        //UINT gBufferHandle = pViewManager->GetGBufferHandle();
-        //pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(colorHandle),
-        //    D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
-        //pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(gBufferHandle),
-        //    D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
-        //pCommandList->FlushResourceBarriers();
-
-        //pCommandList->CopyResource(pViewManager->GetCurrentBuffer(colorHandle), pViewManager->GetCurrentBuffer(gBufferHandle));
-
-        //pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(colorHandle),
-        //    D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        //pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(gBufferHandle),
-        //    D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        //pCommandList->FlushResourceBarriers();
 
         //pCommandList->SetComputeRootSignature(pRootSignature->GetDRXRootSignature());
 

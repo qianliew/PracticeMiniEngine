@@ -62,19 +62,26 @@ void TemporalAAPass::Execute(D3D12CommandList*& pCommandList)
     // Set the color buffer and the TAA history to the SRVs.
     const UINT colorHandle = pViewManager->GetCurrentColorHandle();
     const UINT taaHandle = pViewManager->GetNextColorHandle();
+    const UINT depthHandle = 0;
 
-    pViewManager->EmplaceRenderTarget(pCommandList, colorHandle, D3D12TextureType::ShaderResource);
-    pViewManager->EmplaceRenderTarget(pCommandList, taaHistoryHandle, D3D12TextureType::ShaderResource);
+    pViewManager->ConvertTextureType(pCommandList, colorHandle, D3D12TextureType::RenderTarget, D3D12TextureType::ShaderResource);
+    pViewManager->ConvertTextureType(pCommandList, taaHistoryHandle, D3D12TextureType::RenderTarget, D3D12TextureType::ShaderResource);
+    pViewManager->ConvertTextureType(pCommandList, depthHandle, D3D12TextureType::DepthStencil, D3D12TextureType::ShaderResource);
     pDevice->GetDescriptorHeapManager()->SetViews(
         pCommandList->GetCommandList(),
         SHADER_RESOURCE_VIEW_GLOBAL,
         (UINT)eRootIndex::ShaderResourceViewGlobal0,
-        pViewManager->GetTheSRVHandle(colorHandle));
+        pViewManager->GetSRVHandle4RTV(colorHandle));
     pDevice->GetDescriptorHeapManager()->SetViews(
         pCommandList->GetCommandList(),
         SHADER_RESOURCE_VIEW_GLOBAL,
         (UINT)eRootIndex::ShaderResourceViewGlobal1,
-        pViewManager->GetTheSRVHandle(taaHistoryHandle));
+        pViewManager->GetSRVHandle4RTV(taaHistoryHandle));
+    pDevice->GetDescriptorHeapManager()->SetViews(
+        pCommandList->GetCommandList(),
+        SHADER_RESOURCE_VIEW_GLOBAL,
+        (UINT)eRootIndex::ShaderResourceViewGlobal2,
+        pViewManager->GetDepthSRVHandle());
 
     // Set the TAA handle to the render targert, and draw. 
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle =
@@ -86,8 +93,9 @@ void TemporalAAPass::Execute(D3D12CommandList*& pCommandList)
     pCommandList->SetScissorRects(pSceneManager->GetCamera()->GetScissorRect());
 
     pSceneManager->DrawFullScreenMesh(pCommandList);
-    pViewManager->EmplaceRenderTarget(pCommandList, colorHandle, D3D12TextureType::RenderTarget);
-    pViewManager->EmplaceRenderTarget(pCommandList, taaHistoryHandle, D3D12TextureType::RenderTarget);
+    pViewManager->ConvertTextureType(pCommandList, colorHandle, D3D12TextureType::RenderTarget, D3D12TextureType::RenderTarget);
+    pViewManager->ConvertTextureType(pCommandList, taaHistoryHandle, D3D12TextureType::RenderTarget, D3D12TextureType::RenderTarget);
+    pViewManager->ConvertTextureType(pCommandList, depthHandle, D3D12TextureType::DepthStencil, D3D12TextureType::DepthStencil);
 
     // Copy the current TAA buffer to the history.
     pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(taaHistoryHandle),

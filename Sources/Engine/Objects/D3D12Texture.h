@@ -48,7 +48,12 @@ private:
 
 public:
 	D3D12Texture(UINT inSRVID, UINT inRTVID = -1);
-	D3D12Texture(UINT inSRVID, UINT inRTVID, UINT inWidth, UINT inHeght);
+	D3D12Texture(
+		UINT inSRVID,
+		UINT inRTVID,
+		UINT inWidth,
+		UINT inHeght,
+		DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM);
 	~D3D12Texture();
 
 	inline const BYTE* GetTextureDataAt(UINT index) { return pData[index]; }

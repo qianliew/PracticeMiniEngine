@@ -7,6 +7,7 @@ enum class eRootIndex
     ConstantBufferViewPerObject,
     ShaderResourceViewGlobal0,
     ShaderResourceViewGlobal1,
+    ShaderResourceViewGlobal2,
     ShaderResourceViewPerObject,
     UnorderedAccessViewGlobal,
     Sampler,

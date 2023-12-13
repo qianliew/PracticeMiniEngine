@@ -35,13 +35,14 @@ public:
     UINT CreateRenderTarget();
     void CreateDXRUAV();
     const UINT GetNextColorHandle();
-    UINT GetTheSRVHandle(UINT rtHandle);
-    void EmplaceRenderTarget(D3D12CommandList*& pCommandList, UINT handleID, D3D12TextureType type);
+    UINT GetSRVHandle4RTV(UINT rtvHandle);
+    void ConvertTextureType(D3D12CommandList*& pCommandList, UINT handleIndex, D3D12TextureType type, D3D12TextureType targetType);
 
     inline IDXGISwapChain3* GetSwapChain() const { return pSwapChain.Get(); }
     inline ID3D12Resource* GetCurrentBackBuffer() const { return pBackBuffers[frameIndex].Get(); }
     inline ID3D12Resource* GetCurrentBuffer(UINT rtHandle) { return pRenderTargets[rtHandle]->GetTextureBuffer()->GetResource(); }
     inline const UINT GetCurrentColorHandle() const { return useFirstHandle == TRUE ? colorHandles[0] : colorHandles[1]; }
+    inline const UINT GetDepthSRVHandle() const { return pDepthStencil->GetTextureID();  }
     inline const UINT GetGBufferHandle() const { return gBufferHandle; }
     inline const UINT GetGBufferSize() const { return kGBufferSize; }
     inline const UINT GetFrameIndex() const { return frameIndex; }

@@ -6,6 +6,7 @@
 
 Texture2D SourceTexture : register(t0);
 Texture2D TAAHistoryTexture : register(t1);
+Texture2D DepthTexture : register(t2);
 SamplerState SourceTextureSampler : register(s0);
 
 PSFullScreenInput VSTemporalAA(VSFullScreenInput input)
@@ -39,6 +40,7 @@ float4 PSTemporalAA(PSFullScreenInput input) : SV_TARGET
     color += SourceTexture.Sample(SourceTextureSampler, input.texCoord + TAAJitter.xy + float2(-TAAJitter.z, TAAJitter.w));
     color /= 9.0f;
 
+    // return DepthTexture.Sample(SourceTextureSampler, input.texCoord).r;
     return lerp(color, history, alpha);
 }
 

@@ -55,7 +55,7 @@ ViewManager::ViewManager(std::shared_ptr<D3D12Device>& device, UINT inWidth, UIN
     CreateRenderTarget();
 
     // Create a depth stencil buffer.
-    pDepthStencil = new D3D12Texture(-1, -1, width, height);
+    pDepthStencil = new D3D12Texture(globalSRVID++, -1, width, height, DXGI_FORMAT_R32_TYPELESS);
     pDepthStencil->CreateTexture(D3D12TextureType::DepthStencil);
 
     D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
@@ -127,11 +127,11 @@ void ViewManager::CreateDXRUAV()
         pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, 0));
 }
 
-UINT ViewManager::GetTheSRVHandle(UINT rtHandle)
+UINT ViewManager::GetSRVHandle4RTV(UINT rtvHandle)
 {
-    if (pRenderTargets[rtHandle] != nullptr)
+    if (pRenderTargets[rtvHandle] != nullptr)
     {
-        return pRenderTargets[rtHandle]->GetTextureID();
+        return pRenderTargets[rtvHandle]->GetTextureID();
     }
     return 0;
 }
@@ -142,20 +142,33 @@ const UINT ViewManager::GetNextColorHandle()
     return GetCurrentColorHandle();
 }
 
-void ViewManager::EmplaceRenderTarget(D3D12CommandList*& pCommandList, UINT handleID, D3D12TextureType type)
+void ViewManager::ConvertTextureType(
+    D3D12CommandList*& pCommandList,
+    UINT handleIndex,
+    D3D12TextureType type,
+    D3D12TextureType targetType)
 {
-    D3D12_RESOURCE_STATES stateBefore = GetResourceState(pRenderTargets[handleID]->GetType());
-    UINT heapMapIndex = type == D3D12TextureType::ShaderResource ? SHADER_RESOURCE_VIEW_GLOBAL
+    UINT heapMapIndex = targetType == D3D12TextureType::ShaderResource ? SHADER_RESOURCE_VIEW_GLOBAL
+        : targetType == D3D12TextureType::DepthStencil ? DEPTH_STENCIL_VIEW
         : RENDER_TARGET_VIEW;
-    UINT offset = type == D3D12TextureType::ShaderResource ? pRenderTargets[handleID]->GetTextureID() : handleID;
 
-    pRenderTargets[handleID]->CreateTexture(type);
-    pRenderTargets[handleID]->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(heapMapIndex, offset));
-    pCommandList->AddTransitionResourceBarriers(
-        pRenderTargets[handleID]->GetTextureBuffer()->GetResource(),
-        stateBefore,
-        GetResourceState(type));
+    auto convert = [&](D3D12Texture*& resource)
+    {
+        D3D12_RESOURCE_STATES stateBefore = GetResourceState(resource->GetType());
+        UINT offset = targetType == D3D12TextureType::ShaderResource ? resource->GetTextureID()
+            : targetType == D3D12TextureType::DepthStencil ? 0
+            : handleIndex;
+
+        resource->CreateTexture(targetType);
+        resource->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
+            pDevice->GetDescriptorHeapManager()->GetHandle(heapMapIndex, offset));
+        pCommandList->AddTransitionResourceBarriers(
+            resource->GetTextureBuffer()->GetResource(),
+            stateBefore,
+            GetResourceState(targetType));
+    };
+
+    convert(type == D3D12TextureType::DepthStencil ? pDepthStencil : pRenderTargets[handleIndex]);
     pCommandList->FlushResourceBarriers();
 }
 
@@ -164,9 +177,11 @@ D3D12_RESOURCE_STATES ViewManager::GetResourceState(D3D12TextureType type)
 {
     switch (type)
     {
-    case D3D12TextureType::RenderTarget:
-        return D3D12_RESOURCE_STATE_RENDER_TARGET;
     case D3D12TextureType::ShaderResource:
         return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+    case D3D12TextureType::DepthStencil:
+        return D3D12_RESOURCE_STATE_DEPTH_WRITE;
+    case D3D12TextureType::RenderTarget:
+        return D3D12_RESOURCE_STATE_RENDER_TARGET;
     }
 }
