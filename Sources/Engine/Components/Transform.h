@@ -17,8 +17,8 @@ class Transform
 {
 protected:
     const XMVECTOR DefaultWorldPosition = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
-    const XMVECTOR DefaultForwardDirction = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-    const XMVECTOR DefaultUpDirction = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+    const XMVECTOR DefaultForwardDirction = XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f);
+    const XMVECTOR DefaultUpDirction = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 
     XMVECTOR worldPosition;
     XMVECTOR forwardDirction;

@@ -6,7 +6,7 @@
 #define CAMERA_DEFAULT_FOV XM_PI / 3.0f
 #define CAMERA_DEFAULT_ASPECT_RATIO 16.0f / 9.0f
 #define CAMERA_DEFAULT_NEAR_Z 0.03f
-#define CAMERA_DEFAULT_FAR_Z 100000.0f
+#define CAMERA_DEFAULT_FAR_Z 1000.0f
 
 using namespace DirectX;
 
@@ -39,7 +39,7 @@ public:
     void SetViewport(const FLOAT width, const FLOAT height);
     void SetScissorRect(const LONG width, const LONG height);
     void UpdateCameraConstant();
-    const XMMATRIX GetVPMatrix();
+    void GetVPMatrix(XMMATRIX& worldToProjectionMatrix, XMMATRIX& projectionToWorldMatrix);
 
     inline const FLOAT GetCameraWidth() const { return width; }
     inline const FLOAT GetCameraHeight() const { return height; }

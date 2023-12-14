@@ -5,8 +5,8 @@ cbuffer GlobalConstants : register(b0)
 {
     float4x4 WorldToProjectionMatrix;
     float4x4 ProjectionToWorldMatrix;
-    float4x4 IdentityProjectionMatrix;
     float4x4 PreviousWorldToProjectionMatrix;
+    float4x4 IdentityProjectionMatrix;
     float4 CameraPositionWS;
     float4 TAAJitter;
     uint FrameCount;
@@ -29,7 +29,7 @@ inline float3 GetWorldSpaceTangent(float3 tangentOS)
 
 inline float3 GetWorldSpaceViewDir(float3 positionWS)
 {
-    return CameraPositionWS - positionWS;
+    return CameraPositionWS.xyz - positionWS;
 }
 
 #endif

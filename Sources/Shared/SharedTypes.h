@@ -7,8 +7,8 @@ struct CameraConstant
 {
     XMMATRIX WorldToProjectionMatrix;
     XMMATRIX ProjectionToWorldMatrix;
-    XMMATRIX IdentityProjectionMatrix;
     XMMATRIX PreviousWorldToProjectionMatrix;
+    XMMATRIX IdentityProjectionMatrix;
     XMFLOAT4 CameraWorldPosition;
     XMFLOAT4 TAAJitter;
     UINT FrameCount;

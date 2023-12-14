@@ -53,9 +53,8 @@ void Camera::SetScissorRect(const LONG width, const LONG height)
 void Camera::UpdateCameraConstant()
 {
     cameraConstant.PreviousWorldToProjectionMatrix = cameraConstant.WorldToProjectionMatrix;
-    cameraConstant.WorldToProjectionMatrix = GetVPMatrix();
+    GetVPMatrix(cameraConstant.WorldToProjectionMatrix, cameraConstant.ProjectionToWorldMatrix);
     XMStoreFloat4(&cameraConstant.CameraWorldPosition, worldPosition);
-    cameraConstant.ProjectionToWorldMatrix = XMMatrixInverse(nullptr, GetVPMatrix());
     cameraConstant.TAAJitter.x = (GetHaltonSequence(((INT)ViewManager::sFrameCount & 511) + 1, 2) - 0.5f) / width;
     cameraConstant.TAAJitter.y = (GetHaltonSequence(((INT)ViewManager::sFrameCount & 511) + 1, 3) - 0.5f) / height;
     cameraConstant.TAAJitter.z = 1.0f / width;
@@ -63,7 +62,7 @@ void Camera::UpdateCameraConstant()
     cameraConstant.FrameCount = ViewManager::sFrameCount;
 }
 
-const XMMATRIX Camera::GetVPMatrix()
+void Camera::GetVPMatrix(XMMATRIX& worldToProjectionMatrix, XMMATRIX& projectionToWorldMatrix)
 {
     // Get the view matrix.
     XMMATRIX view = XMMatrixLookAtRH(worldPosition, worldPosition + forwardDirction, upDirction);
@@ -71,7 +70,8 @@ const XMMATRIX Camera::GetVPMatrix()
     // Get the proj matrix.
     XMMATRIX proj = XMMatrixPerspectiveFovRH(fov, aspectRatio, nearZ, farZ);
 
-    return view * proj;
+    worldToProjectionMatrix = view * proj;
+    projectionToWorldMatrix = XMMatrixInverse(nullptr, worldToProjectionMatrix);
 }
 
 float Camera::GetHaltonSequence(int index, int base)

@@ -53,8 +53,8 @@ void Transform::MoveAlongZ(const FLOAT direction)
 void Transform::RotateAlongY(const FLOAT direction)
 {
     XMMATRIX trans = XMMatrixRotationNormal(g_XMIdentityR1, DEFAULT_ROTATING_SPEED * direction);
-    forwardDirction = XMPlaneNormalize(XMVector3Transform(forwardDirction, trans));
-    upDirction = XMPlaneNormalize(XMVector3Transform(upDirction, trans));
+    forwardDirction = XMVector3Normalize(XMVector3Transform(forwardDirction, trans));
+    upDirction = XMVector3Normalize(XMVector3Transform(upDirction, trans));
 }
 
 void Transform::RotateAlongX(const FLOAT direction)
@@ -62,6 +62,6 @@ void Transform::RotateAlongX(const FLOAT direction)
     XMVECTOR vec = XMVector3Cross(upDirction, forwardDirction);
 
     XMMATRIX trans = XMMatrixRotationNormal(vec, DEFAULT_ROTATING_SPEED * direction);
-    forwardDirction = XMPlaneNormalize(XMVector3Transform(forwardDirction, trans));
-    upDirction = XMPlaneNormalize(XMVector3Transform(upDirction, trans));
+    forwardDirction = XMVector3Normalize(XMVector3Transform(forwardDirction, trans));
+    upDirction = XMVector3Normalize(XMVector3Transform(upDirction, trans));
 }

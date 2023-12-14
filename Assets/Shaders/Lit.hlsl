@@ -22,11 +22,12 @@ struct VSInput
 
 struct PSInput
 {
-    float4 positionWS   : SV_POSITION;
-    float2 texCoord     : TEXCOORD;
+    float4 positionCS   : SV_POSITION;
+    float2 texCoord     : TEXCOORD0;
     float3 normalWS     : TEXCOORD1;
     float4 tangentWS    : TEXCOORD2;
     float3 viewDirWS    : TEXCOORD3;
+    float4 positionWS   : TEXCOORD4;
     float4 color        : COLOR;
 };
 
@@ -35,7 +36,8 @@ PSInput VSMain(VSInput input)
     PSInput result;
 
     input.positionOS.w = 1;
-    result.positionWS = mul(WorldToProjectionMatrix, mul(ObjectToWorldMatrix, input.positionOS));
+    result.positionWS = mul(ObjectToWorldMatrix, input.positionOS);
+    result.positionCS = mul(WorldToProjectionMatrix, result.positionWS);
     result.texCoord = input.texCoord;
 
     result.normalWS = normalize(GetWorldSpaceNormal(input.normalOS));
