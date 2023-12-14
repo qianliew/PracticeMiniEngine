@@ -163,7 +163,7 @@ void D3D12Texture::CreateTexture(D3D12TextureType inType)
 
     if (oldBuffer != nullptr)
     {
-        pTextureBuffer->SetResourceLoaction(oldBuffer->GetResourceLocation());
+        pTextureBuffer->SetResourceLoaction(oldBuffer->GetResource());
         delete oldBuffer;
     }
 }

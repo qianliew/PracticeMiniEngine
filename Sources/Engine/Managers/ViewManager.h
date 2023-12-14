@@ -40,12 +40,12 @@ public:
 
     inline IDXGISwapChain3* GetSwapChain() const { return pSwapChain.Get(); }
     inline ID3D12Resource* GetCurrentBackBuffer() const { return pBackBuffers[frameIndex].Get(); }
-    inline ID3D12Resource* GetCurrentBuffer(UINT rtHandle) { return pRenderTargets[rtHandle]->GetTextureBuffer()->GetResource(); }
+    inline ID3D12Resource* GetCurrentBuffer(UINT rtHandle) { return pRenderTargets[rtHandle]->GetTextureBuffer()->GetResource().Get(); }
     inline const UINT GetCurrentColorHandle() const { return useFirstHandle == TRUE ? colorHandles[0] : colorHandles[1]; }
     inline const UINT GetDepthSRVHandle() const { return pDepthStencil->GetTextureID();  }
     inline const UINT GetGBufferHandle() const { return gBufferHandle; }
     inline const UINT GetGBufferSize() const { return kGBufferSize; }
     inline const UINT GetFrameIndex() const { return frameIndex; }
-    inline ID3D12Resource* GetDepthStencil() const { return pDepthStencil->GetTextureBuffer()->GetResource(); }
-    inline ID3D12Resource* GetRayTracingOutput() const { return pRayTracingOutput->GetTextureBuffer()->GetResource(); }
+    inline ID3D12Resource* GetDepthStencil() const { return pDepthStencil->GetTextureBuffer()->GetResource().Get(); }
+    inline ID3D12Resource* GetRayTracingOutput() const { return pRayTracingOutput->GetTextureBuffer()->GetResource().Get(); }
 };

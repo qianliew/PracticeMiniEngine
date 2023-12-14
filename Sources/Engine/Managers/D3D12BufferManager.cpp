@@ -76,13 +76,13 @@ void D3D12BufferManager::AllocateDefaultBuffer(
     D3D12_RESOURCE_STATES state,
     const D3D12_CLEAR_VALUE* clearValue)
 {
-    if (pResource->GetResource() == nullptr 
+    if (pResource->GetResource().Get() == nullptr
         || DefaultBufferPool.find(pResource) == DefaultBufferPool.end())
     {
         D3D12DefaultBuffer* pbuffer = new D3D12DefaultBuffer();
         pbuffer->CreateBuffer(pDevice.Get(), &pResource->GetResourceDesc(), state, clearValue);
         DefaultBufferPool.insert(std::make_pair(pResource, pbuffer));
-        pResource->SetResourceLoaction(pbuffer->ResourceLocation);
+        pResource->SetResourceLoaction(pbuffer->ResourceLocation.Resource);
     }
 }
 
@@ -94,7 +94,7 @@ void D3D12BufferManager::AllocateGlobalConstantBuffer()
     D3D12UploadBuffer* pBuffer = new D3D12UploadBuffer(TRUE);
     AllocateUploadBuffer(pBuffer, 1024);
 
-    globalConstantBuffer->SetResourceLoaction(pBuffer->ResourceLocation);
+    globalConstantBuffer->SetResourceLoaction(pBuffer->ResourceLocation.Resource);
     globalConstantBuffer->SetStartLocation(pBuffer->GetStartLocation());
 }
 
@@ -110,7 +110,7 @@ void D3D12BufferManager::AllocatePerObjectConstantBuffers(UINT offset)
     D3D12UploadBuffer* pBuffer = new D3D12UploadBuffer(TRUE);
     AllocateUploadBuffer(pBuffer, 1024);
 
-    perObjectConstantBuffers[offset]->SetResourceLoaction(pBuffer->ResourceLocation);
+    perObjectConstantBuffers[offset]->SetResourceLoaction(pBuffer->ResourceLocation.Resource);
     perObjectConstantBuffers[offset]->SetStartLocation(pBuffer->GetStartLocation());
 }
 

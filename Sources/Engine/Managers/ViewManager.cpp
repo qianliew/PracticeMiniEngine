@@ -163,7 +163,7 @@ void ViewManager::ConvertTextureType(
         resource->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
             pDevice->GetDescriptorHeapManager()->GetHandle(heapMapIndex, offset));
         pCommandList->AddTransitionResourceBarriers(
-            resource->GetTextureBuffer()->GetResource(),
+            resource->GetTextureBuffer()->GetResource().Get(),
             stateBefore,
             GetResourceState(targetType));
     };

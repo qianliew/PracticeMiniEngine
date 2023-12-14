@@ -13,13 +13,12 @@ public:
 	D3D12Resource(const D3D12_RESOURCE_DESC&);
 	virtual ~D3D12Resource();
 
-	void SetResourceLoaction(const D3D12ResourceLocation&);
+	void SetResourceLoaction(const ComPtr<ID3D12Resource>&);
 	// TODO: Check nullptr.
 	virtual void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) = 0;
 
-	inline const D3D12_RESOURCE_DESC GetResourceDesc() const { return resourceDesc; }
-	inline D3D12ResourceLocation GetResourceLocation() const { return resourceLocation; }
-	inline ID3D12Resource* GetResource() const { return resourceLocation.Resource.Get(); }
+	inline const D3D12_RESOURCE_DESC& GetResourceDesc() const { return resourceDesc; }
+	inline const ComPtr<ID3D12Resource>& GetResource() const { return resourceLocation.Resource; }
 };
 
 template<typename TView, typename TViewDesc>
