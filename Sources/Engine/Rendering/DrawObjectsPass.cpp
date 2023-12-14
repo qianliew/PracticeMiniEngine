@@ -10,7 +10,7 @@ DrawObjectsPass::DrawObjectsPass(
 
 }
 
-void DrawObjectsPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
+void DrawObjectsPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
 {
     ComPtr<ID3DBlob> vertexShader;
     ComPtr<ID3DBlob> pixelShader;
@@ -56,7 +56,7 @@ void DrawObjectsPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSi
     ThrowIfFailed(pDevice->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pPipelineState.GetAddressOf())));
 }
 
-void DrawObjectsPass::Execute(D3D12CommandList*& pCommandList)
+void DrawObjectsPass::Execute(D3D12CommandList* pCommandList)
 {
     // Set the pipeline state.
     pCommandList->SetPipelineState(pPipelineState.Get());

@@ -10,7 +10,7 @@ DrawSkyboxPass::DrawSkyboxPass(
 
 }
 
-void DrawSkyboxPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
+void DrawSkyboxPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
 {
     ComPtr<ID3DBlob> vertexShader;
     ComPtr<ID3DBlob> pixelShader;
@@ -55,7 +55,7 @@ void DrawSkyboxPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
     ThrowIfFailed(pDevice->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pPipelineState.GetAddressOf())));
 }
 
-void DrawSkyboxPass::Execute(D3D12CommandList*& pCommandList)
+void DrawSkyboxPass::Execute(D3D12CommandList* pCommandList)
 {
     // Set the pipeline state.
     pCommandList->SetPipelineState(pPipelineState.Get());

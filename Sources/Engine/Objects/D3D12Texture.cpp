@@ -108,6 +108,7 @@ void D3D12Texture::CreateTexture(D3D12TextureType inType)
         }
 
         pTextureBuffer = new D3D12ShaderResourceBuffer(desc, viewDesc);
+        pTextureBuffer->SetResourceState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     }
     else if (type == D3D12TextureType::RenderTarget)
     {
@@ -125,6 +126,7 @@ void D3D12Texture::CreateTexture(D3D12TextureType inType)
         viewDesc.Texture2D.PlaneSlice = 0;
 
         pTextureBuffer = new D3D12RenderTargetBuffer(desc, viewDesc);
+        pTextureBuffer->SetResourceState(D3D12_RESOURCE_STATE_RENDER_TARGET);
     }
     else if (type == D3D12TextureType::DepthStencil)
     {
@@ -142,6 +144,7 @@ void D3D12Texture::CreateTexture(D3D12TextureType inType)
         viewDesc.Texture2D.MipSlice = 0;
 
         pTextureBuffer = new D3D12DepthStencilBuffer(desc, viewDesc);
+        pTextureBuffer->SetResourceState(D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
     else if (type == D3D12TextureType::UnorderedAccess)
     {
@@ -159,6 +162,7 @@ void D3D12Texture::CreateTexture(D3D12TextureType inType)
         viewDesc.Texture2D.PlaneSlice = 0;
 
         pTextureBuffer = new D3D12UnorderedAccessBuffer(desc, viewDesc);
+        pTextureBuffer->SetResourceState(D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
     }
 
     if (oldBuffer != nullptr)

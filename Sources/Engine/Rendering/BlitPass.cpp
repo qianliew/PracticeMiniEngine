@@ -10,7 +10,7 @@ BlitPass::BlitPass(
 
 }
 
-void BlitPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
+void BlitPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
 {
     ComPtr<ID3DBlob> vertexShader;
     ComPtr<ID3DBlob> pixelShader;
@@ -52,7 +52,7 @@ void BlitPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSignature
     ThrowIfFailed(pDevice->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pPipelineState.GetAddressOf())));
 }
 
-void BlitPass::Execute(D3D12CommandList*& pCommandList)
+void BlitPass::Execute(D3D12CommandList* pCommandList)
 {
     pCommandList->SetPipelineState(pPipelineState.Get());
 

@@ -38,7 +38,7 @@ private:
 public:
 	RayTracingPass(shared_ptr<D3D12Device>&, shared_ptr<SceneManager>&, shared_ptr<ViewManager>&);
 
-	void Setup(D3D12CommandList*&, ComPtr<ID3D12RootSignature>&);
-	void Execute(D3D12CommandList*&);
+	void Setup(D3D12CommandList*, ComPtr<ID3D12RootSignature>&);
+	void Execute(D3D12CommandList*);
 	void BuildShaderTables();
 };

@@ -10,7 +10,7 @@ GBufferPass::GBufferPass(
 
 }
 
-void GBufferPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
+void GBufferPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
 {
     ComPtr<ID3DBlob> vertexShader;
     ComPtr<ID3DBlob> pixelShader;
@@ -61,7 +61,7 @@ void GBufferPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSignat
     ThrowIfFailed(pDevice->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pPipelineState.GetAddressOf())));
 }
 
-void GBufferPass::Execute(D3D12CommandList*& pCommandList)
+void GBufferPass::Execute(D3D12CommandList* pCommandList)
 {
     // Set the pipeline state.
     pCommandList->SetPipelineState(pPipelineState.Get());
@@ -84,4 +84,8 @@ void GBufferPass::Execute(D3D12CommandList*& pCommandList)
     pCommandList->ClearDepth(dsvHandle);
 
     pSceneManager->DrawObjects(pCommandList);
+
+    const D3D12Resource* pColorResource = pViewManager->GetCurrentBuffer(pViewManager->GetCurrentColorHandle());
+    const D3D12Resource* pGBufferResource = pViewManager->GetCurrentBuffer(pViewManager->GetGBufferHandle());
+    CopyBuffer(pCommandList, pColorResource, pGBufferResource);
 }

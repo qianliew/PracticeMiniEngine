@@ -197,22 +197,6 @@ void MiniEngine::PopulateCommandList()
     {
         pGBufferPass->Execute(pCommandList);
 
-        UINT colorHandle = pViewManager->GetCurrentColorHandle();
-        UINT gBufferHandle = pViewManager->GetGBufferHandle();
-        pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(colorHandle),
-            D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
-        pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(gBufferHandle),
-            D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
-        pCommandList->FlushResourceBarriers();
-
-        pCommandList->CopyResource(pViewManager->GetCurrentBuffer(colorHandle), pViewManager->GetCurrentBuffer(gBufferHandle));
-
-        pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(colorHandle),
-            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(gBufferHandle),
-            D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        pCommandList->FlushResourceBarriers();
-
         //pCommandList->SetComputeRootSignature(pRootSignature->GetDRXRootSignature());
 
         //// Execute the ray tracing path.

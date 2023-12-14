@@ -5,6 +5,7 @@
 class D3D12Resource
 {
 protected:
+	D3D12_RESOURCE_STATES resourceState;
 	D3D12ResourceLocation resourceLocation;
 	const D3D12_RESOURCE_DESC resourceDesc;
 
@@ -19,6 +20,8 @@ public:
 
 	inline const D3D12_RESOURCE_DESC& GetResourceDesc() const { return resourceDesc; }
 	inline const ComPtr<ID3D12Resource>& GetResource() const { return resourceLocation.Resource; }
+	inline const D3D12_RESOURCE_STATES GetResourceState() const { return resourceState; }
+	inline void SetResourceState(D3D12_RESOURCE_STATES state) { resourceState = state; }
 };
 
 template<typename TView, typename TViewDesc>

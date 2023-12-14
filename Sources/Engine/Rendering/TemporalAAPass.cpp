@@ -10,7 +10,7 @@ TemporalAAPass::TemporalAAPass(
 
 }
 
-void TemporalAAPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
+void TemporalAAPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
 {
     ComPtr<ID3DBlob> vertexShader;
     ComPtr<ID3DBlob> pixelShader;
@@ -55,7 +55,7 @@ void TemporalAAPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSig
     taaHistoryHandle = pViewManager->CreateRenderTarget();
 }
 
-void TemporalAAPass::Execute(D3D12CommandList*& pCommandList)
+void TemporalAAPass::Execute(D3D12CommandList* pCommandList)
 {
     pCommandList->SetPipelineState(pPipelineState.Get());
 
@@ -98,18 +98,8 @@ void TemporalAAPass::Execute(D3D12CommandList*& pCommandList)
     pViewManager->ConvertTextureType(pCommandList, depthHandle, D3D12TextureType::DepthStencil, D3D12TextureType::DepthStencil);
 
     // Copy the current TAA buffer to the history.
-    pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(taaHistoryHandle),
-        D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
-    pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(taaHandle),
-        D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
-    pCommandList->FlushResourceBarriers();
+    const D3D12Resource* pTAAHistoryResource = pViewManager->GetCurrentBuffer(taaHistoryHandle);
+    const D3D12Resource* pTAAResource = pViewManager->GetCurrentBuffer(taaHandle);
 
-    pCommandList->CopyResource(pViewManager->GetCurrentBuffer(taaHistoryHandle),
-        pViewManager->GetCurrentBuffer(taaHandle));
-
-    pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(taaHistoryHandle),
-        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(taaHandle),
-        D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    pCommandList->FlushResourceBarriers();
+    CopyBuffer(pCommandList, pTAAHistoryResource, pTAAResource);
 }

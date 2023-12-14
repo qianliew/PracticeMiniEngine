@@ -13,7 +13,7 @@ RayTracingPass::RayTracingPass(
 
 }
 
-void RayTracingPass::Setup(D3D12CommandList*& pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
+void RayTracingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
 {
     CD3DX12_STATE_OBJECT_DESC raytracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
 
@@ -163,7 +163,7 @@ void RayTracingPass::BuildShaderTables()
     }
 }
 
-void RayTracingPass::Execute(D3D12CommandList*& pCommandList)
+void RayTracingPass::Execute(D3D12CommandList* pCommandList)
 {
     auto DispatchRays = [&](auto* commandList, auto* stateObject, auto* dispatchDesc)
     {
