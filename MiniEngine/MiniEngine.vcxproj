@@ -179,6 +179,7 @@
     <ClInclude Include="..\Sources\Engine\Objects\SkyboxMaterial.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\AbstractRenderPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\BlitPass.h" />
+    <ClInclude Include="..\Sources\Engine\Rendering\DeferredLightingPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\DrawObjecstPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\DrawSkyboxPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\GBufferPass.h" />
@@ -224,6 +225,7 @@
     <ClCompile Include="..\Sources\Engine\Objects\SkyboxMaterial.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\AbstractRenderPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\BlitPass.cpp" />
+    <ClCompile Include="..\Sources\Engine\Rendering\DeferredLightingPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\DrawObjectsPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\DrawSkyboxPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\GBufferPass.cpp" />
@@ -272,6 +274,17 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="..\Assets\Shaders\DeferredLighting.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
       <FileType>Document</FileType>
     </CustomBuild>
     <FxCompile Include="..\Assets\Shaders\Raytracing.hlsl">
