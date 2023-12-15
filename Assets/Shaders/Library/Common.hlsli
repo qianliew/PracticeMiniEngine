@@ -12,7 +12,7 @@ cbuffer GlobalConstants : register(b0)
     uint FrameCount;
 };
 
-SamplerState SourceTextureSampler : register(s0);
+SamplerState StaticLinearClampSampler : register(s0);
 
 cbuffer PerObjectConstants : register(b1)
 {

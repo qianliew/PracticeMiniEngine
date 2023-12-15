@@ -36,6 +36,7 @@ private:
     std::shared_ptr<D3D12Device>& pDevice;
     ComPtr<ID3D12RootSignature> pRootSignature;
     ComPtr<ID3D12RootSignature> pDRXRootSignature;
+    D3D12_STATIC_SAMPLER_DESC staticSamplerDesc;
 
 public:
     D3D12RootSignature(std::shared_ptr<D3D12Device>&);

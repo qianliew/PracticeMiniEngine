@@ -253,7 +253,7 @@ void GIClosestHitShader(inout GIRayPayload payload, in BuiltInTriangleIntersecti
 [shader("miss")]
 void MissShader(inout RayPayload payload)
 {
-    payload.color = SkyboxCube.SampleLevel(SourceTextureSampler, payload.direction, 0.0f);
+    payload.color = SkyboxCube.SampleLevel(StaticLinearClampSampler, payload.direction, 0.0f);
 }
 
 [shader("miss")]
@@ -265,7 +265,7 @@ void AOMissShader(inout AORayPayload payload)
 [shader("miss")]
 void GIMissShader(inout GIRayPayload payload)
 {
-    payload.color = SkyboxCube.SampleLevel(SourceTextureSampler, payload.direction, 0.0f);
+    payload.color = SkyboxCube.SampleLevel(StaticLinearClampSampler, payload.direction, 0.0f);
 }
 
 #endif // RAYTRACING_HLSL

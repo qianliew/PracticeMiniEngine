@@ -18,7 +18,7 @@ PSFullScreenInput VSBlit(VSFullScreenInput input)
 
 float4 PSBlit(PSFullScreenInput input) : SV_TARGET
 {
-    return SourceTexture.Sample(SourceTextureSampler, input.texCoord);
+    return SourceTexture.Sample(StaticLinearClampSampler, input.texCoord);
 }
 
 #endif
