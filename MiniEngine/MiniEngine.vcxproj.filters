@@ -333,5 +333,8 @@
     <None Include="..\Assets\Shaders\Library\Inputs.hlsli">
       <Filter>Assets\Shaders\Library</Filter>
     </None>
+    <None Include="..\Assets\Shaders\Library\BRDF.hlsli">
+      <Filter>Assets\Shaders\Library</Filter>
+    </None>
   </ItemGroup>
 </Project>

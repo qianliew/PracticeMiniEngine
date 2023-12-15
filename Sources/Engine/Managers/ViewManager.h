@@ -4,7 +4,7 @@
 class ViewManager
 {
 private:
-    const static UINT kGBufferCount = 3;
+    const static UINT kGBufferCount = 4;
 
     std::shared_ptr<D3D12Device> pDevice;
     ComPtr<IDXGISwapChain3> pSwapChain;

@@ -304,6 +304,7 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Assets\Shaders\Library\BRDF.hlsli" />
     <None Include="..\Assets\Shaders\Library\Common.hlsli" />
     <None Include="..\Assets\Shaders\Library\Inputs.hlsli" />
   </ItemGroup>

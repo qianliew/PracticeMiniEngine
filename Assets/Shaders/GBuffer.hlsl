@@ -52,16 +52,18 @@ PSInput VSMain(VSInput input)
 void PSMain(PSInput input,
     out float4 GBuffer0 : SV_TARGET0,
     out float4 GBuffer1 : SV_TARGET1,
-    out float4 GBuffer2 : SV_TARGET2)
+    out float4 GBuffer2 : SV_TARGET2,
+    out float4 GBuffer3 : SV_TARGET3)
 {
     GBuffer0 = BaseTexture.Sample(BaseTextureSampler, input.texCoord);
     GBuffer1 = MRATexture.Sample(MRATextureSampler, input.texCoord);
 
     float3 normalTS = NormalTexture.Sample(NormalTextureSampler, input.texCoord).xyz * 2.0f - 1.0f;
-    float sgn = input.tangentWS.w > 0.0f ? -1.0f : 1.0f;
+    float sgn = input.tangentWS.w > 0.0f ? 1.0f : -1.0f;
     float3 bitangentWS = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
     float3 normalWS = mul(normalTS, float3x3(input.tangentWS.xyz, bitangentWS.xyz, input.normalWS.xyz));
-    GBuffer2 = float4(normalWS, 1.0f);
+    GBuffer2 = float4(normalize(normalWS), 1.0f);
+    GBuffer3 = input.positionWS;
 }
 
 #endif
