@@ -16,11 +16,6 @@ StructuredBuffer<Vertex> Vertices : register(t2);
 StructuredBuffer<uint> Offsets : register(t3);
 
 TextureCube SkyboxCube  : register(t4);
-Texture2D BaseTexture0  : register(t5);
-Texture2D BaseTexture1  : register(t6);
-
-SamplerState BaseTextureSampler0     : register(s5);
-SamplerState BaseTextureSampler1     : register(s6);
 
 uint initRand(uint val0, uint val1, uint backoff = 16)
 {
@@ -172,14 +167,8 @@ void RaygenShader()
     world.xyz /= world.w;
 
     uint currentRayRecursionDepth = 0;
-    Result[DispatchRaysIndex().xy] =
+    Result[DispatchRaysIndex().xy] +=
         TraceRadianceRay(origin, normalize(world.xyz - origin), currentRayRecursionDepth);
-}
-
-float4 Lambert(float3 normalWS, float3 lightDirWS, float2 uv)
-{
-    float NdotL = dot(normalWS, lightDirWS);
-    return BaseTexture0.SampleLevel(BaseTextureSampler0, uv, 0.0f) * NdotL;
 }
 
 [shader("closesthit")]
@@ -189,7 +178,7 @@ void ClosestHitShader(inout RayPayload payload, in BuiltInTriangleIntersectionAt
     float3 barycentrics = GetBarycentrics(attr.barycentrics);
     uint vertId = 3 * PrimitiveIndex() + Offsets[GeometryIndex()];
 
-    float3 hitPosition = HitWorldPosition();
+    float4 hitPosition = float4(HitWorldPosition(), 1.0f);
     float3 normalOS = Vertices[vertId + 0].normalOS * barycentrics.x +
         Vertices[vertId + 1].normalOS * barycentrics.y +
         Vertices[vertId + 2].normalOS * barycentrics.z;
@@ -198,7 +187,6 @@ void ClosestHitShader(inout RayPayload payload, in BuiltInTriangleIntersectionAt
         Vertices[vertId + 2].texCoord * barycentrics.z;
 
     const float3 lightDirWS = float3(1.0f, 1.0f, 0.0f);
-    payload.color = Lambert(normalOS, lightDirWS, uv % 1.0f);
 
     // Calculate GI.
     const uint GIRayCount = 10;
@@ -209,7 +197,7 @@ void ClosestHitShader(inout RayPayload payload, in BuiltInTriangleIntersectionAt
         float3 direction = normalize(getCosHemisphereSample(seed, normalOS));
         gi += TraceGIRay(hitPosition, direction, payload.depth) / GIRayCount;
     }
-    payload.color.rgb += gi / 2;
+    payload.color.rgb += gi * 0.4f;
 
     // Calculate AO.
     const uint aoRayCount = 10;
@@ -236,7 +224,7 @@ void GIClosestHitShader(inout GIRayPayload payload, in BuiltInTriangleIntersecti
     float3 barycentrics = GetBarycentrics(attr.barycentrics);
     uint vertId = 3 * PrimitiveIndex() + Offsets[GeometryIndex()];
 
-    float3 hitPosition = HitWorldPosition();
+    float4 hitPosition = float4(HitWorldPosition(), 1.0f);
     float3 normalOS = Vertices[vertId + 0].normalOS * barycentrics.x +
         Vertices[vertId + 1].normalOS * barycentrics.y +
         Vertices[vertId + 2].normalOS * barycentrics.z;
@@ -244,8 +232,11 @@ void GIClosestHitShader(inout GIRayPayload payload, in BuiltInTriangleIntersecti
         Vertices[vertId + 1].texCoord * barycentrics.y +
         Vertices[vertId + 2].texCoord * barycentrics.z;
 
-    const float3 lightDirWS = float3(1.0f, 1.0f, 0.0f);
-    payload.color = Lambert(normalOS, lightDirWS, uv % 1.0f);
+    float4 positionCS = mul(WorldToProjectionMatrix, hitPosition);
+    float2 screenUV = (positionCS.xy / positionCS.w + 1.0f) / 2.0f;
+    screenUV.y = 1 - screenUV.y;
+    uint2 coord = screenUV * uint2(rcp(TAAJitter.zw));
+    payload.color = Result[coord];
 
     // Calculate GI.
     const uint GIRayCount = 10 / payload.depth;
@@ -262,7 +253,7 @@ void GIClosestHitShader(inout GIRayPayload payload, in BuiltInTriangleIntersecti
 [shader("miss")]
 void MissShader(inout RayPayload payload)
 {
-    payload.color = SkyboxCube.SampleLevel(BaseTextureSampler1, payload.direction, 0.0f);
+    payload.color = SkyboxCube.SampleLevel(SourceTextureSampler, payload.direction, 0.0f);
 }
 
 [shader("miss")]
@@ -274,7 +265,7 @@ void AOMissShader(inout AORayPayload payload)
 [shader("miss")]
 void GIMissShader(inout GIRayPayload payload)
 {
-    payload.color = SkyboxCube.SampleLevel(BaseTextureSampler1, payload.direction, 0.0f);
+    payload.color = SkyboxCube.SampleLevel(SourceTextureSampler, payload.direction, 0.0f);
 }
 
 #endif // RAYTRACING_HLSL

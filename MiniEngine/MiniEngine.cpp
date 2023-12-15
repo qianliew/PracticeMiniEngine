@@ -203,25 +203,8 @@ void MiniEngine::PopulateCommandList()
         pCommandList->SetComputeRootSignature(pRootSignature->GetRootSignature());
         pDeferredLightingPass->Execute(pCommandList);
 
-        //pCommandList->SetComputeRootSignature(pRootSignature->GetDRXRootSignature());
-
-        //// Execute the ray tracing path.
-        //pRayTracingPass->Execute(pCommandList);
-
-        //UINT colorHandle = pViewManager->GetCurrentColorHandle();
-        //pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(colorHandle),
-        //    D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
-        //pCommandList->AddTransitionResourceBarriers(pViewManager->GetRayTracingOutput(),
-        //    D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
-        //pCommandList->FlushResourceBarriers();
-
-        //pCommandList->CopyResource(pViewManager->GetCurrentBuffer(colorHandle), pViewManager->GetRayTracingOutput());
-
-        //pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBuffer(colorHandle),
-        //    D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        //pCommandList->AddTransitionResourceBarriers(pViewManager->GetRayTracingOutput(),
-        //    D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-        //pCommandList->FlushResourceBarriers();
+        pCommandList->SetComputeRootSignature(pRootSignature->GetDRXRootSignature());
+        pRayTracingPass->Execute(pCommandList);
     }
     else
     {

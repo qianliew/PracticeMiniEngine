@@ -6,9 +6,7 @@ RayTracingPass::RayTracingPass(
     shared_ptr<D3D12Device>& device,
     shared_ptr<SceneManager>& sceneManager,
     shared_ptr<ViewManager>& viewManager) :
-    pDevice(device),
-    pSceneManager(sceneManager),
-    pViewManager(viewManager)
+    AbstractRenderPass(device, sceneManager, viewManager)
 {
 
 }
@@ -199,4 +197,8 @@ void RayTracingPass::Execute(D3D12CommandList* pCommandList)
     // Dispatch rays.    
     D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
     DispatchRays(pCommandList->GetDXRCommandList().Get(), pDXRStateObject.Get(), &dispatchDesc);
+
+    const D3D12Resource* pColorResource = pViewManager->GetCurrentBuffer(pViewManager->GetCurrentColorHandle());
+    const D3D12Resource* pOutputResource = pViewManager->GetRayTracingOutput();
+    CopyBuffer(pCommandList, pColorResource, pOutputResource);
 }

@@ -1,4 +1,6 @@
 #pragma once
+
+#include "AbstractRenderPass.h"
 #include "SceneManager.h"
 #include "ViewManager.h"
 #include "D3D12ShaderTable.h"
@@ -7,7 +9,7 @@ using namespace std;
 
 #define SizeOfInUint32(obj) ((sizeof(obj) - 1) / sizeof(UINT32) + 1)
 
-class RayTracingPass
+class RayTracingPass : public AbstractRenderPass
 {
 private:
 	// Main
@@ -26,9 +28,6 @@ private:
 	const wchar_t* kGIClosestHitShaderName = L"GIClosestHitShader";
 	const wchar_t* kGIMissShaderName = L"GIMissShader";
 
-	shared_ptr<D3D12Device> pDevice;
-	shared_ptr<SceneManager> pSceneManager;
-	shared_ptr<ViewManager> pViewManager;
 	ComPtr<ID3D12RootSignature> pRaytracingLocalRootSignature;
 	ComPtr<ID3D12StateObject> pDXRStateObject;
 	ComPtr<ID3D12Resource> pMissShaderTable;

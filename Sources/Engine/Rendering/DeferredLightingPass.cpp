@@ -86,8 +86,4 @@ void DeferredLightingPass::Execute(D3D12CommandList* pCommandList)
             D3D12TextureType::RenderTarget,
             FALSE);
     }
-
-    const D3D12Resource* pColorResource = pViewManager->GetCurrentBuffer(pViewManager->GetCurrentColorHandle());
-    const D3D12Resource* pOutputResource = pViewManager->GetRayTracingOutput();
-    CopyBuffer(pCommandList, pColorResource, pOutputResource);
 }

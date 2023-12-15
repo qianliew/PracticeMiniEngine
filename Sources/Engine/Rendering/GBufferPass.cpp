@@ -80,7 +80,12 @@ void GBufferPass::Execute(D3D12CommandList* pCommandList)
 
     // Clear the rtv and the dsv.
     const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-    pCommandList->ClearColor(rtvHandle, clearColor);
+    for (UINT i = 0; i < pViewManager->GetGBufferCount(); i++)
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE handle =
+            pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW, pViewManager->GetGBufferHandle(i));
+        pCommandList->ClearColor(handle, clearColor);
+    }
     pCommandList->ClearDepth(dsvHandle);
 
     pSceneManager->DrawObjects(pCommandList);
