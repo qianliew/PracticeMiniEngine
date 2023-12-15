@@ -16,6 +16,7 @@ StructuredBuffer<Vertex> Vertices : register(t2);
 StructuredBuffer<uint> Offsets : register(t3);
 
 TextureCube SkyboxCube  : register(t4);
+Texture2D DepthTexture : register(t5);
 
 uint initRand(uint val0, uint val1, uint backoff = 16)
 {
@@ -197,7 +198,7 @@ void ClosestHitShader(inout RayPayload payload, in BuiltInTriangleIntersectionAt
         float3 direction = normalize(getCosHemisphereSample(seed, normalOS));
         gi += TraceGIRay(hitPosition, direction, payload.depth) / GIRayCount;
     }
-    payload.color.rgb += gi * 0.4f;
+    payload.color.rgb += gi * 0.5f;
 
     // Calculate AO.
     const uint aoRayCount = 10;
@@ -233,10 +234,13 @@ void GIClosestHitShader(inout GIRayPayload payload, in BuiltInTriangleIntersecti
         Vertices[vertId + 2].texCoord * barycentrics.z;
 
     float4 positionCS = mul(WorldToProjectionMatrix, hitPosition);
-    float2 screenUV = (positionCS.xy / positionCS.w + 1.0f) / 2.0f;
+    float3 positionNDC = positionCS.xyz / positionCS.w;
+    float2 screenUV = (positionNDC.xy + 1.0f) / 2.0f;
     screenUV.y = 1 - screenUV.y;
     uint2 coord = screenUV * uint2(rcp(TAAJitter.zw));
-    payload.color = Result[coord];
+    float depth = DepthTexture.SampleLevel(StaticLinearClampSampler, screenUV, 0.0f);
+    float4 skybox = SkyboxCube.SampleLevel(StaticLinearClampSampler, payload.direction, 0.0f);
+    payload.color = lerp(skybox, Result[coord], step(depth, positionNDC.z));
 
     // Calculate GI.
     const uint GIRayCount = 10 / payload.depth;

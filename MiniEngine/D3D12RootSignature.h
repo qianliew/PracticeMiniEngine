@@ -23,7 +23,7 @@ enum class eDXRRootIndex
     ShaderResourceViewVertex,
     ShaderResourceViewOffset,
     ShaderResourceViewSkybox,
-    ShaderResourceViewTexture,
+    ShaderResourceViewDepth,
     Sampler,
     ConstantBufferViewGlobal,
     UnorderedAccessViewGlobal,

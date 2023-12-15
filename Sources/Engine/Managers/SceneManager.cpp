@@ -360,18 +360,6 @@ void SceneManager::SetDXRResources(D3D12CommandList*& pCommandList)
     pDevice->GetDescriptorHeapManager()->SetComputeViews(
         pCommandList->GetCommandList(),
         SHADER_RESOURCE_VIEW_PEROBJECT,
-        (UINT)eDXRRootIndex::ShaderResourceViewTexture,
-        pObjects[0]->GetMaterial()->GetTexture()->GetTextureID());
-
-    pDevice->GetDescriptorHeapManager()->SetComputeViews(
-        pCommandList->GetCommandList(),
-        SAMPLER,
-        (UINT)eDXRRootIndex::Sampler,
-        pObjects[0]->GetMaterial()->GetTexture()->GetTextureID());
-
-    pDevice->GetDescriptorHeapManager()->SetComputeViews(
-        pCommandList->GetCommandList(),
-        SHADER_RESOURCE_VIEW_PEROBJECT,
         (UINT)eDXRRootIndex::ShaderResourceViewSkybox,
         pSkyboxMaterial->GetTexture()->GetTextureID());
 }

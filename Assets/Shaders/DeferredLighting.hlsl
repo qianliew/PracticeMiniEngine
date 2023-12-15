@@ -34,7 +34,7 @@ void CSMain(uint3 threadID : SV_DispatchThreadID)
 	float specularTerm = a2 / ((d * d) * max(0.1f, LdotH * LdotH) * (a * 4.0f + 2.0f));
 	float diffuseTerm = 1.0f;
 
-	Result[threadID.xy] = float4((diffuseTerm + specularTerm) * baseColor.xyz * NdotL, 1.0f);
+	Result[threadID.xy] = float4((diffuseTerm + specularTerm) * baseColor.xyz * NdotL, 1.0f) * 0.7f;
 }
 
 #endif
