@@ -52,7 +52,7 @@ void GBufferPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignatu
     psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
     psoDesc.SampleMask = UINT_MAX;
     psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    psoDesc.NumRenderTargets = pViewManager->GetGBufferSize();
+    psoDesc.NumRenderTargets = pViewManager->GetGBufferCount();
     for (UINT i = 0; i < psoDesc.NumRenderTargets; i++)
     {
         psoDesc.RTVFormats[i] = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -71,12 +71,12 @@ void GBufferPass::Execute(D3D12CommandList* pCommandList)
     pCommandList->SetScissorRects(pSceneManager->GetCamera()->GetScissorRect());
 
     // Set the rtv and the dsv.
-    UINT const gBufferHandle = pViewManager->GetGBufferHandle();
+    UINT const gBufferHandle = pViewManager->GetGBufferHandle(0);
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle =
         pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW, gBufferHandle);
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle =
         pDevice->GetDescriptorHeapManager()->GetHandle(DEPTH_STENCIL_VIEW, 0);
-    pCommandList->SetRenderTargets(2, &rtvHandle, &dsvHandle);
+    pCommandList->SetRenderTargets(pViewManager->GetGBufferCount(), &rtvHandle, &dsvHandle);
 
     // Clear the rtv and the dsv.
     const float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -86,6 +86,6 @@ void GBufferPass::Execute(D3D12CommandList* pCommandList)
     pSceneManager->DrawObjects(pCommandList);
 
     const D3D12Resource* pColorResource = pViewManager->GetCurrentBuffer(pViewManager->GetCurrentColorHandle());
-    const D3D12Resource* pGBufferResource = pViewManager->GetCurrentBuffer(pViewManager->GetGBufferHandle());
+    const D3D12Resource* pGBufferResource = pViewManager->GetCurrentBuffer(pViewManager->GetGBufferHandle(0));
     CopyBuffer(pCommandList, pColorResource, pGBufferResource);
 }
