@@ -112,7 +112,7 @@ void D3D12Texture::CreateTexture(D3D12TextureType inType)
     }
     else if (type == D3D12TextureType::RenderTarget)
     {
-        desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        desc.Format = dxgiFormat;
         desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
         desc.DepthOrArraySize = 1;
         desc.MipLevels = 1;
@@ -120,7 +120,7 @@ void D3D12Texture::CreateTexture(D3D12TextureType inType)
         desc.SampleDesc.Quality = 0;
 
         D3D12_RENDER_TARGET_VIEW_DESC viewDesc;
-        viewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        viewDesc.Format = dxgiFormat;
         viewDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
         viewDesc.Texture2D.MipSlice = 0;
         viewDesc.Texture2D.PlaneSlice = 0;
@@ -148,7 +148,7 @@ void D3D12Texture::CreateTexture(D3D12TextureType inType)
     }
     else if (type == D3D12TextureType::UnorderedAccess)
     {
-        desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        desc.Format = dxgiFormat;
         desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
         desc.DepthOrArraySize = 1;
         desc.MipLevels = 1;

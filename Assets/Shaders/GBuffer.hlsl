@@ -62,7 +62,7 @@ void PSMain(PSInput input,
     float sgn = input.tangentWS.w > 0.0f ? 1.0f : -1.0f;
     float3 bitangentWS = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
     float3 normalWS = mul(normalTS, float3x3(input.tangentWS.xyz, bitangentWS.xyz, input.normalWS.xyz));
-    GBuffer2 = float4(normalize(normalWS), 1.0f);
+    GBuffer2 = float4(normalize(normalWS), 0.0f);
     GBuffer3 = input.positionWS;
 }
 

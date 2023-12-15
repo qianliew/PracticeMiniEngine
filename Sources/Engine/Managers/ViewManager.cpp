@@ -14,7 +14,7 @@ ViewManager::ViewManager(std::shared_ptr<D3D12Device>& device, UINT inWidth, UIN
     swapChainDesc.BufferCount = FRAME_COUNT;
     swapChainDesc.Width = width;
     swapChainDesc.Height = height;
-    swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    swapChainDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     swapChainDesc.SampleDesc.Count = 1;
@@ -92,7 +92,7 @@ void ViewManager::UpdateFrameIndex()
 
 UINT ViewManager::CreateRenderTarget()
 {
-    D3D12Texture* pRenderTarget = new D3D12Texture(globalSRVID++, rtvID++, width, height);
+    D3D12Texture* pRenderTarget = new D3D12Texture(globalSRVID++, rtvID++, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT);
     pRenderTarget->CreateTexture(D3D12TextureType::RenderTarget);
 
     D3D12_CLEAR_VALUE renderTargetClearValue = {};
@@ -100,7 +100,7 @@ UINT ViewManager::CreateRenderTarget()
     renderTargetClearValue.Color[1] = 0.0f;
     renderTargetClearValue.Color[2] = 0.0f;
     renderTargetClearValue.Color[3] = 1.0f;
-    renderTargetClearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    renderTargetClearValue.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         pRenderTarget->GetTextureBuffer(),
         D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -118,7 +118,7 @@ UINT ViewManager::CreateRenderTarget()
 void ViewManager::CreateDXRUAV()
 {
     // Create 2D output texture for raytracing.
-    pRayTracingOutput = new D3D12Texture(-1, -1, width, height);
+    pRayTracingOutput = new D3D12Texture(-1, -1, width, height, DXGI_FORMAT_R16G16B16A16_FLOAT);
     pRayTracingOutput->CreateTexture(D3D12TextureType::UnorderedAccess);
 
     pDevice->GetBufferManager()->AllocateDefaultBuffer(

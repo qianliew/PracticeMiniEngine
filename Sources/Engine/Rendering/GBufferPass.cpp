@@ -55,7 +55,7 @@ void GBufferPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignatu
     psoDesc.NumRenderTargets = pViewManager->GetGBufferCount();
     for (UINT i = 0; i < psoDesc.NumRenderTargets; i++)
     {
-        psoDesc.RTVFormats[i] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        psoDesc.RTVFormats[i] = DXGI_FORMAT_R16G16B16A16_FLOAT;
     }
     psoDesc.SampleDesc.Count = 1;
     ThrowIfFailed(pDevice->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pPipelineState.GetAddressOf())));

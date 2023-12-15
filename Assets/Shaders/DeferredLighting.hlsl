@@ -14,7 +14,7 @@ Texture2D GBuffer3 : register(t13);
 [numthreads(10, 10, 1)]
 void CSMain(uint3 threadID : SV_DispatchThreadID)
 {
-	float2 uv = threadID.xy / float2(1920.0f, 1080.0f);
+	float2 uv = threadID.xy * TAAJitter.zw;
 	float4 baseColor = GBuffer0.SampleLevel(StaticLinearClampSampler, uv, 0.0f);
 	float4 attributes = GBuffer1.SampleLevel(StaticLinearClampSampler, uv, 0.0f);
 	float3 normalWS = GBuffer2.SampleLevel(StaticLinearClampSampler, uv, 0.0f).rgb;
