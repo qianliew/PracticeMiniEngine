@@ -1,19 +1,19 @@
 #ifndef DEFERRED_LIGHTING_HLSL
 #define DEFERRED_LIGHTING_HLSL
 
+#include "Library/Common.hlsli"
+
 RWTexture2D<float4> Result : register(u0);
 
-[numthreads(1, 1, 1)]
+Texture2D GBuffer0 : register(t10);
+Texture2D GBuffer1 : register(t11);
+Texture2D GBuffer2 : register(t12);
+
+[numthreads(10, 10, 1)]
 void CSMain(uint3 threadID : SV_DispatchThreadID)
 {
-	for (uint i = 0; i < 100; i++)
-	{
-		for (uint j = 0; j < 100; j++)
-		{
-			Result[uint2(threadID.x * i, threadID.y * j)] =
-				float4(threadID.x * i / 500.0f, threadID.y * j / 500.0f, 1.0f, 1.0f);
-		}
-	}
+	float2 uv = threadID.xy / float2(1920.0f, 1080.0f);
+	Result[threadID.xy] = GBuffer0.SampleLevel(SourceTextureSampler, uv, 0.0f);
 }
 
 #endif

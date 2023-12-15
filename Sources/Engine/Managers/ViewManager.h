@@ -23,7 +23,7 @@ private:
     UINT height;
 
     // Helper functions
-    D3D12_RESOURCE_STATES GetResourceState(D3D12TextureType type);
+    D3D12_RESOURCE_STATES GetResourceState(D3D12TextureType type, BOOL isPixelShaderResource);
 
 public:
     ViewManager(std::shared_ptr<D3D12Device>&, UINT inWidth, UINT inHeight);
@@ -36,7 +36,12 @@ public:
     void CreateDXRUAV();
     const UINT GetNextColorHandle();
     UINT GetSRVHandle4RTV(UINT rtvHandle);
-    void ConvertTextureType(D3D12CommandList*& pCommandList, UINT handleIndex, D3D12TextureType type, D3D12TextureType targetType);
+    void ConvertTextureType(
+        D3D12CommandList*& pCommandList,
+        UINT handleIndex,
+        D3D12TextureType type,
+        D3D12TextureType targetType,
+        BOOL isPixelShaderResource = TRUE);
 
     inline IDXGISwapChain3* GetSwapChain() const { return pSwapChain.Get(); }
     inline ID3D12Resource* GetCurrentBackBuffer() const { return pBackBuffers[frameIndex].Get(); }

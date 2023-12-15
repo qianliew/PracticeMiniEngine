@@ -130,7 +130,8 @@ void ViewManager::CreateDXRUAV()
 
 UINT ViewManager::GetSRVHandle4RTV(UINT rtvHandle)
 {
-    if (pRenderTargets[rtvHandle] != nullptr)
+    if (pRenderTargets[rtvHandle] != nullptr
+        && pRenderTargets[rtvHandle]->GetType() == D3D12TextureType::ShaderResource)
     {
         return pRenderTargets[rtvHandle]->GetTextureID();
     }
@@ -147,7 +148,8 @@ void ViewManager::ConvertTextureType(
     D3D12CommandList*& pCommandList,
     UINT handleIndex,
     D3D12TextureType type,
-    D3D12TextureType targetType)
+    D3D12TextureType targetType,
+    BOOL isPixelShaderResource)
 {
     UINT heapMapIndex = targetType == D3D12TextureType::ShaderResource ? SHADER_RESOURCE_VIEW_GLOBAL
         : targetType == D3D12TextureType::DepthStencil ? DEPTH_STENCIL_VIEW
@@ -155,7 +157,7 @@ void ViewManager::ConvertTextureType(
 
     auto convert = [&](D3D12Texture*& resource)
     {
-        D3D12_RESOURCE_STATES stateBefore = GetResourceState(resource->GetType());
+        D3D12_RESOURCE_STATES stateBefore = GetResourceState(resource->GetType(), isPixelShaderResource);
         UINT offset = targetType == D3D12TextureType::ShaderResource ? resource->GetTextureID()
             : targetType == D3D12TextureType::DepthStencil ? 0
             : handleIndex;
@@ -166,7 +168,7 @@ void ViewManager::ConvertTextureType(
         pCommandList->AddTransitionResourceBarriers(
             resource->GetTextureBuffer()->GetResource().Get(),
             stateBefore,
-            GetResourceState(targetType));
+            GetResourceState(targetType, isPixelShaderResource));
     };
 
     convert(type == D3D12TextureType::DepthStencil ? pDepthStencil : pRenderTargets[handleIndex]);
@@ -174,12 +176,12 @@ void ViewManager::ConvertTextureType(
 }
 
 // Helper functions
-D3D12_RESOURCE_STATES ViewManager::GetResourceState(D3D12TextureType type)
+D3D12_RESOURCE_STATES ViewManager::GetResourceState(D3D12TextureType type, BOOL isPixelShaderResource)
 {
     switch (type)
     {
     case D3D12TextureType::ShaderResource:
-        return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+        return isPixelShaderResource ? D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
     case D3D12TextureType::DepthStencil:
         return D3D12_RESOURCE_STATE_DEPTH_WRITE;
     case D3D12TextureType::RenderTarget:

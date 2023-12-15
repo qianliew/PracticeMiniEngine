@@ -9,6 +9,7 @@ enum class eRootIndex
     ShaderResourceViewGlobal1,
     ShaderResourceViewGlobal2,
     ShaderResourceViewPerObject,
+    ShaderResourceViewGBuffer,
     UnorderedAccessViewGlobal,
     Sampler,
     Count,

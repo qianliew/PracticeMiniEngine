@@ -5,7 +5,6 @@
 #include "Library/Inputs.hlsli"
 
 Texture2D SourceTexture : register(t0);
-SamplerState SourceTextureSampler : register(s0);
 
 PSFullScreenInput VSBlit(VSFullScreenInput input)
 {

@@ -45,6 +45,22 @@ void DeferredLightingPass::Execute(D3D12CommandList* pCommandList)
     // Set the pipeline state.
     pCommandList->SetPipelineState(pPipelineState.Get());
 
+    // Bind the SRVs using in the shading.
+    for (UINT i = 0; i < pViewManager->GetGBufferCount(); i++)
+    {
+        pViewManager->ConvertTextureType(
+            pCommandList,
+            pViewManager->GetGBufferHandle(i),
+            D3D12TextureType::RenderTarget,
+            D3D12TextureType::ShaderResource,
+            FALSE);
+    }
+    pDevice->GetDescriptorHeapManager()->SetComputeViews(
+        pCommandList->GetCommandList(),
+        SHADER_RESOURCE_VIEW_GLOBAL,
+        (UINT)eRootIndex::ShaderResourceViewGBuffer,
+        pViewManager->GetSRVHandle4RTV(pViewManager->GetGBufferHandle(0)));
+
     // Bind the UAV heap for the output.
     pDevice->GetDescriptorHeapManager()->SetComputeViews(
         pCommandList->GetCommandList(),
@@ -53,7 +69,19 @@ void DeferredLightingPass::Execute(D3D12CommandList* pCommandList)
         0);
 
     // Dispatch threads to shade the lighting.
-    pCommandList->DispatchThreads(5, 5, 1);
+    UINT groupCountX = pSceneManager->GetCamera()->GetCameraWidth() / 10;
+    UINT groupCountY = pSceneManager->GetCamera()->GetCameraHeight() / 10;
+    pCommandList->DispatchThreads(groupCountX, groupCountY, 1);
+
+    for (UINT i = 0; i < pViewManager->GetGBufferCount(); i++)
+    {
+        pViewManager->ConvertTextureType(
+            pCommandList,
+            pViewManager->GetGBufferHandle(i),
+            D3D12TextureType::RenderTarget,
+            D3D12TextureType::RenderTarget,
+            FALSE);
+    }
 
     const D3D12Resource* pColorResource = pViewManager->GetCurrentBuffer(pViewManager->GetCurrentColorHandle());
     const D3D12Resource* pOutputResource = pViewManager->GetRayTracingOutput();

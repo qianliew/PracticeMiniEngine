@@ -242,9 +242,6 @@
     <CustomBuild Include="..\Assets\Shaders\Blit.hlsl">
       <FileType>Document</FileType>
     </CustomBuild>
-    <CustomBuild Include="..\Assets\Shaders\Unlit.hlsl">
-      <FileType>Document</FileType>
-    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\Assets\Shaders\Lit.hlsl">

@@ -7,7 +7,6 @@
 Texture2D SourceTexture : register(t0);
 Texture2D TAAHistoryTexture : register(t1);
 Texture2D DepthTexture : register(t2);
-SamplerState SourceTextureSampler : register(s0);
 
 PSFullScreenInput VSTemporalAA(VSFullScreenInput input)
 {

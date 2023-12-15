@@ -12,6 +12,8 @@ cbuffer GlobalConstants : register(b0)
     uint FrameCount;
 };
 
+SamplerState SourceTextureSampler : register(s0);
+
 cbuffer PerObjectConstants : register(b1)
 {
     float4x4 ObjectToWorldMatrix;
