@@ -9,7 +9,7 @@
 #include "../../Sources/Shared/SharedConstants.h"
 
 RaytracingAccelerationStructure Scene : register(t0);
-RWTexture2D<float4> RenderTarget : register(u0);
+RWTexture2D<float4> Result : register(u0);
 
 StructuredBuffer<uint16_t> Indices : register(t1);
 StructuredBuffer<Vertex> Vertices : register(t2);
@@ -172,7 +172,7 @@ void RaygenShader()
     world.xyz /= world.w;
 
     uint currentRayRecursionDepth = 0;
-    RenderTarget[DispatchRaysIndex().xy] =
+    Result[DispatchRaysIndex().xy] =
         TraceRadianceRay(origin, normalize(world.xyz - origin), currentRayRecursionDepth);
 }
 

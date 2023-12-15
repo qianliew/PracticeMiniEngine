@@ -43,5 +43,19 @@ void DeferredLightingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Ro
 void DeferredLightingPass::Execute(D3D12CommandList* pCommandList)
 {
     // Set the pipeline state.
-    // pCommandList->SetPipelineState(pPipelineState.Get());
+    pCommandList->SetPipelineState(pPipelineState.Get());
+
+    // Bind the UAV heap for the output.
+    pDevice->GetDescriptorHeapManager()->SetComputeViews(
+        pCommandList->GetCommandList(),
+        UNORDERED_ACCESS_VIEW,
+        (UINT)eRootIndex::UnorderedAccessViewGlobal,
+        0);
+
+    // Dispatch threads to shade the lighting.
+    pCommandList->DispatchThreads(5, 5, 1);
+
+    const D3D12Resource* pColorResource = pViewManager->GetCurrentBuffer(pViewManager->GetCurrentColorHandle());
+    const D3D12Resource* pOutputResource = pViewManager->GetRayTracingOutput();
+    CopyBuffer(pCommandList, pColorResource, pOutputResource);
 }

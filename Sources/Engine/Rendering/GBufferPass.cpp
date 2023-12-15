@@ -84,8 +84,4 @@ void GBufferPass::Execute(D3D12CommandList* pCommandList)
     pCommandList->ClearDepth(dsvHandle);
 
     pSceneManager->DrawObjects(pCommandList);
-
-    const D3D12Resource* pColorResource = pViewManager->GetCurrentBuffer(pViewManager->GetCurrentColorHandle());
-    const D3D12Resource* pGBufferResource = pViewManager->GetCurrentBuffer(pViewManager->GetGBufferHandle(0));
-    CopyBuffer(pCommandList, pColorResource, pGBufferResource);
 }

@@ -86,6 +86,9 @@ void MiniEngine::LoadAssets()
     pGBufferPass = make_shared<GBufferPass>(pDevice, pSceneManager, pViewManager);
     pGBufferPass->Setup(pCommandList, pRootSignature->GetRootSignature());
 
+    pDeferredLightingPass = make_shared<DeferredLightingPass>(pDevice, pSceneManager, pViewManager);
+    pDeferredLightingPass->Setup(pCommandList, pRootSignature->GetRootSignature());
+
     pDrawSkyboxPass = make_shared<DrawSkyboxPass>(pDevice, pSceneManager, pViewManager);
     pDrawSkyboxPass->Setup(pCommandList, pRootSignature->GetRootSignature());
 
@@ -196,6 +199,9 @@ void MiniEngine::PopulateCommandList()
     if (isDXR)
     {
         pGBufferPass->Execute(pCommandList);
+
+        pCommandList->SetComputeRootSignature(pRootSignature->GetRootSignature());
+        pDeferredLightingPass->Execute(pCommandList);
 
         //pCommandList->SetComputeRootSignature(pRootSignature->GetDRXRootSignature());
 

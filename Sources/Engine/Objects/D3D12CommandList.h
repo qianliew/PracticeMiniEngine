@@ -103,6 +103,11 @@ public:
         pCommandList->DrawIndexedInstanced(IndexCountPerInstance, 1, 0, 0, 0);
     }
 
+    inline void DispatchThreads(UINT ThreadGroupCountX, UINT ThreadGroupCountY, UINT ThreadGroupCountZ)
+    {
+        pCommandList->Dispatch(ThreadGroupCountX, ThreadGroupCountY, ThreadGroupCountZ);
+    }
+
     inline void CopyBufferRegion(ID3D12Resource* pDstBuffer, ID3D12Resource* pSrcBuffer,
         UINT64 NumBytes, UINT64 DstOffset = 0, UINT64 SrcOffset = 0)
     {
