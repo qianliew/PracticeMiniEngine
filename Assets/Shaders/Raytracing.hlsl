@@ -73,11 +73,20 @@ inline float3 GetBarycentrics(float2 barycentrics)
     return float3(1 - barycentrics.x - barycentrics.y, barycentrics.x, barycentrics.y);
 }
 
-float4 TraceRadianceRay(float3 origin, float3 direction, in uint currentRayRecursionDepth)
+RayPayload TraceRadianceRay(float3 origin, float3 direction, in uint currentRayRecursionDepth)
 {
+    RayPayload payload =
+    {
+        float4(0, 0, 0, 0),
+        direction,
+        1.0f,
+        currentRayRecursionDepth,
+        DispatchRaysIndex().x + DispatchRaysIndex().y * DispatchRaysDimensions().x
+    };
+
     if (currentRayRecursionDepth >= RaytracingConstants::MaxRayRecursiveDepth)
     {
-        return 0.0f;
+        return payload;
     }
 
     RayDesc rayDesc;
@@ -88,16 +97,9 @@ float4 TraceRadianceRay(float3 origin, float3 direction, in uint currentRayRecur
 
     uint flags = RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
 
-    RayPayload payload = 
-    {
-        float4(0, 0, 0, 0),
-        direction,
-        currentRayRecursionDepth,
-        DispatchRaysIndex().x + DispatchRaysIndex().y * DispatchRaysDimensions().x
-    };
     TraceRay(Scene, flags, 0xFF, RayType::Radiance, 0, RayType::Radiance, rayDesc, payload);
 
-    return payload.color;
+    return payload;
 }
 
 float TraceAORay(float3 origin, float3 direction, in uint currentRayRecursionDepth)
@@ -151,6 +153,29 @@ float3 TraceGIRay(float3 origin, float3 direction, in uint currentRayRecursionDe
     return payload.color.rgb;
 }
 
+float TraceShadowRay(float3 origin, float3 direction, in uint currentRayRecursionDepth)
+{
+    if (currentRayRecursionDepth >= RaytracingConstants::MaxRayRecursiveDepth)
+    {
+        return 0.0f;
+    }
+    
+    RayDesc rayDesc;
+    rayDesc.Origin = origin;
+    rayDesc.Direction = direction;
+    rayDesc.TMin = 0.001;
+    rayDesc.TMax = 10000.0;
+
+    uint flags = RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH
+        | RAY_FLAG_CULL_BACK_FACING_TRIANGLES
+        | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER;
+
+    ShadowRayPayload shadowRayPayload = { 0.0f };
+    TraceRay(Scene, flags, 0xFF, RayType::Shadow, 0, RayType::Shadow, rayDesc, shadowRayPayload);
+
+    return shadowRayPayload.attenuation;
+}
+
 [shader("raygeneration")]
 void RaygenShader()
 {
@@ -168,8 +193,9 @@ void RaygenShader()
     world.xyz /= world.w;
 
     uint currentRayRecursionDepth = 0;
-    Result[DispatchRaysIndex().xy] +=
-        TraceRadianceRay(origin, normalize(world.xyz - origin), currentRayRecursionDepth);
+    RayPayload payload = TraceRadianceRay(origin, normalize(world.xyz - origin), currentRayRecursionDepth);
+    Result[DispatchRaysIndex().xy] *= payload.attenuation;
+    Result[DispatchRaysIndex().xy] += payload.color;
 }
 
 [shader("closesthit")]
@@ -210,12 +236,22 @@ void ClosestHitShader(inout RayPayload payload, in BuiltInTriangleIntersectionAt
         aoVal += TraceAORay(hitPosition, direction, payload.depth) / aoRayCount;
     }
     payload.color *= max(aoVal, 0.5f);
+
+    // Calculate Shadow.
+    float3 direction = normalize(float3(1.0f, 1.0f, 0.0f));
+    payload.attenuation = TraceShadowRay(hitPosition, direction, payload.depth);
 }
 
 [shader("closesthit")]
 void AOClosestHitShader(inout AORayPayload payload, in BuiltInTriangleIntersectionAttributes attr)
 {
     payload.aoVal = 0.0f;
+}
+
+[shader("closesthit")]
+void ShadowClosestHitShader(inout ShadowRayPayload payload, in BuiltInTriangleIntersectionAttributes attr)
+{
+    payload.attenuation = 0.0f;
 }
 
 [shader("closesthit")]
@@ -258,6 +294,12 @@ void GIClosestHitShader(inout GIRayPayload payload, in BuiltInTriangleIntersecti
 void MissShader(inout RayPayload payload)
 {
     payload.color = SkyboxCube.SampleLevel(StaticLinearClampSampler, payload.direction, 0.0f);
+}
+
+[shader("miss")]
+void ShadowMissShader(inout ShadowRayPayload payload)
+{
+    payload.attenuation = 1.0f;
 }
 
 [shader("miss")]

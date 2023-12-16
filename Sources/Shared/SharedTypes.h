@@ -27,6 +27,7 @@ struct RayPayload
 {
     XMFLOAT4 color;
     XMFLOAT3 direction;
+    FLOAT attenuation;
     UINT depth;
     UINT randomSeed;
 };
@@ -42,6 +43,11 @@ struct GIRayPayload
     XMFLOAT3 direction;
     UINT depth;
     UINT randomSeed;
+};
+
+struct ShadowRayPayload
+{
+    FLOAT attenuation;
 };
 
 #endif // !SHARED_TYPES_H

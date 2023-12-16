@@ -28,6 +28,11 @@ private:
 	const wchar_t* kGIClosestHitShaderName = L"GIClosestHitShader";
 	const wchar_t* kGIMissShaderName = L"GIMissShader";
 
+	// Shadow
+	const wchar_t* kShadowHitGroupName = L"ShadowHitGroup";
+	const wchar_t* kShadowClosestHitShaderName = L"ShadowClosestHitShader";
+	const wchar_t* kShadowMissShaderName = L"ShadowMissShader";
+
 	ComPtr<ID3D12RootSignature> pRaytracingLocalRootSignature;
 	ComPtr<ID3D12StateObject> pDXRStateObject;
 	ComPtr<ID3D12Resource> pMissShaderTable;

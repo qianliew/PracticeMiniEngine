@@ -15,7 +15,8 @@ namespace RayType
 		Radiance = 0,
 		AO = 1,
 		GI = 2,
-		Count = 3,
+		Shadow = 3,
+		Count = 4,
 	};
 };
 
