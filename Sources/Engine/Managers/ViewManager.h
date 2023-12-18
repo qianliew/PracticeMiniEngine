@@ -12,13 +12,17 @@ private:
     std::map<UINT, D3D12Texture*> pRenderTargets;
     std::map<UINT, D3D12Texture*> pDepthStencils;
     D3D12Texture* pRayTracingOutput;
+
+    // Index of handles.
     UINT colorHandles[2];
     UINT gBufferHandle[kGBufferCount];
+    UINT depthHandle;
     BOOL useFirstHandle;
 
     UINT frameIndex;
     UINT globalSRVID;
     UINT rtvID;
+    UINT dsvID;
     UINT width;
     UINT height;
 

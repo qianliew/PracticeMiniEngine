@@ -1,23 +1,41 @@
 #include "stdafx.h"
 #include "D3D12Texture.h"
 
-D3D12Texture::D3D12Texture(UINT inSRVID, UINT inRTVID) :
-    D3D12Texture(inSRVID, inRTVID, 0, 0)
+D3D12Texture::D3D12Texture(UINT inSRVID) :
+    D3D12Texture(inSRVID, -1, 0, 0, D3D12TextureType::ShaderResource)
 {
 
 }
 
-D3D12Texture::D3D12Texture(UINT inSRVID, UINT inRTVID, UINT inWidth, UINT inHeght, DXGI_FORMAT format) :
+D3D12Texture::D3D12Texture(
+    UINT inSRVID,
+    UINT inIndex,
+    UINT inWidth,
+    UINT inHeght,
+    D3D12TextureType inType,
+    DXGI_FORMAT format) :
     srvID(inSRVID),
-    rtvID(inRTVID),
     width(inWidth),
     height(inHeght),
+    type(inType),
     mipLevel(1),
     slice(1),
     srvDimension(D3D12_SRV_DIMENSION_TEXTURE2D),
     dxgiFormat(format)
 {
     pTextureBuffer = nullptr;
+    switch (inType)
+    {
+    case D3D12TextureType::RenderTarget:
+        rtvHandle = inIndex;
+        break;
+    case D3D12TextureType::DepthStencil:
+        dsvHandle = inIndex;
+        break;
+    case D3D12TextureType::UnorderedAccess:
+        uavHandle = inIndex;
+        break;
+    }
 
     // Init the loader factory.
     CoInitialize(NULL);
@@ -66,11 +84,8 @@ void D3D12Texture::LoadTexture(std::wstring& texturePath, UINT inMipLevel,
     }
 }
 
-void D3D12Texture::CreateTexture(D3D12TextureType inType)
+void D3D12Texture::CreateTextureResource()
 {
-    type = inType;
-    D3D12Resource* oldBuffer = pTextureBuffer;
-
     // Create texture desc.
     D3D12_RESOURCE_DESC desc;
     desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -164,6 +179,13 @@ void D3D12Texture::CreateTexture(D3D12TextureType inType)
         pTextureBuffer = new D3D12UnorderedAccessBuffer(desc, viewDesc);
         pTextureBuffer->SetResourceState(D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
     }
+}
+
+void D3D12Texture::ChangeTextureType(D3D12TextureType newType)
+{
+    type = newType;
+    D3D12Resource* oldBuffer = pTextureBuffer;
+    CreateTextureResource();
 
     if (oldBuffer != nullptr)
     {

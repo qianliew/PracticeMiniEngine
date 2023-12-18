@@ -22,7 +22,7 @@ void SkyboxMaterial::LoadTexture()
 	UINT id = SceneManager::sTextureID++;
 	pTexture = new D3D12Texture(id);
 	pTexture->LoadTexture(texturePath, 1, D3D12_SRV_DIMENSION_TEXTURECUBE, 6);
-	pTexture->CreateTexture(D3D12TextureType::ShaderResource);
+	pTexture->CreateTextureResource();
 }
 
 void SkyboxMaterial::ReleaseTextureData()

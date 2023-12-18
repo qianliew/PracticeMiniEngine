@@ -13,7 +13,12 @@ class D3D12Texture
 {
 private:
 	UINT srvID;
-	UINT rtvID;
+	union
+	{
+		UINT rtvHandle;
+		UINT dsvHandle;
+		UINT uavHandle;
+	};
 	UINT width;
 	UINT height;
 	UINT mipLevel;
@@ -47,19 +52,21 @@ private:
 	std::wstring GetDefaultMipTexturePath(std::wstring texturePath, UINT mipSize);
 
 public:
-	D3D12Texture(UINT inSRVID, UINT inRTVID = -1);
+	D3D12Texture(UINT inSRVID);
 	D3D12Texture(
 		UINT inSRVID,
-		UINT inRTVID,
+		UINT inIndex,
 		UINT inWidth,
 		UINT inHeght,
+		D3D12TextureType inType,
 		DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM);
 	~D3D12Texture();
 
 	inline const BYTE* GetTextureDataAt(UINT index) { return pData[index]; }
 	inline D3D12Resource* GetTextureBuffer() { return pTextureBuffer; }
 	inline const UINT GetTextureID() const { return srvID; }
-	inline const UINT GetRenderTargetID() const { return rtvID; }
+	inline const UINT GetRTVHandle() const { return rtvHandle; }
+	inline const UINT GetDSVHandle() const { return dsvHandle; }
 	inline const UINT GetSubresourceNum() const { return mipLevel * slice; }
 	inline const D3D12TextureType GetType() const { return type; }
 
@@ -68,7 +75,8 @@ public:
 		UINT mipLevel = 1,
 		D3D12_SRV_DIMENSION srvDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
 		UINT slice = 1);
-	void CreateTexture(D3D12TextureType type);
+	void CreateTextureResource();
+	void ChangeTextureType(D3D12TextureType newType);
 	void ReleaseTextureData();
 	void ReleaseTextureBuffer();
 	void CreateSampler();
