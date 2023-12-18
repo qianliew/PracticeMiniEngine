@@ -3,7 +3,8 @@
 
 Model::Model(UINT id, LPCWSTR meshPath) :
     Transform(id),
-    pMeshPath(meshPath)
+    pMeshPath(meshPath),
+    pBoundingBox(nullptr)
 {
     pMesh = new D3D12Mesh();
 }
@@ -11,6 +12,7 @@ Model::Model(UINT id, LPCWSTR meshPath) :
 Model::~Model()
 {
     delete pMesh;
+    delete pBoundingBox;
 }
 
 void Model::LoadModel(unique_ptr<FBXImporter>& importer)
@@ -20,6 +22,8 @@ void Model::LoadModel(unique_ptr<FBXImporter>& importer)
     {
         importer->LoadFBX(pMesh);
     }
+
+    GenerateBoundingBox();
 }
 
 void Model::CreatePlane()
@@ -36,9 +40,23 @@ void Model::CreatePlane()
 
     pMesh->SetIndices(pIndex, sizeof(pIndex));
     pMesh->SetVertices(pVertex, sizeof(pVertex));
+
+    GenerateBoundingBox();
 }
 
 void Model::SetMaterial(AbstractMaterial* material)
 {
     pMaterial = material;
+}
+
+void Model::GenerateBoundingBox()
+{
+    if (pBoundingBox != nullptr)
+    {
+        delete pBoundingBox;
+    }
+
+    const Vertex* pVertex = static_cast<const Vertex*>(pMesh->GetVerticesData());
+
+    pBoundingBox = new AABBBox();
 }

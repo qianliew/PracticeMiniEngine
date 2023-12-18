@@ -187,6 +187,9 @@
     <ClInclude Include="..\Sources\Engine\Rendering\DeferredLightingPass.h">
       <Filter>Engine\Rendering\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Objects\AABBBox.h">
+      <Filter>Engine\Objects\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Sources\Engine\Objects\D3D12IndexBuffer.cpp">
@@ -299,6 +302,9 @@
     </ClCompile>
     <ClCompile Include="..\Sources\Engine\Rendering\DeferredLightingPass.cpp">
       <Filter>Engine\Rendering\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Objects\AABBBox.cpp">
+      <Filter>Engine\Objects\Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

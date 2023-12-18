@@ -3,13 +3,17 @@
 #include "D3D12Mesh.h"
 #include "Transform.h"
 #include "AbstractMaterial.h"
+#include "AABBBox.h"
 
 class Model : public Transform
 {
 private:
+    LPCWSTR pMeshPath;
     D3D12Mesh* pMesh;
     AbstractMaterial* pMaterial;
-    LPCWSTR pMeshPath;
+    AABBBox* pBoundingBox;
+
+    void GenerateBoundingBox();
 
 public:
     Model(UINT id, LPCWSTR);
