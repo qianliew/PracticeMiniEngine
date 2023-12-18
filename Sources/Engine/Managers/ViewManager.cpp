@@ -56,21 +56,7 @@ ViewManager::ViewManager(std::shared_ptr<D3D12Device>& device, UINT inWidth, UIN
         gBufferHandle[i] = CreateRenderTarget();
     }
 
-    // Create a depth stencil buffer.
-    pDepthStencil = new D3D12Texture(globalSRVID++, -1, width, height, DXGI_FORMAT_R32_TYPELESS);
-    pDepthStencil->CreateTexture(D3D12TextureType::DepthStencil);
-
-    D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
-    depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
-    depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
-    depthOptimizedClearValue.DepthStencil.Stencil = 0;
-
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(
-        pDepthStencil->GetTextureBuffer(),
-        D3D12_RESOURCE_STATE_DEPTH_WRITE,
-        &depthOptimizedClearValue);
-    pDepthStencil->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(DEPTH_STENCIL_VIEW, 0));
+    CreateDepthStencilView();
 }
 
 ViewManager::~ViewManager()
@@ -79,7 +65,10 @@ ViewManager::~ViewManager()
     {
         delete it->second;
     }
-    delete pDepthStencil;
+    for (auto it = pDepthStencils.begin(); it != pDepthStencils.end(); it++)
+    {
+        delete it->second;
+    }
 }
 
 UINT ViewManager::sFrameCount = 0;
@@ -113,6 +102,29 @@ UINT ViewManager::CreateRenderTarget()
     pRenderTargets[rtid] = pRenderTarget;
 
     return rtid;
+}
+
+// Create a depth stencil buffer.
+UINT ViewManager::CreateDepthStencilView()
+{
+    D3D12Texture* pDepthStencil = new D3D12Texture(globalSRVID++, -1, width, height, DXGI_FORMAT_R32_TYPELESS);
+    pDepthStencil->CreateTexture(D3D12TextureType::DepthStencil);
+
+    D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
+    depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+    depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
+    depthOptimizedClearValue.DepthStencil.Stencil = 0;
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(
+        pDepthStencil->GetTextureBuffer(),
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        &depthOptimizedClearValue);
+
+    const UINT dsvHandle = 0;
+    pDepthStencil->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
+        pDevice->GetDescriptorHeapManager()->GetHandle(DEPTH_STENCIL_VIEW, dsvHandle));
+
+    pDepthStencils[dsvHandle] = pDepthStencil;
+    return dsvHandle;
 }
 
 void ViewManager::CreateDXRUAV()
@@ -172,7 +184,7 @@ void ViewManager::ConvertTextureType(
             GetResourceState(targetType, isPixelShaderResource));
     };
 
-    convert(type == D3D12TextureType::DepthStencil ? pDepthStencil : pRenderTargets[handleIndex]);
+    convert(type == D3D12TextureType::DepthStencil ? pDepthStencils[0] : pRenderTargets[handleIndex]);
     pCommandList->FlushResourceBarriers();
 }
 

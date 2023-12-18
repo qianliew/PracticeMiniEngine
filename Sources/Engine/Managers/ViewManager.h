@@ -10,7 +10,7 @@ private:
     ComPtr<IDXGISwapChain3> pSwapChain;
     ComPtr<ID3D12Resource> pBackBuffers[FRAME_COUNT];
     std::map<UINT, D3D12Texture*> pRenderTargets;
-    D3D12Texture* pDepthStencil;
+    std::map<UINT, D3D12Texture*> pDepthStencils;
     D3D12Texture* pRayTracingOutput;
     UINT colorHandles[2];
     UINT gBufferHandle[kGBufferCount];
@@ -33,6 +33,7 @@ public:
 
     void UpdateFrameIndex();
     UINT CreateRenderTarget();
+    UINT CreateDepthStencilView();
     void CreateDXRUAV();
     const UINT GetNextColorHandle();
     UINT GetSRVHandle4RTV(UINT rtvHandle);
@@ -47,10 +48,10 @@ public:
     inline ID3D12Resource* GetCurrentBackBuffer() const { return pBackBuffers[frameIndex].Get(); }
     inline const D3D12Resource* GetCurrentBuffer(UINT rtHandle) { return pRenderTargets[rtHandle]->GetTextureBuffer(); }
     inline const UINT GetCurrentColorHandle() const { return useFirstHandle == TRUE ? colorHandles[0] : colorHandles[1]; }
-    inline const UINT GetDepthSRVHandle() const { return pDepthStencil->GetTextureID();  }
+    inline const UINT GetCurrentDSVHandle() const { return 0; }
+    inline const UINT GetDepthSRVHandle() { return pDepthStencils[0]->GetTextureID();  }
     inline const UINT GetGBufferHandle(UINT index) const { return gBufferHandle[index]; }
     inline const UINT GetGBufferCount() const { return kGBufferCount; }
     inline const UINT GetFrameIndex() const { return frameIndex; }
-    inline ID3D12Resource* GetDepthStencil() const { return pDepthStencil->GetTextureBuffer()->GetResource().Get(); }
     inline D3D12Resource* GetRayTracingOutput() const { return pRayTracingOutput->GetTextureBuffer(); }
 };
