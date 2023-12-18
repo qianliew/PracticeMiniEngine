@@ -9,20 +9,22 @@ private:
     std::shared_ptr<D3D12Device> pDevice;
     ComPtr<IDXGISwapChain3> pSwapChain;
     ComPtr<ID3D12Resource> pBackBuffers[FRAME_COUNT];
-    std::map<UINT, D3D12Texture*> pRenderTargets;
-    std::map<UINT, D3D12Texture*> pDepthStencils;
-    D3D12Texture* pRayTracingOutput;
+    std::map<UINT, D3D12Texture*> pRenderTargetViews;
+    std::map<UINT, D3D12Texture*> pDepthStencilViews;
+    std::map<UINT, D3D12Texture*> pUnorderedAccessViews;
 
     // Index of handles.
     UINT colorHandles[2];
     UINT gBufferHandle[kGBufferCount];
-    UINT depthHandle;
+    UINT dsvHandle;
+    UINT uavColorHandle;
     BOOL useFirstHandle;
 
     UINT frameIndex;
     UINT globalSRVID;
     UINT rtvID;
     UINT dsvID;
+    UINT uavID;
     UINT width;
     UINT height;
 
@@ -38,9 +40,10 @@ public:
     void UpdateFrameIndex();
     UINT CreateRenderTarget();
     UINT CreateDepthStencilView();
-    void CreateDXRUAV();
+    UINT CreateUnorderedAccessView();
     const UINT GetNextColorHandle();
-    UINT GetSRVHandle4RTV(UINT rtvHandle);
+    const UINT GetRTVSRVHandle(UINT rtvHandle);
+    const UINT GetDSVSRVHandle(UINT dsvHandle);
     void ConvertTextureType(
         D3D12CommandList*& pCommandList,
         UINT handleIndex,
@@ -49,13 +52,14 @@ public:
         BOOL isPixelShaderResource = TRUE);
 
     inline IDXGISwapChain3* GetSwapChain() const { return pSwapChain.Get(); }
-    inline ID3D12Resource* GetCurrentBackBuffer() const { return pBackBuffers[frameIndex].Get(); }
-    inline const D3D12Resource* GetCurrentBuffer(UINT rtHandle) { return pRenderTargets[rtHandle]->GetTextureBuffer(); }
     inline const UINT GetCurrentColorHandle() const { return useFirstHandle == TRUE ? colorHandles[0] : colorHandles[1]; }
-    inline const UINT GetCurrentDSVHandle() const { return 0; }
-    inline const UINT GetDepthSRVHandle() { return pDepthStencils[0]->GetTextureID();  }
     inline const UINT GetGBufferHandle(UINT index) const { return gBufferHandle[index]; }
     inline const UINT GetGBufferCount() const { return kGBufferCount; }
+    inline const UINT GetCurrentDSVHandle() const { return dsvHandle; }
+    inline const UINT GetUAVColorHandle() const{ return uavColorHandle; }
     inline const UINT GetFrameIndex() const { return frameIndex; }
-    inline D3D12Resource* GetRayTracingOutput() const { return pRayTracingOutput->GetTextureBuffer(); }
+
+    inline ID3D12Resource* GetCurrentBackBuffer() const { return pBackBuffers[frameIndex].Get(); }
+    inline const D3D12Resource* GetCurrentRTVBuffer(UINT rtvHandle) { return pRenderTargetViews[rtvHandle]->GetTextureBuffer(); }
+    inline const D3D12Resource* GetUAVBuffer(UINT uavHandle) { return pUnorderedAccessViews[uavHandle]->GetTextureBuffer(); }
 };

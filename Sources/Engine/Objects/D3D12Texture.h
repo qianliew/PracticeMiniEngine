@@ -67,6 +67,7 @@ public:
 	inline const UINT GetTextureID() const { return srvID; }
 	inline const UINT GetRTVHandle() const { return rtvHandle; }
 	inline const UINT GetDSVHandle() const { return dsvHandle; }
+	inline const UINT GetUAVHandle() const { return uavHandle; }
 	inline const UINT GetSubresourceNum() const { return mipLevel * slice; }
 	inline const D3D12TextureType GetType() const { return type; }
 

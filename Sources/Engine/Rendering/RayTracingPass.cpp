@@ -201,7 +201,7 @@ void RayTracingPass::Execute(D3D12CommandList* pCommandList)
         pCommandList->GetCommandList(),
         SHADER_RESOURCE_VIEW_GLOBAL,
         (UINT)eDXRRootIndex::ShaderResourceViewDepth,
-        pViewManager->GetDepthSRVHandle());
+        pViewManager->GetDSVSRVHandle(pViewManager->GetCurrentDSVHandle()));
 
     // Bind the UAV heap for the output.
     pDevice->GetDescriptorHeapManager()->SetComputeViews(
@@ -217,7 +217,7 @@ void RayTracingPass::Execute(D3D12CommandList* pCommandList)
     pViewManager->ConvertTextureType(pCommandList, depthHandle, D3D12TextureType::DepthStencil, D3D12TextureType::DepthStencil);
 
     // Copy the output to the color buffer.
-    const D3D12Resource* pColorResource = pViewManager->GetCurrentBuffer(pViewManager->GetCurrentColorHandle());
-    const D3D12Resource* pOutputResource = pViewManager->GetRayTracingOutput();
+    const D3D12Resource* pColorResource = pViewManager->GetCurrentRTVBuffer(pViewManager->GetCurrentColorHandle());
+    const D3D12Resource* pOutputResource = pViewManager->GetUAVBuffer(pViewManager->GetUAVColorHandle());
     CopyBuffer(pCommandList, pColorResource, pOutputResource);
 }

@@ -40,13 +40,7 @@ void MiniEngine::LoadPipeline()
     // Create the root signature.
     pRootSignature = new D3D12RootSignature(pDevice);
     pRootSignature->CreateRootSignature();
-
-    // Create features for DXR.
-    if (isDXR)
-    {
-        pViewManager->CreateDXRUAV();
-        pRootSignature->CreateDXRRootSignature();
-    }
+    pRootSignature->CreateDXRRootSignature();
 }
 
 // Load the sample assets.

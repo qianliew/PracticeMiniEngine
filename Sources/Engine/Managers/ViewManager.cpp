@@ -8,7 +8,8 @@ ViewManager::ViewManager(std::shared_ptr<D3D12Device>& device, UINT inWidth, UIN
     height(inHeight),
     globalSRVID(0),
     rtvID(FRAME_COUNT),
-    dsvID(0)
+    dsvID(0),
+    uavID(0)
 {
     // Describe and create the swap chain.
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
@@ -57,16 +58,17 @@ ViewManager::ViewManager(std::shared_ptr<D3D12Device>& device, UINT inWidth, UIN
         gBufferHandle[i] = CreateRenderTarget();
     }
 
-    depthHandle = CreateDepthStencilView();
+    dsvHandle = CreateDepthStencilView();
+    uavColorHandle = CreateUnorderedAccessView();
 }
 
 ViewManager::~ViewManager()
 {
-    for (auto it = pRenderTargets.begin(); it != pRenderTargets.end(); it++)
+    for (auto it = pRenderTargetViews.begin(); it != pRenderTargetViews.end(); it++)
     {
         delete it->second;
     }
-    for (auto it = pDepthStencils.begin(); it != pDepthStencils.end(); it++)
+    for (auto it = pDepthStencilViews.begin(); it != pDepthStencilViews.end(); it++)
     {
         delete it->second;
     }
@@ -101,7 +103,7 @@ UINT ViewManager::CreateRenderTarget()
     pRenderTarget->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW, rtvHandle));
 
-    pRenderTargets[rtvHandle] = pRenderTarget;
+    pRenderTargetViews[rtvHandle] = pRenderTarget;
 
     return rtvHandle;
 }
@@ -126,31 +128,45 @@ UINT ViewManager::CreateDepthStencilView()
     pDepthStencil->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(DEPTH_STENCIL_VIEW, dsvHandle));
 
-    pDepthStencils[dsvHandle] = pDepthStencil;
+    pDepthStencilViews[dsvHandle] = pDepthStencil;
     return dsvHandle;
 }
 
-void ViewManager::CreateDXRUAV()
+UINT ViewManager::CreateUnorderedAccessView()
 {
-    // Create 2D output texture for raytracing.
-    pRayTracingOutput = new D3D12Texture(-1, -1, width, height,
+    D3D12Texture* pUAV = new D3D12Texture(globalSRVID++, rtvID++, width, height,
         D3D12TextureType::UnorderedAccess, DXGI_FORMAT_R16G16B16A16_FLOAT);
-    pRayTracingOutput->CreateTextureResource();
+    pUAV->CreateTextureResource();
 
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
-        pRayTracingOutput->GetTextureBuffer(),
+        pUAV->GetTextureBuffer(),
         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
         nullptr);
-    pRayTracingOutput->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
+
+    const UINT uavHandle = pUAV->GetUAVHandle();
+    pUAV->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, 0));
+
+    pUnorderedAccessViews[uavHandle] = pUAV;
+    return uavHandle;
 }
 
-UINT ViewManager::GetSRVHandle4RTV(UINT rtvHandle)
+const UINT ViewManager::GetRTVSRVHandle(UINT rtvHandle)
 {
-    if (pRenderTargets[rtvHandle] != nullptr
-        && pRenderTargets[rtvHandle]->GetType() == D3D12TextureType::ShaderResource)
+    if (pRenderTargetViews[rtvHandle] != nullptr
+        && pRenderTargetViews[rtvHandle]->GetType() == D3D12TextureType::ShaderResource)
     {
-        return pRenderTargets[rtvHandle]->GetTextureID();
+        return pRenderTargetViews[rtvHandle]->GetTextureID();
+    }
+    return 0;
+}
+
+const UINT ViewManager::GetDSVSRVHandle(UINT dsvHandle)
+{
+    if (pDepthStencilViews[dsvHandle] != nullptr
+        && pDepthStencilViews[dsvHandle]->GetType() == D3D12TextureType::ShaderResource)
+    {
+        return pDepthStencilViews[dsvHandle]->GetTextureID();
     }
     return 0;
 }
@@ -188,7 +204,7 @@ void ViewManager::ConvertTextureType(
             GetResourceState(targetType, isPixelShaderResource));
     };
 
-    convert(type == D3D12TextureType::DepthStencil ? pDepthStencils[0] : pRenderTargets[handleIndex]);
+    convert(type == D3D12TextureType::DepthStencil ? pDepthStencilViews[0] : pRenderTargetViews[handleIndex]);
     pCommandList->FlushResourceBarriers();
 }
 

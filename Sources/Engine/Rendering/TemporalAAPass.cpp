@@ -71,17 +71,17 @@ void TemporalAAPass::Execute(D3D12CommandList* pCommandList)
         pCommandList->GetCommandList(),
         SHADER_RESOURCE_VIEW_GLOBAL,
         (UINT)eRootIndex::ShaderResourceViewGlobal0,
-        pViewManager->GetSRVHandle4RTV(colorHandle));
+        pViewManager->GetRTVSRVHandle(colorHandle));
     pDevice->GetDescriptorHeapManager()->SetViews(
         pCommandList->GetCommandList(),
         SHADER_RESOURCE_VIEW_GLOBAL,
         (UINT)eRootIndex::ShaderResourceViewGlobal1,
-        pViewManager->GetSRVHandle4RTV(taaHistoryHandle));
+        pViewManager->GetRTVSRVHandle(taaHistoryHandle));
     pDevice->GetDescriptorHeapManager()->SetViews(
         pCommandList->GetCommandList(),
         SHADER_RESOURCE_VIEW_GLOBAL,
         (UINT)eRootIndex::ShaderResourceViewGlobal2,
-        pViewManager->GetDepthSRVHandle());
+        pViewManager->GetDSVSRVHandle(pViewManager->GetCurrentDSVHandle()));
 
     // Set the TAA handle to the render targert, and draw. 
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle =
@@ -98,8 +98,8 @@ void TemporalAAPass::Execute(D3D12CommandList* pCommandList)
     pViewManager->ConvertTextureType(pCommandList, depthHandle, D3D12TextureType::DepthStencil, D3D12TextureType::DepthStencil);
 
     // Copy the current TAA buffer to the history.
-    const D3D12Resource* pTAAHistoryResource = pViewManager->GetCurrentBuffer(taaHistoryHandle);
-    const D3D12Resource* pTAAResource = pViewManager->GetCurrentBuffer(taaHandle);
+    const D3D12Resource* pTAAHistoryResource = pViewManager->GetCurrentRTVBuffer(taaHistoryHandle);
+    const D3D12Resource* pTAAResource = pViewManager->GetCurrentRTVBuffer(taaHandle);
 
     CopyBuffer(pCommandList, pTAAHistoryResource, pTAAResource);
 }

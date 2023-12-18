@@ -63,7 +63,7 @@ void DeferredLightingPass::Execute(D3D12CommandList* pCommandList)
         pCommandList->GetCommandList(),
         SHADER_RESOURCE_VIEW_GLOBAL,
         (UINT)eRootIndex::ShaderResourceViewGBuffer,
-        pViewManager->GetSRVHandle4RTV(pViewManager->GetGBufferHandle(0)));
+        pViewManager->GetRTVSRVHandle(pViewManager->GetGBufferHandle(0)));
 
     // Bind the UAV heap for the output.
     pDevice->GetDescriptorHeapManager()->SetComputeViews(
