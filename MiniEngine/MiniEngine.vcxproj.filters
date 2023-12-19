@@ -190,6 +190,9 @@
     <ClInclude Include="..\Sources\Engine\Objects\AABBBox.h">
       <Filter>Engine\Objects\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Rendering\FrustumCullingPass.h">
+      <Filter>Engine\Rendering\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Sources\Engine\Objects\D3D12IndexBuffer.cpp">
@@ -306,6 +309,9 @@
     <ClCompile Include="..\Sources\Engine\Objects\AABBBox.cpp">
       <Filter>Engine\Objects\Sources</Filter>
     </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Rendering\FrustumCullingPass.cpp">
+      <Filter>Engine\Rendering\Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\Assets\Shaders\Lit.hlsl">
@@ -329,6 +335,9 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Assets\Shaders\Raytracing.hlsl">
+      <Filter>Assets\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Assets\Shaders\FrustumCulling.hlsl">
       <Filter>Assets\Shaders</Filter>
     </FxCompile>
   </ItemGroup>
