@@ -96,7 +96,7 @@ void RayTracingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSign
     auto pipelineConfig = raytracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
     // PERFOMANCE TIP: Set max recursion depth as low as needed 
     // as drivers may apply optimization strategies for low recursion depths. 
-    UINT maxRecursionDepth = RaytracingConstants::MaxRayRecursiveDepth; // ~ primary rays only. 
+    UINT maxRecursionDepth = RaytracingConstants::kMaxRayRecursiveDepth; // ~ primary rays only. 
     pipelineConfig->Config(maxRecursionDepth);
 
     // Create the state object.
@@ -170,6 +170,9 @@ void RayTracingPass::BuildShaderTables()
 
 void RayTracingPass::Execute(D3D12CommandList* pCommandList)
 {
+    UINT width = pSceneManager->GetCamera()->GetCameraWidth();
+    UINT height = pSceneManager->GetCamera()->GetCameraHeight();
+
     auto DispatchRays = [&](auto* commandList, auto* stateObject, auto* dispatchDesc)
     {
         // Since each shader table has only one shader record, the stride is same as the size.
@@ -181,8 +184,8 @@ void RayTracingPass::Execute(D3D12CommandList* pCommandList)
         dispatchDesc->MissShaderTable.StrideInBytes = dispatchDesc->MissShaderTable.SizeInBytes / RayType::Count;
         dispatchDesc->RayGenerationShaderRecord.StartAddress = pRayGenShaderTable->GetGPUVirtualAddress();
         dispatchDesc->RayGenerationShaderRecord.SizeInBytes = pRayGenShaderTable->GetDesc().Width;
-        dispatchDesc->Width = 1920;
-        dispatchDesc->Height = 1080;
+        dispatchDesc->Width = width;
+        dispatchDesc->Height = height;
         dispatchDesc->Depth = 1;
         commandList->SetPipelineState1(stateObject);
         commandList->DispatchRays(dispatchDesc);
@@ -190,10 +193,6 @@ void RayTracingPass::Execute(D3D12CommandList* pCommandList)
 
     // Bind resources for the raytracing.
     pSceneManager->SetDXRResources(pCommandList);
-
-    pCommandList->SetComputeRootConstantBufferView(
-        (UINT)eDXRRootIndex::ConstantBufferViewGlobal,
-        pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
 
     const UINT depthHandle = 0;
     pViewManager->ConvertTextureType(pCommandList, depthHandle, D3D12TextureType::DepthStencil, D3D12TextureType::ShaderResource);

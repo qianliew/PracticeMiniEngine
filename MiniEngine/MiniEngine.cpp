@@ -67,12 +67,13 @@ void MiniEngine::LoadAssets()
 
     // Create and init render passes.
     pCommandList->Reset(pDevice->GetCommandAllocator());
-    if (isDXR)
-    {
-        pRayTracingPass = make_shared<RayTracingPass>(pDevice, pSceneManager, pViewManager);
-        pRayTracingPass->Setup(pCommandList, pRootSignature->GetDRXRootSignature());
-        pRayTracingPass->BuildShaderTables();
-    }
+
+    pRayTracingPass = make_shared<RayTracingPass>(pDevice, pSceneManager, pViewManager);
+    pRayTracingPass->Setup(pCommandList, pRootSignature->GetDRXRootSignature());
+    pRayTracingPass->BuildShaderTables();
+
+    pFrustumCullingPass = make_shared<FrustumCullingPass>(pDevice, pSceneManager, pViewManager);
+    pRayTracingPass->Setup(pCommandList, pRootSignature->GetDRXRootSignature());
 
     pDrawObjectPass = make_shared<DrawObjectsPass>(pDevice, pSceneManager, pViewManager);
     pDrawObjectPass->Setup(pCommandList, pRootSignature->GetRootSignature());
@@ -187,27 +188,26 @@ void MiniEngine::PopulateCommandList()
     pCommandList->SetRootSignature(pRootSignature->GetRootSignature());
 
     // Set the global views.
-    pCommandList->SetRootConstantBufferView((UINT)eRootIndex::ConstantBufferViewGlobal,
+    pCommandList->SetRootConstantBufferView(
+        (UINT)eRootIndex::ConstantBufferViewGlobal,
         pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
 
-    if (isDXR)
-    {
-        pGBufferPass->Execute(pCommandList);
+    pCommandList->SetComputeRootSignature(pRootSignature->GetDRXRootSignature());
+    pCommandList->SetComputeRootConstantBufferView(
+        (UINT)eDXRRootIndex::ConstantBufferViewGlobal,
+        pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
 
-        pCommandList->SetComputeRootSignature(pRootSignature->GetRootSignature());
-        pDeferredLightingPass->Execute(pCommandList);
+    pFrustumCullingPass->Execute(pCommandList);
 
-        pCommandList->SetComputeRootSignature(pRootSignature->GetDRXRootSignature());
-        pRayTracingPass->Execute(pCommandList);
-    }
-    else
-    {
-        pDrawObjectPass->Execute(pCommandList);
-        pDrawSkyboxPass->Execute(pCommandList);
-    }
+    //pGBufferPass->Execute(pCommandList);
 
-    pTemporalAAPass->Execute(pCommandList);
-    pBlitPass->Execute(pCommandList);
+    //pDeferredLightingPass->Execute(pCommandList);
+
+    //pCommandList->SetComputeRootSignature(pRootSignature->GetDRXRootSignature());
+    //pRayTracingPass->Execute(pCommandList);
+
+    //pTemporalAAPass->Execute(pCommandList);
+    //pBlitPass->Execute(pCommandList);
 
     // Indicate that the back buffer will now be used to present.
     pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBackBuffer(),

@@ -57,16 +57,21 @@ void Model::GenerateBoundingBox()
     }
 
     const Vertex* pVertex = static_cast<const Vertex*>(pMesh->GetVerticesData());
-    XMFLOAT3 maxPos = pVertex->positionOS, minPos = pVertex->positionOS;
+
+    D3D12_RAYTRACING_AABB aabb = {};
+    aabb.MaxX = aabb.MinX = pVertex->positionOS.x;
+    aabb.MaxY = aabb.MinY = pVertex->positionOS.y;
+    aabb.MaxZ = aabb.MinZ = pVertex->positionOS.z;
+
     for (UINT i = 0; i < pMesh->GetVerticesNum(); i++)
     {
-        maxPos.x = max(maxPos.x, (pVertex + i)->positionOS.x);
-        maxPos.y = max(maxPos.y, (pVertex + i)->positionOS.y);
-        maxPos.z = max(maxPos.z, (pVertex + i)->positionOS.z);
-        minPos.x = min(minPos.x, (pVertex + i)->positionOS.x);
-        minPos.y = min(minPos.y, (pVertex + i)->positionOS.y);
-        minPos.z = min(minPos.z, (pVertex + i)->positionOS.z);
+        aabb.MaxX = max(aabb.MaxX, (pVertex + i)->positionOS.x);
+        aabb.MaxY = max(aabb.MaxY, (pVertex + i)->positionOS.y);
+        aabb.MaxZ = max(aabb.MaxZ, (pVertex + i)->positionOS.z);
+        aabb.MinX = min(aabb.MinX, (pVertex + i)->positionOS.x);
+        aabb.MinY = min(aabb.MinY, (pVertex + i)->positionOS.y);
+        aabb.MinZ = min(aabb.MinZ, (pVertex + i)->positionOS.z);
     }
 
-    pBoundingBox = new AABBBox(minPos, maxPos);
+    pBoundingBox = new AABBBox(aabb);
 }

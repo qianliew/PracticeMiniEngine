@@ -13,10 +13,107 @@ FrustumCullingPass::FrustumCullingPass(
 
 void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
 {
+    CD3DX12_STATE_OBJECT_DESC raytracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
+    auto lib = raytracingPipeline.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
+    D3D12_SHADER_BYTECODE libdxil = CD3DX12_SHADER_BYTECODE((void*)g_pFrustumCulling, ARRAYSIZE(g_pFrustumCulling));
+    lib->SetDXILLibrary(&libdxil);
 
+    auto hitGroup = raytracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
+    hitGroup->SetIntersectionShaderImport(kIntersectionShaderName);
+    hitGroup->SetHitGroupExport(kHitGroupName);
+    hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
+
+    // Build the shader table.
+    void* rayGenShaderIdentifier;
+    void* missShaderIdentifier;
+    void* hitGroupShaderIdentifier;
+
+    auto GetShaderIdentifiers = [&](auto* stateObjectProperties)
+    {
+        rayGenShaderIdentifier = stateObjectProperties->GetShaderIdentifier(kRaygenShaderName);
+        missShaderIdentifier = stateObjectProperties->GetShaderIdentifier(kMissShaderName);
+        hitGroupShaderIdentifier = stateObjectProperties->GetShaderIdentifier(kHitGroupName);
+    };
+
+    // Get shader identifiers.
+    UINT shaderIdentifierSize;
+    {
+        ComPtr<ID3D12StateObjectProperties> stateObjectProperties;
+        ThrowIfFailed(pDXRStateObject.As(&stateObjectProperties));
+        GetShaderIdentifiers(stateObjectProperties.Get());
+        shaderIdentifierSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+    }
+
+    // Ray gen shader table
+    {
+        UINT numShaderRecords = 1;
+        UINT shaderRecordSize = shaderIdentifierSize;
+        ShaderTable rayGenShaderTable(numShaderRecords, shaderRecordSize);
+        rayGenShaderTable.CreateBuffer(pDevice->GetDevice().Get());
+        rayGenShaderTable.PushBack(ShaderRecord(rayGenShaderIdentifier, shaderIdentifierSize));
+        pRayGenShaderTable = rayGenShaderTable.ResourceLocation.Resource;
+    }
+
+    // Miss shader table
+    {
+        UINT numShaderRecords = RayType::Count;
+        UINT shaderRecordSize = shaderIdentifierSize;
+        ShaderTable missShaderTable(numShaderRecords, shaderRecordSize);
+        missShaderTable.CreateBuffer(pDevice->GetDevice().Get());
+        missShaderTable.PushBack(ShaderRecord(missShaderIdentifier, shaderIdentifierSize));
+        pMissShaderTable = missShaderTable.ResourceLocation.Resource;
+    }
+
+    // Hit group shader table
+    {
+        UINT numShaderRecords = RayType::Count;
+        UINT shaderRecordSize = shaderIdentifierSize;
+        ShaderTable hitGroupShaderTable(numShaderRecords, shaderRecordSize);
+        hitGroupShaderTable.CreateBuffer(pDevice->GetDevice().Get());
+        hitGroupShaderTable.PushBack(ShaderRecord(hitGroupShaderIdentifier, shaderIdentifierSize));
+        pHitGroupShaderTable = hitGroupShaderTable.ResourceLocation.Resource;
+    }
 }
 
 void FrustumCullingPass::Execute(D3D12CommandList* pCommandList)
 {
+    FLOAT scale = 0.05;
+    UINT width = pSceneManager->GetCamera()->GetCameraWidth() * scale;
+    UINT height = pSceneManager->GetCamera()->GetCameraHeight() * scale;
 
+    auto DispatchRays = [&](auto* commandList, auto* stateObject, auto* dispatchDesc)
+    {
+        dispatchDesc->HitGroupTable.StartAddress = pHitGroupShaderTable->GetGPUVirtualAddress();
+        dispatchDesc->HitGroupTable.SizeInBytes = pHitGroupShaderTable->GetDesc().Width;
+        dispatchDesc->HitGroupTable.StrideInBytes = dispatchDesc->HitGroupTable.SizeInBytes;
+        dispatchDesc->MissShaderTable.StartAddress = pMissShaderTable->GetGPUVirtualAddress();
+        dispatchDesc->MissShaderTable.SizeInBytes = pMissShaderTable->GetDesc().Width;
+        dispatchDesc->MissShaderTable.StrideInBytes = dispatchDesc->MissShaderTable.SizeInBytes;
+        dispatchDesc->RayGenerationShaderRecord.StartAddress = pRayGenShaderTable->GetGPUVirtualAddress();
+        dispatchDesc->RayGenerationShaderRecord.SizeInBytes = pRayGenShaderTable->GetDesc().Width;
+        dispatchDesc->Width = width;
+        dispatchDesc->Height = height;
+        dispatchDesc->Depth = 1;
+        commandList->SetPipelineState1(stateObject);
+        commandList->DispatchRays(dispatchDesc);
+    };
+
+    // Bind resources for the frustum culling.
+    pSceneManager->SetDXRResources(pCommandList);
+
+    // Bind the UAV heap for the output.
+    pDevice->GetDescriptorHeapManager()->SetComputeViews(
+        pCommandList->GetCommandList(),
+        UNORDERED_ACCESS_VIEW,
+        (UINT)eDXRRootIndex::UnorderedAccessViewGlobal,
+        0);
+
+    // Dispatch rays.    
+    D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
+    DispatchRays(pCommandList->GetDXRCommandList().Get(), pDXRStateObject.Get(), &dispatchDesc);
+
+    // Copy the output to the color buffer.
+    const D3D12Resource* pColorResource = pViewManager->GetCurrentRTVBuffer(pViewManager->GetCurrentColorHandle());
+    const D3D12Resource* pOutputResource = pViewManager->GetUAVBuffer(pViewManager->GetUAVColorHandle());
+    CopyBuffer(pCommandList, pColorResource, pOutputResource);
 }

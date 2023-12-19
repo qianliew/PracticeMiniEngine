@@ -25,4 +25,5 @@ public:
 
     inline D3D12Mesh* GetMesh() const { return pMesh; }
     inline AbstractMaterial* GetMaterial() const { return pMaterial; }
+    inline const AABBBox* GetAABBBox() const { return pBoundingBox; }
 };

@@ -16,6 +16,8 @@ SceneManager::SceneManager(shared_ptr<D3D12Device>& device, BOOL isDXR) :
     pDevice->GetBufferManager()->AllocateUploadBuffer(pTempIndexBuffer, 1024 * 1024);
     pTempOffsetBuffer = new D3D12UploadBuffer();
     pDevice->GetBufferManager()->AllocateUploadBuffer(pTempOffsetBuffer, 1024);
+    pTempBoundingBoxBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateUploadBuffer(pTempBoundingBoxBuffer, 1024);
 }
 
 SceneManager::~SceneManager()
@@ -42,7 +44,7 @@ void SceneManager::InitFBXImporter()
     pFBXImporter->InitializeSdkObjects();
 }
 
-void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
+void SceneManager::ParseScene(D3D12CommandList* pCommandList)
 {
     LPCWSTR sceneName = L"scene";
     std::wifstream inFile(GetAssetPath(sceneName));
@@ -81,139 +83,63 @@ void SceneManager::ParseScene(D3D12CommandList*& pCommandList)
         LoadObjectVertexBufferAndIndexBuffer(pCommandList, model);
     }
 
-    if (isDXR)
-    {
-        // Create the SRV of indices and vertices.
-        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-        srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        srvDesc.Buffer.NumElements = pTempVertexBuffer->GetBufferUsage() / sizeof(Vertex);
-        srvDesc.Buffer.StructureByteStride = sizeof(Vertex);
-        srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+    // Create the SRV of indices and vertices.
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Buffer.NumElements = pTempVertexBuffer->GetBufferUsage() / sizeof(Vertex);
+    srvDesc.Buffer.StructureByteStride = sizeof(Vertex);
+    srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-        pIndexBuffer = new D3D12ShaderResourceBuffer(pTempIndexBuffer->GetResourceDesc(), srvDesc);
-        pDevice->GetBufferManager()->AllocateDefaultBuffer(pIndexBuffer);
-        pIndexBuffer->CreateView(pDevice->GetDevice(),
-            pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_GLOBAL, 1));
-        pCommandList->CopyBufferRegion(pIndexBuffer->GetResource().Get(),
-            pTempIndexBuffer->ResourceLocation.Resource.Get(),
-            pTempIndexBuffer->GetBufferUsage());
+    pIndexBuffer = new D3D12ShaderResourceBuffer(pTempIndexBuffer->GetResourceDesc(), srvDesc);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(pIndexBuffer);
+    pIndexBuffer->CreateView(pDevice->GetDevice(),
+        pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_GLOBAL, 1));
+    pCommandList->CopyBufferRegion(pIndexBuffer->GetResource().Get(),
+        pTempIndexBuffer->ResourceLocation.Resource.Get(),
+        pTempIndexBuffer->GetBufferUsage());
 
-        srvDesc = {};
-        srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        srvDesc.Buffer.NumElements = pTempVertexBuffer->GetBufferUsage() / sizeof(UINT16);
-        srvDesc.Buffer.StructureByteStride = sizeof(UINT16);
-        srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+    srvDesc = {};
+    srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Buffer.NumElements = pTempVertexBuffer->GetBufferUsage() / sizeof(UINT16);
+    srvDesc.Buffer.StructureByteStride = sizeof(UINT16);
+    srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-        pVertexBuffer = new D3D12ShaderResourceBuffer(pTempVertexBuffer->GetResourceDesc(), srvDesc);
-        pDevice->GetBufferManager()->AllocateDefaultBuffer(pVertexBuffer);
-        pVertexBuffer->CreateView(pDevice->GetDevice(),
-            pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_GLOBAL, 2));
-        pCommandList->CopyBufferRegion(pVertexBuffer->GetResource().Get(),
-            pTempVertexBuffer->ResourceLocation.Resource.Get(),
-            pTempVertexBuffer->GetBufferUsage());
+    pVertexBuffer = new D3D12ShaderResourceBuffer(pTempVertexBuffer->GetResourceDesc(), srvDesc);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(pVertexBuffer);
+    pVertexBuffer->CreateView(pDevice->GetDevice(),
+        pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_GLOBAL, 2));
+    pCommandList->CopyBufferRegion(pVertexBuffer->GetResource().Get(),
+        pTempVertexBuffer->ResourceLocation.Resource.Get(),
+        pTempVertexBuffer->GetBufferUsage());
 
-        srvDesc = {};
-        srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        srvDesc.Buffer.NumElements = numModels;
-        srvDesc.Buffer.StructureByteStride = sizeof(UINT);
-        srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+    srvDesc = {};
+    srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Buffer.NumElements = numModels;
+    srvDesc.Buffer.StructureByteStride = sizeof(UINT);
+    srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-        pOffsetBuffer = new D3D12ShaderResourceBuffer(pTempOffsetBuffer->GetResourceDesc(), srvDesc);
-        pDevice->GetBufferManager()->AllocateDefaultBuffer(pOffsetBuffer);
-        pOffsetBuffer->CreateView(pDevice->GetDevice(),
-            pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_GLOBAL, 3));
-        pCommandList->CopyBufferRegion(pOffsetBuffer->GetResource().Get(),
-            pTempOffsetBuffer->ResourceLocation.Resource.Get(),
-            pTempOffsetBuffer->GetBufferUsage());
+    pOffsetBuffer = new D3D12ShaderResourceBuffer(pTempOffsetBuffer->GetResourceDesc(), srvDesc);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(pOffsetBuffer);
+    pOffsetBuffer->CreateView(pDevice->GetDevice(),
+        pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_GLOBAL, 3));
+    pCommandList->CopyBufferRegion(pOffsetBuffer->GetResource().Get(),
+        pTempOffsetBuffer->ResourceLocation.Resource.Get(),
+        pTempOffsetBuffer->GetBufferUsage());
 
-        // Create the input of TLAS.
-        D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS buildFlags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
-        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS topLevelInputs = {};
-        topLevelInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
-        topLevelInputs.Flags = buildFlags;
-        topLevelInputs.NumDescs = 1;
-        topLevelInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
-
-        D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO topLevelPrebuildInfo = {};
-        pDevice->GetDXRDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&topLevelInputs, &topLevelPrebuildInfo);
-        ThrowIfFalse(topLevelPrebuildInfo.ResultDataMaxSizeInBytes > 0);
-
-        // Create the input of BLAS.
-        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS bottomLevelInputs = {};
-        bottomLevelInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
-        bottomLevelInputs.Flags = buildFlags;
-        bottomLevelInputs.NumDescs = numModels;
-        bottomLevelInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
-        bottomLevelInputs.pGeometryDescs = geometryDescs.data();
-
-        D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO bottomLevelPrebuildInfo = {};
-        pDevice->GetDXRDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&bottomLevelInputs, &bottomLevelPrebuildInfo);
-        ThrowIfFalse(bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes > 0);
-
-        pDevice->GetBufferManager()->AllocateUAVBuffer(
-            max(topLevelPrebuildInfo.ScratchDataSizeInBytes, bottomLevelPrebuildInfo.ScratchDataSizeInBytes),
-            &pScratchResource,
-            D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-            L"ScratchResource");
-
-        D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
-
-        pDevice->GetBufferManager()->AllocateUAVBuffer(
-            bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes,
-            &pBottomLevelAccelerationStructure,
-            initialResourceState,
-            L"BottomLevelAccelerationStructure");
-        pDevice->GetBufferManager()->AllocateUAVBuffer(
-            topLevelPrebuildInfo.ResultDataMaxSizeInBytes,
-            &pTopLevelAccelerationStructure,
-            initialResourceState,
-            L"TopLevelAccelerationStructure");
-
-        const UINT64 instanceDescSize = sizeof(D3D12_RAYTRACING_INSTANCE_DESC);
-        pInstanceDescBuffer = new D3D12UploadBuffer();
-        pDevice->GetBufferManager()->AllocateUploadBuffer(pInstanceDescBuffer, instanceDescSize);
-
-        D3D12_RAYTRACING_INSTANCE_DESC desc = {};
-        // Create an instance desc for the bottom-level acceleration structure.
-        desc.Transform[0][0] = desc.Transform[1][1] = desc.Transform[2][2] = 1;
-        desc.InstanceID = 0;
-        desc.InstanceMask = 0xFF;
-        desc.InstanceContributionToHitGroupIndex = 0;
-        desc.Flags = 0;
-        desc.AccelerationStructure = pBottomLevelAccelerationStructure->GetGPUVirtualAddress();
-
-        pInstanceDescBuffer->CopyData(&desc, sizeof(desc), 0);
-
-        // Bottom Level Acceleration Structure desc
-        bottomLevelBuildDesc.DestAccelerationStructureData = pBottomLevelAccelerationStructure->GetGPUVirtualAddress();
-        bottomLevelBuildDesc.Inputs = bottomLevelInputs;
-        bottomLevelBuildDesc.SourceAccelerationStructureData = NULL;
-        bottomLevelBuildDesc.ScratchAccelerationStructureData = pScratchResource->GetGPUVirtualAddress();
-
-        // Top Level Acceleration Structure desc
-        topLevelInputs.InstanceDescs = pInstanceDescBuffer->ResourceLocation.Resource->GetGPUVirtualAddress();
-        topLevelBuildDesc.DestAccelerationStructureData = pTopLevelAccelerationStructure->GetGPUVirtualAddress();
-        topLevelBuildDesc.Inputs = topLevelInputs;
-        topLevelBuildDesc.SourceAccelerationStructureData = NULL;
-        topLevelBuildDesc.ScratchAccelerationStructureData = pScratchResource->GetGPUVirtualAddress();
-
-        // Build acceleration structure.
-        pCommandList->GetDXRCommandList()->BuildRaytracingAccelerationStructure(&bottomLevelBuildDesc, 0, nullptr);
-        pCommandList->GetCommandList()->ResourceBarrier(1,
-            &CD3DX12_RESOURCE_BARRIER::UAV(pBottomLevelAccelerationStructure.Get()));
-        pCommandList->GetDXRCommandList()->BuildRaytracingAccelerationStructure(&topLevelBuildDesc, 0, nullptr);
-    }
+    BuildBottomLevelAS(pCommandList, GeometryType::Triangle);
+    BuildBottomLevelAS(pCommandList, GeometryType::AABB);
+    BuildTopLevelAS(pCommandList);
 
     inFile.close();
 }
 
-void SceneManager::LoadScene(D3D12CommandList*& pCommandList)
+void SceneManager::LoadScene(D3D12CommandList* pCommandList)
 {
     // Parse the scene file.
     ParseScene(pCommandList);
@@ -270,7 +196,7 @@ void SceneManager::AddObject(Model* object)
 	pObjects.push_back(object);
 }
 
-void SceneManager::DrawObjects(D3D12CommandList*& pCommandList)
+void SceneManager::DrawObjects(D3D12CommandList* pCommandList)
 {
     for (UINT i = 0; i < pObjects.size(); i++)
     {
@@ -303,7 +229,7 @@ void SceneManager::DrawObjects(D3D12CommandList*& pCommandList)
     }
 }
 
-void SceneManager::DrawSkybox(D3D12CommandList*& pCommandList)
+void SceneManager::DrawSkybox(D3D12CommandList* pCommandList)
 {
     // Set the global CBV.
     UINT id = pSkyboxMesh->GetObjectID();
@@ -329,7 +255,7 @@ void SceneManager::DrawSkybox(D3D12CommandList*& pCommandList)
     pCommandList->DrawIndexedInstanced(pSkyboxMesh->GetMesh()->GetIndicesNum());
 }
 
-void SceneManager::DrawFullScreenMesh(D3D12CommandList*& pCommandList)
+void SceneManager::DrawFullScreenMesh(D3D12CommandList* pCommandList)
 {
     pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -338,7 +264,7 @@ void SceneManager::DrawFullScreenMesh(D3D12CommandList*& pCommandList)
     pCommandList->DrawIndexedInstanced(pFullScreenMesh->GetMesh()->GetIndicesNum());
 }
 
-void SceneManager::SetDXRResources(D3D12CommandList*& pCommandList)
+void SceneManager::SetDXRResources(D3D12CommandList* pCommandList)
 {
     // Bind the heap of TLAS.
     pCommandList->SetComputeRootShaderResourceView(
@@ -400,7 +326,7 @@ void SceneManager::Release()
 }
 
 // Helper functions.
-void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*& pCommandList, Model* object)
+void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList* pCommandList, Model* object)
 {
     // Create the perObject constant buffer and its view.
     UINT id = object->GetObjectID();
@@ -435,7 +361,7 @@ void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*& pComm
     pCommandList->FlushResourceBarriers();
 }
 
-void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*& pCommandList, Model* object, UINT& offset)
+void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList* pCommandList, Model* object, UINT& offset)
 {
     // Create the perObject constant buffer and its view.
     UINT id = object->GetObjectID();
@@ -458,8 +384,7 @@ void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*& pC
     geometryDesc.Triangles.VertexBuffer.StartAddress =
         pTempVertexBuffer->ResourceLocation.Resource->GetGPUVirtualAddress() + pTempVertexBuffer->GetBufferUsage();
     geometryDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(Vertex);
-
-    geometryDescs.push_back(geometryDesc);
+    blas[GeometryType::Triangle].geometryDescs.push_back(geometryDesc);
 
     // Copy vertex and index data to a common buffer.
     pTempVertexBuffer->CopyData(
@@ -477,9 +402,24 @@ void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*& pC
         sizeof(UINT),
         pTempOffsetBuffer->GetBufferUsage());
     offset += object->GetMesh()->GetIndicesNum();
+
+    // Create the geomerty desc for the binding box of this object.
+    geometryDesc = {};
+    geometryDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_PROCEDURAL_PRIMITIVE_AABBS;
+    geometryDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
+    geometryDesc.AABBs.AABBCount = 1;
+    geometryDesc.AABBs.AABBs.StartAddress =
+        pTempBoundingBoxBuffer->ResourceLocation.Resource->GetGPUVirtualAddress() + pTempBoundingBoxBuffer->GetBufferUsage();
+    geometryDesc.AABBs.AABBs.StrideInBytes = sizeof(D3D12_RAYTRACING_AABB);
+    blas[GeometryType::AABB].geometryDescs.push_back(geometryDesc);
+
+    pTempBoundingBoxBuffer->CopyData(
+        &object->GetAABBBox()->GetData(),
+        sizeof(D3D12_RAYTRACING_AABB),
+        pTempBoundingBoxBuffer->GetBufferUsage());
 }
 
-void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList*& pCommandList, D3D12Texture* texture)
+void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList* pCommandList, D3D12Texture* texture)
 {
     UINT id = texture->GetTextureID();
 
@@ -516,4 +456,98 @@ void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList*& pCommandList, 
     texture->TextureSampler->CPUHandle = pDevice->GetDescriptorHeapManager()->GetHandle(SAMPLER, id);
     pDevice->GetDevice()->CreateSampler(&texture->TextureSampler->SamplerDesc,
         texture->TextureSampler->CPUHandle);
+}
+
+void SceneManager::BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index)
+{
+    // Create the input of BLAS.
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS bottomLevelInputs = {};
+    bottomLevelInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
+    bottomLevelInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+    bottomLevelInputs.NumDescs = blas[index].geometryDescs.size();
+    bottomLevelInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
+    bottomLevelInputs.pGeometryDescs = blas[index].geometryDescs.data();
+
+    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO bottomLevelPrebuildInfo = {};
+    pDevice->GetDXRDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&bottomLevelInputs, &bottomLevelPrebuildInfo);
+    ThrowIfFalse(bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes > 0);
+
+    pDevice->GetBufferManager()->AllocateUAVBuffer(
+        bottomLevelPrebuildInfo.ScratchDataSizeInBytes,
+        &blas[index].pScratchResource,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        L"ScratchResource");
+
+    pDevice->GetBufferManager()->AllocateUAVBuffer(
+        bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes,
+        &blas[index].pBottomLevelAccelerationStructure,
+        D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
+        L"BottomLevelAccelerationStructure");
+
+    // Bottom Level Acceleration Structure desc
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC bottomLevelBuildDesc = {};
+    bottomLevelBuildDesc.DestAccelerationStructureData = blas[index].pBottomLevelAccelerationStructure->GetGPUVirtualAddress();
+    bottomLevelBuildDesc.Inputs = bottomLevelInputs;
+    bottomLevelBuildDesc.SourceAccelerationStructureData = NULL;
+    bottomLevelBuildDesc.ScratchAccelerationStructureData = blas[index].pScratchResource->GetGPUVirtualAddress();
+
+    pCommandList->GetDXRCommandList()->BuildRaytracingAccelerationStructure(&bottomLevelBuildDesc, 0, nullptr);
+    pCommandList->GetCommandList()->ResourceBarrier(1,
+        &CD3DX12_RESOURCE_BARRIER::UAV(blas[index].pBottomLevelAccelerationStructure.Get()));
+}
+
+void SceneManager::BuildTopLevelAS(D3D12CommandList* pCommandList)
+{
+    // Create instance descs for the bottom-level acceleration structure.
+    const UINT64 instanceDescsSize = sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * GeometryType::Count;
+    pInstanceDescBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateUploadBuffer(pInstanceDescBuffer, instanceDescsSize);
+
+    D3D12_RAYTRACING_INSTANCE_DESC descs[GeometryType::Count];
+    for (UINT i = GeometryType::Triangle; i < GeometryType::Count; i++)
+    {
+        descs[i] = {};
+        descs[i].Transform[0][0] = descs[i].Transform[1][1] = descs[i].Transform[2][2] = 1;
+        descs[i].InstanceID = 0;
+        descs[i].InstanceMask = 0xFF;
+        descs[i].InstanceContributionToHitGroupIndex = 0;
+        descs[i].Flags = 0;
+        descs[i].AccelerationStructure = blas[GeometryType::Triangle].pBottomLevelAccelerationStructure->GetGPUVirtualAddress();
+    }
+
+    pInstanceDescBuffer->CopyData(descs, instanceDescsSize, 0);
+
+    // Create the input of TLAS.
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS topLevelInputs = {};
+    topLevelInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
+    topLevelInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+    topLevelInputs.NumDescs = 1;
+    topLevelInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
+    topLevelInputs.InstanceDescs = pInstanceDescBuffer->ResourceLocation.Resource->GetGPUVirtualAddress();
+
+    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO topLevelPrebuildInfo = {};
+    pDevice->GetDXRDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&topLevelInputs, &topLevelPrebuildInfo);
+    ThrowIfFalse(topLevelPrebuildInfo.ResultDataMaxSizeInBytes > 0);
+
+    pDevice->GetBufferManager()->AllocateUAVBuffer(
+        topLevelPrebuildInfo.ScratchDataSizeInBytes,
+        &pScratchResource,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        L"ScratchResource");
+
+    pDevice->GetBufferManager()->AllocateUAVBuffer(
+        topLevelPrebuildInfo.ResultDataMaxSizeInBytes,
+        &pTopLevelAccelerationStructure,
+        D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
+        L"TopLevelAccelerationStructure");
+
+    // Top Level Acceleration Structure desc
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC topLevelBuildDesc = {};
+    topLevelBuildDesc.DestAccelerationStructureData = pTopLevelAccelerationStructure->GetGPUVirtualAddress();
+    topLevelBuildDesc.Inputs = topLevelInputs;
+    topLevelBuildDesc.SourceAccelerationStructureData = NULL;
+    topLevelBuildDesc.ScratchAccelerationStructureData = pScratchResource->GetGPUVirtualAddress();
+
+    // Build acceleration structure.
+    pCommandList->GetDXRCommandList()->BuildRaytracingAccelerationStructure(&topLevelBuildDesc, 0, nullptr);
 }

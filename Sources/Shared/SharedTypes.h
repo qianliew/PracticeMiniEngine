@@ -50,4 +50,9 @@ struct ShadowRayPayload
     FLOAT attenuation;
 };
 
+struct FrustumCullingRayPayload
+{
+    FLOAT vis;
+};
+
 #endif // !SHARED_TYPES_H

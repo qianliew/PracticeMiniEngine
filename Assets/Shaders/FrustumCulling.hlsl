@@ -9,6 +9,27 @@
 #include "../../Sources/Shared/SharedConstants.h"
 
 RaytracingAccelerationStructure Scene : register(t0);
+RWTexture2D<float4> Result : register(u0);
+
+float TraceFrustumCullingRay(float3 origin, float3 direction, in uint currentRayRecursionDepth)
+{
+    FrustumCullingRayPayload payload =
+    {
+        0.0f,
+    };
+
+    RayDesc rayDesc;
+    rayDesc.Origin = origin;
+    rayDesc.Direction = direction;
+    rayDesc.TMin = 0.001;
+    rayDesc.TMax = 10000.0;
+
+    uint flags = RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH
+        | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER;
+    TraceRay(Scene, flags, 0xFF, 0, 0, 0, rayDesc, payload);
+
+    return payload.vis;
+}
 
 [shader("raygeneration")]
 void FrustumCullingRaygenShader()
@@ -17,9 +38,14 @@ void FrustumCullingRaygenShader()
     GetRay(origin, direction);
 
     uint currentRayRecursionDepth = 0;
-    //RayPayload payload = TraceRadianceRay(origin, normalize(world.xyz - origin), currentRayRecursionDepth);
-    //Result[DispatchRaysIndex().xy] *= payload.attenuation;
-    //Result[DispatchRaysIndex().xy] += payload.color;
+    float vis = TraceFrustumCullingRay(origin, direction, currentRayRecursionDepth);
+    Result[DispatchRaysIndex().xy] = vis;
+}
+
+[shader("miss")]
+void FrustumCullingMissShader()
+{
+    return 0.0f;
 }
 
 #endif

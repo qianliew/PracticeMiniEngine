@@ -4,6 +4,13 @@
 #include "Model.h"
 #include "AbstractMaterial.h"
 
+struct BLAS
+{
+	std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> geometryDescs;
+	ComPtr<ID3D12Resource> pScratchResource;
+	ComPtr<ID3D12Resource> pBottomLevelAccelerationStructure;
+};
+
 class SceneManager
 {
 private:
@@ -22,27 +29,27 @@ private:
 	// DXR member variables.
 	BOOL isDXR;
 
+	BLAS blas[GeometryType::Count];
+
 	ComPtr<ID3D12Resource> pScratchResource;
-	ComPtr<ID3D12Resource> pBottomLevelAccelerationStructure;
 	ComPtr<ID3D12Resource> pTopLevelAccelerationStructure;
 
-	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC bottomLevelBuildDesc;
-	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC topLevelBuildDesc;
-
 	D3D12ShaderResourceBuffer* pVertexBuffer;
-	D3D12UploadBuffer* pTempVertexBuffer;
 	D3D12ShaderResourceBuffer* pIndexBuffer;
-	D3D12UploadBuffer* pTempIndexBuffer;
 	D3D12ShaderResourceBuffer* pOffsetBuffer;
-	D3D12UploadBuffer* pTempOffsetBuffer;
 
-	std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> geometryDescs;
+	D3D12UploadBuffer* pTempVertexBuffer;
+	D3D12UploadBuffer* pTempIndexBuffer;
+	D3D12UploadBuffer* pTempOffsetBuffer;
+	D3D12UploadBuffer* pTempBoundingBoxBuffer;
 	D3D12UploadBuffer* pInstanceDescBuffer;
 
 	// Helper functions.
-	void LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*&, Model* object);
-	void LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*&, Model* object, UINT& offset);
-	void LoadTextureBufferAndSampler(D3D12CommandList*&, D3D12Texture* texture);
+	void LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*, Model* object);
+	void LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*, Model* object, UINT& offset);
+	void LoadTextureBufferAndSampler(D3D12CommandList*, D3D12Texture* texture);
+	void BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index);
+	void BuildTopLevelAS(D3D12CommandList* pCommandList);
 
 public:
 	SceneManager(shared_ptr<D3D12Device>&, BOOL isDXR);
@@ -51,15 +58,15 @@ public:
 	static UINT sTextureID;
 
 	void InitFBXImporter();
-	void ParseScene(D3D12CommandList*&);
-	void LoadScene(D3D12CommandList*&);
+	void ParseScene(D3D12CommandList*);
+	void LoadScene(D3D12CommandList*);
 	void UnloadScene();
 	void CreateCamera(UINT width, UINT height);
 	void AddObject(Model* object);
-	void DrawObjects(D3D12CommandList*&);
-	void DrawSkybox(D3D12CommandList*&);
-	void DrawFullScreenMesh(D3D12CommandList*&);
-	void SetDXRResources(D3D12CommandList*&);
+	void DrawObjects(D3D12CommandList*);
+	void DrawSkybox(D3D12CommandList*);
+	void DrawFullScreenMesh(D3D12CommandList*);
+	void SetDXRResources(D3D12CommandList*);
 
 	void UpdateTransforms();
 	void UpdateCamera();

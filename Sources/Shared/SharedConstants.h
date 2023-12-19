@@ -5,7 +5,17 @@
 
 namespace RaytracingConstants
 {
-	static const UINT MaxRayRecursiveDepth = 3;
+	static const UINT kMaxRayRecursiveDepth = 3;
+}
+
+namespace GeometryType
+{
+	enum Type
+	{
+		Triangle = 0,
+		AABB,
+		Count
+	};
 }
 
 namespace RayType

@@ -30,7 +30,7 @@ RayPayload TraceRadianceRay(float3 origin, float3 direction, in uint currentRayR
         DispatchRaysIndex().x + DispatchRaysIndex().y * DispatchRaysDimensions().x
     };
 
-    if (currentRayRecursionDepth >= RaytracingConstants::MaxRayRecursiveDepth)
+    if (currentRayRecursionDepth >= RaytracingConstants::kMaxRayRecursiveDepth)
     {
         return payload;
     }
@@ -50,7 +50,7 @@ RayPayload TraceRadianceRay(float3 origin, float3 direction, in uint currentRayR
 
 float TraceAORay(float3 origin, float3 direction, in uint currentRayRecursionDepth)
 {
-    if (currentRayRecursionDepth >= RaytracingConstants::MaxRayRecursiveDepth)
+    if (currentRayRecursionDepth >= RaytracingConstants::kMaxRayRecursiveDepth)
     {
         return 0.0f;
     }
@@ -73,7 +73,7 @@ float TraceAORay(float3 origin, float3 direction, in uint currentRayRecursionDep
 
 float3 TraceGIRay(float3 origin, float3 direction, in uint currentRayRecursionDepth)
 {
-    if (currentRayRecursionDepth >= RaytracingConstants::MaxRayRecursiveDepth)
+    if (currentRayRecursionDepth >= RaytracingConstants::kMaxRayRecursiveDepth)
     {
         return 0.0f;
     }
@@ -101,7 +101,7 @@ float3 TraceGIRay(float3 origin, float3 direction, in uint currentRayRecursionDe
 
 float TraceShadowRay(float3 origin, float3 direction, in uint currentRayRecursionDepth)
 {
-    if (currentRayRecursionDepth >= RaytracingConstants::MaxRayRecursiveDepth)
+    if (currentRayRecursionDepth >= RaytracingConstants::kMaxRayRecursiveDepth)
     {
         return 0.0f;
     }
