@@ -57,6 +57,16 @@ void Model::GenerateBoundingBox()
     }
 
     const Vertex* pVertex = static_cast<const Vertex*>(pMesh->GetVerticesData());
+    XMFLOAT3 maxPos = pVertex->positionOS, minPos = pVertex->positionOS;
+    for (UINT i = 0; i < pMesh->GetVerticesNum(); i++)
+    {
+        maxPos.x = max(maxPos.x, (pVertex + i)->positionOS.x);
+        maxPos.y = max(maxPos.y, (pVertex + i)->positionOS.y);
+        maxPos.z = max(maxPos.z, (pVertex + i)->positionOS.z);
+        minPos.x = min(minPos.x, (pVertex + i)->positionOS.x);
+        minPos.y = min(minPos.y, (pVertex + i)->positionOS.y);
+        minPos.z = min(minPos.z, (pVertex + i)->positionOS.z);
+    }
 
-    pBoundingBox = new AABBBox();
+    pBoundingBox = new AABBBox(minPos, maxPos);
 }

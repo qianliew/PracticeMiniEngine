@@ -3,10 +3,11 @@
 class AABBBox
 {
 private:
-    XMFLOAT3 min;
-    XMFLOAT3 max;
+    XMFLOAT3 minPos;
+    XMFLOAT3 maxPos;
 
 public:
-    AABBBox();
+    AABBBox() = delete;
+    AABBBox(XMFLOAT3 inMinPos, XMFLOAT3 inMaxPos);
     ~AABBBox();
 };
