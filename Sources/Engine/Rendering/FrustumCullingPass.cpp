@@ -21,7 +21,46 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
     auto hitGroup = raytracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
     hitGroup->SetIntersectionShaderImport(kIntersectionShaderName);
     hitGroup->SetHitGroupExport(kHitGroupName);
-    hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
+    hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_PROCEDURAL_PRIMITIVE);
+
+    auto shaderConfig = raytracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
+    UINT payloadSize = sizeof(FrustumCullingRayPayload);
+    UINT attributeSize = sizeof(AABBAttributes);
+    shaderConfig->Config(payloadSize, attributeSize);
+
+    CD3DX12_ROOT_PARAMETER rootParameters[1];
+    rootParameters[0].InitAsConstants(32, 1, 0);
+    CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
+    localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
+
+    ComPtr<ID3DBlob> blob;
+    ComPtr<ID3DBlob> error;
+    ThrowIfFailed(D3D12SerializeRootSignature(
+        &localRootSignatureDesc,
+        D3D_ROOT_SIGNATURE_VERSION_1,
+        &blob,
+        &error));
+
+    ThrowIfFailed(pDevice->GetDevice()->CreateRootSignature(1,
+        blob->GetBufferPointer(),
+        blob->GetBufferSize(),
+        IID_PPV_ARGS(&pRaytracingLocalRootSignature)));
+
+    auto localRootSignature = raytracingPipeline.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
+    localRootSignature->SetRootSignature(pRaytracingLocalRootSignature.Get());
+
+    auto rootSignatureAssociation = raytracingPipeline.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
+    rootSignatureAssociation->SetSubobjectToAssociate(*localRootSignature);
+    rootSignatureAssociation->AddExport(kRaygenShaderName);
+
+    auto globalRootSignature = raytracingPipeline.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
+    globalRootSignature->SetRootSignature(pRootSignature.Get());
+
+    auto pipelineConfig = raytracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
+    pipelineConfig->Config(RaytracingConstants::kMaxRayRecursiveDepth);
+
+    // Create the state object.
+    ThrowIfFailed(pDevice->GetDXRDevice()->CreateStateObject(raytracingPipeline, IID_PPV_ARGS(&pDXRStateObject)));
 
     // Build the shader table.
     void* rayGenShaderIdentifier;
@@ -56,7 +95,7 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
 
     // Miss shader table
     {
-        UINT numShaderRecords = RayType::Count;
+        UINT numShaderRecords = 1;
         UINT shaderRecordSize = shaderIdentifierSize;
         ShaderTable missShaderTable(numShaderRecords, shaderRecordSize);
         missShaderTable.CreateBuffer(pDevice->GetDevice().Get());
@@ -66,7 +105,7 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
 
     // Hit group shader table
     {
-        UINT numShaderRecords = RayType::Count;
+        UINT numShaderRecords = 1;
         UINT shaderRecordSize = shaderIdentifierSize;
         ShaderTable hitGroupShaderTable(numShaderRecords, shaderRecordSize);
         hitGroupShaderTable.CreateBuffer(pDevice->GetDevice().Get());
@@ -78,8 +117,8 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
 void FrustumCullingPass::Execute(D3D12CommandList* pCommandList)
 {
     FLOAT scale = 0.05;
-    UINT width = pSceneManager->GetCamera()->GetCameraWidth() * scale;
-    UINT height = pSceneManager->GetCamera()->GetCameraHeight() * scale;
+    UINT width = pSceneManager->GetCamera()->GetCameraWidth();
+    UINT height = pSceneManager->GetCamera()->GetCameraHeight();
 
     auto DispatchRays = [&](auto* commandList, auto* stateObject, auto* dispatchDesc)
     {

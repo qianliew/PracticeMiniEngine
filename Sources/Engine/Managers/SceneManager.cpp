@@ -512,16 +512,16 @@ void SceneManager::BuildTopLevelAS(D3D12CommandList* pCommandList)
         descs[i].InstanceMask = 0xFF;
         descs[i].InstanceContributionToHitGroupIndex = 0;
         descs[i].Flags = 0;
-        descs[i].AccelerationStructure = blas[GeometryType::Triangle].pBottomLevelAccelerationStructure->GetGPUVirtualAddress();
+        descs[i].AccelerationStructure = blas[i].pBottomLevelAccelerationStructure->GetGPUVirtualAddress();
     }
 
-    pInstanceDescBuffer->CopyData(descs, instanceDescsSize, 0);
+    pInstanceDescBuffer->CopyData(&descs[1], sizeof(D3D12_RAYTRACING_INSTANCE_DESC), 0);
 
     // Create the input of TLAS.
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS topLevelInputs = {};
     topLevelInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
     topLevelInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
-    topLevelInputs.NumDescs = 1;
+    topLevelInputs.NumDescs = /* GeometryType::Count */ 1;
     topLevelInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
     topLevelInputs.InstanceDescs = pInstanceDescBuffer->ResourceLocation.Resource->GetGPUVirtualAddress();
 

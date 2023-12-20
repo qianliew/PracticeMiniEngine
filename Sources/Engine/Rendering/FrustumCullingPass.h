@@ -11,6 +11,7 @@ private:
 	const wchar_t* kIntersectionShaderName = L"FrustumCullingIntersectionShader";
 	const wchar_t* kMissShaderName = L"FrustumCullingMissShader";
 
+	ComPtr<ID3D12RootSignature> pRaytracingLocalRootSignature;
 	ComPtr<ID3D12StateObject> pDXRStateObject;
 	ComPtr<ID3D12Resource> pMissShaderTable;
 	ComPtr<ID3D12Resource> pHitGroupShaderTable;

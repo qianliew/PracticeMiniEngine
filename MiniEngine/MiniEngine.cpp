@@ -73,7 +73,7 @@ void MiniEngine::LoadAssets()
     pRayTracingPass->BuildShaderTables();
 
     pFrustumCullingPass = make_shared<FrustumCullingPass>(pDevice, pSceneManager, pViewManager);
-    pRayTracingPass->Setup(pCommandList, pRootSignature->GetDRXRootSignature());
+    pFrustumCullingPass->Setup(pCommandList, pRootSignature->GetDRXRootSignature());
 
     pDrawObjectPass = make_shared<DrawObjectsPass>(pDevice, pSceneManager, pViewManager);
     pDrawObjectPass->Setup(pCommandList, pRootSignature->GetRootSignature());
@@ -207,7 +207,7 @@ void MiniEngine::PopulateCommandList()
     //pRayTracingPass->Execute(pCommandList);
 
     //pTemporalAAPass->Execute(pCommandList);
-    //pBlitPass->Execute(pCommandList);
+    pBlitPass->Execute(pCommandList);
 
     // Indicate that the back buffer will now be used to present.
     pCommandList->AddTransitionResourceBarriers(pViewManager->GetCurrentBackBuffer(),

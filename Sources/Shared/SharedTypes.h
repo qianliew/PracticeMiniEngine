@@ -23,6 +23,12 @@ struct Vertex
     XMFLOAT4 color;
 };
 
+struct Ray
+{
+    XMFLOAT3 origin;
+    XMFLOAT3 direction;
+};
+
 struct RayPayload
 {
     XMFLOAT4 color;
@@ -53,6 +59,11 @@ struct ShadowRayPayload
 struct FrustumCullingRayPayload
 {
     FLOAT vis;
+};
+
+struct AABBAttributes
+{
+    FLOAT a;
 };
 
 #endif // !SHARED_TYPES_H

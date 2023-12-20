@@ -43,9 +43,30 @@ void FrustumCullingRaygenShader()
 }
 
 [shader("miss")]
-void FrustumCullingMissShader()
+void FrustumCullingMissShader(inout FrustumCullingRayPayload payload)
 {
-    return 0.0f;
+    payload.vis = 1.0f;
+}
+
+Ray GetRayInAABBPrimitiveLocalSpace()
+{
+    Ray ray;
+    ray.origin = ObjectRayOrigin();
+    ray.direction = ObjectRayDirection();
+    return ray;
+}
+
+[shader("intersection")]
+void FrustumCullingIntersectionShader()
+{
+    Ray ray = GetRayInAABBPrimitiveLocalSpace();
+
+    float thit = 5.0f;
+    AABBAttributes attr = (AABBAttributes)0;
+    // if (RayAnalyticGeometryIntersectionTest(ray, primitiveType, thit, attr))
+    {
+        ReportHit(thit, /*hitKind*/ 0, attr);
+    }
 }
 
 #endif
