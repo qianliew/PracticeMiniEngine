@@ -142,6 +142,7 @@ void MiniEngine::OnKeyUp(UINT8 key)
 void MiniEngine::OnUpdate()
 {
     // Update scene objects.
+    pSceneManager->UpdateScene();
     pSceneManager->UpdateTransforms();
     pSceneManager->UpdateCamera();
 }
@@ -184,29 +185,29 @@ void MiniEngine::PopulateCommandList()
         D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     pCommandList->FlushResourceBarriers();
 
-    // Set the graphic root signature.
-    pCommandList->SetRootSignature(pRootSignature->GetRootSignature());
-
-    // Set the global views.
-    pCommandList->SetRootConstantBufferView(
-        (UINT)eRootIndex::ConstantBufferViewGlobal,
-        pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
-
     pCommandList->SetComputeRootSignature(pRootSignature->GetDRXRootSignature());
     pCommandList->SetComputeRootConstantBufferView(
         (UINT)eDXRRootIndex::ConstantBufferViewGlobal,
         pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
-
     pFrustumCullingPass->Execute(pCommandList);
 
-    //pGBufferPass->Execute(pCommandList);
+    pCommandList->SetRootSignature(pRootSignature->GetRootSignature());
+    pCommandList->SetRootConstantBufferView(
+        (UINT)eRootIndex::ConstantBufferViewGlobal,
+        pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
+    pGBufferPass->Execute(pCommandList);
 
-    //pDeferredLightingPass->Execute(pCommandList);
+    pCommandList->SetComputeRootSignature(pRootSignature->GetRootSignature());
+    pCommandList->SetComputeRootConstantBufferView(
+        (UINT)eRootIndex::ConstantBufferViewGlobal,
+        pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
+    pDeferredLightingPass->Execute(pCommandList);
 
-    //pCommandList->SetComputeRootSignature(pRootSignature->GetDRXRootSignature());
-    //pRayTracingPass->Execute(pCommandList);
+    pCommandList->SetComputeRootSignature(pRootSignature->GetDRXRootSignature());
+    pRayTracingPass->Execute(pCommandList);
 
-    //pTemporalAAPass->Execute(pCommandList);
+    pCommandList->SetRootSignature(pRootSignature->GetRootSignature());
+    pTemporalAAPass->Execute(pCommandList);
     pBlitPass->Execute(pCommandList);
 
     // Indicate that the back buffer will now be used to present.

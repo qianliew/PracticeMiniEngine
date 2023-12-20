@@ -11,6 +11,12 @@ struct BLAS
 	ComPtr<ID3D12Resource> pBottomLevelAccelerationStructure;
 };
 
+struct TLAS
+{
+	ComPtr<ID3D12Resource> pScratchResource;
+	ComPtr<ID3D12Resource> pTopLevelAccelerationStructure;
+};
+
 class SceneManager
 {
 private:
@@ -19,6 +25,7 @@ private:
 
 	std::vector<Model*> pObjects;
 	std::map<wstring, AbstractMaterial*> pMaterialPool;
+	UINT visData[GlobalConstants::kVisDataSize];
 	AbstractMaterial* pSkyboxMaterial;
 	Camera* pCamera;
 	Model* pSkyboxMesh;
@@ -30,9 +37,7 @@ private:
 	BOOL isDXR;
 
 	BLAS blas[GeometryType::Count];
-
-	ComPtr<ID3D12Resource> pScratchResource;
-	ComPtr<ID3D12Resource> pTopLevelAccelerationStructure;
+	TLAS tlas[GeometryType::Count];
 
 	D3D12ShaderResourceBuffer* pVertexBuffer;
 	D3D12ShaderResourceBuffer* pIndexBuffer;
@@ -49,7 +54,7 @@ private:
 	void LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*, Model* object, UINT& offset);
 	void LoadTextureBufferAndSampler(D3D12CommandList*, D3D12Texture* texture);
 	void BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index);
-	void BuildTopLevelAS(D3D12CommandList* pCommandList);
+	void BuildTopLevelAS(D3D12CommandList* pCommandList, UINT index);
 
 public:
 	SceneManager(shared_ptr<D3D12Device>&, BOOL isDXR);
@@ -66,14 +71,17 @@ public:
 	void DrawObjects(D3D12CommandList*);
 	void DrawSkybox(D3D12CommandList*);
 	void DrawFullScreenMesh(D3D12CommandList*);
+	void SetFrustumCullingResources(D3D12CommandList*);
 	void SetDXRResources(D3D12CommandList*);
 
+	void UpdateScene();
 	void UpdateTransforms();
 	void UpdateCamera();
 
 	void Release();
 
 	inline const std::vector<Model*>& GetObjects() const { return pObjects; }
+	inline UINT* GetVisData() { return visData; }
 	inline Camera* GetCamera() const { return pCamera; }
 	inline Model* GetSkybox() const { return pSkyboxMesh; }
 };

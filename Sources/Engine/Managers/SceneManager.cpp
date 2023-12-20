@@ -134,7 +134,8 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
 
     BuildBottomLevelAS(pCommandList, GeometryType::Triangle);
     BuildBottomLevelAS(pCommandList, GeometryType::AABB);
-    BuildTopLevelAS(pCommandList);
+    BuildTopLevelAS(pCommandList, GeometryType::Triangle);
+    BuildTopLevelAS(pCommandList, GeometryType::AABB);
 
     inFile.close();
 }
@@ -264,12 +265,20 @@ void SceneManager::DrawFullScreenMesh(D3D12CommandList* pCommandList)
     pCommandList->DrawIndexedInstanced(pFullScreenMesh->GetMesh()->GetIndicesNum());
 }
 
+void SceneManager::SetFrustumCullingResources(D3D12CommandList* pCommandList)
+{
+    // Bind the heap of TLAS.
+    pCommandList->SetComputeRootShaderResourceView(
+        (UINT)eDXRRootIndex::ShaderResourceViewTLAS,
+        tlas[GeometryType::AABB].pTopLevelAccelerationStructure->GetGPUVirtualAddress());
+}
+
 void SceneManager::SetDXRResources(D3D12CommandList* pCommandList)
 {
     // Bind the heap of TLAS.
     pCommandList->SetComputeRootShaderResourceView(
         (UINT)eDXRRootIndex::ShaderResourceViewTLAS,
-        pTopLevelAccelerationStructure->GetGPUVirtualAddress());
+        tlas[GeometryType::Triangle].pTopLevelAccelerationStructure->GetGPUVirtualAddress());
 
     // Bind the global heaps.
     pCommandList->SetComputeRootShaderResourceView(
@@ -288,6 +297,15 @@ void SceneManager::SetDXRResources(D3D12CommandList* pCommandList)
         SHADER_RESOURCE_VIEW_PEROBJECT,
         (UINT)eDXRRootIndex::ShaderResourceViewSkybox,
         pSkyboxMaterial->GetTexture()->GetTextureID());
+}
+
+void SceneManager::UpdateScene()
+{
+    // Reset VisData.
+    for (UINT i = 0; i < GlobalConstants::kVisDataSize; i++)
+    {
+        visData[i] = 0;
+    }
 }
 
 void SceneManager::UpdateTransforms()
@@ -496,32 +514,27 @@ void SceneManager::BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index
         &CD3DX12_RESOURCE_BARRIER::UAV(blas[index].pBottomLevelAccelerationStructure.Get()));
 }
 
-void SceneManager::BuildTopLevelAS(D3D12CommandList* pCommandList)
+void SceneManager::BuildTopLevelAS(D3D12CommandList* pCommandList, UINT index)
 {
     // Create instance descs for the bottom-level acceleration structure.
-    const UINT64 instanceDescsSize = sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * GeometryType::Count;
+    const UINT64 instanceDescsSize = sizeof(D3D12_RAYTRACING_INSTANCE_DESC);
     pInstanceDescBuffer = new D3D12UploadBuffer();
     pDevice->GetBufferManager()->AllocateUploadBuffer(pInstanceDescBuffer, instanceDescsSize);
 
-    D3D12_RAYTRACING_INSTANCE_DESC descs[GeometryType::Count];
-    for (UINT i = GeometryType::Triangle; i < GeometryType::Count; i++)
-    {
-        descs[i] = {};
-        descs[i].Transform[0][0] = descs[i].Transform[1][1] = descs[i].Transform[2][2] = 1;
-        descs[i].InstanceID = 0;
-        descs[i].InstanceMask = 0xFF;
-        descs[i].InstanceContributionToHitGroupIndex = 0;
-        descs[i].Flags = 0;
-        descs[i].AccelerationStructure = blas[i].pBottomLevelAccelerationStructure->GetGPUVirtualAddress();
-    }
-
-    pInstanceDescBuffer->CopyData(&descs[1], sizeof(D3D12_RAYTRACING_INSTANCE_DESC), 0);
+    D3D12_RAYTRACING_INSTANCE_DESC desc = {};
+    desc.Transform[0][0] = desc.Transform[1][1] = desc.Transform[2][2] = 1;
+    desc.InstanceID = 0;
+    desc.InstanceMask = 0xFF;
+    desc.InstanceContributionToHitGroupIndex = 0;
+    desc.Flags = 0;
+    desc.AccelerationStructure = blas[index].pBottomLevelAccelerationStructure->GetGPUVirtualAddress();
+    pInstanceDescBuffer->CopyData(&desc, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), 0);
 
     // Create the input of TLAS.
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS topLevelInputs = {};
     topLevelInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
     topLevelInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
-    topLevelInputs.NumDescs = /* GeometryType::Count */ 1;
+    topLevelInputs.NumDescs =  1;
     topLevelInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
     topLevelInputs.InstanceDescs = pInstanceDescBuffer->ResourceLocation.Resource->GetGPUVirtualAddress();
 
@@ -531,22 +544,22 @@ void SceneManager::BuildTopLevelAS(D3D12CommandList* pCommandList)
 
     pDevice->GetBufferManager()->AllocateUAVBuffer(
         topLevelPrebuildInfo.ScratchDataSizeInBytes,
-        &pScratchResource,
+        &tlas[index].pScratchResource,
         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
         L"ScratchResource");
 
     pDevice->GetBufferManager()->AllocateUAVBuffer(
         topLevelPrebuildInfo.ResultDataMaxSizeInBytes,
-        &pTopLevelAccelerationStructure,
+        &tlas[index].pTopLevelAccelerationStructure,
         D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
         L"TopLevelAccelerationStructure");
 
     // Top Level Acceleration Structure desc
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC topLevelBuildDesc = {};
-    topLevelBuildDesc.DestAccelerationStructureData = pTopLevelAccelerationStructure->GetGPUVirtualAddress();
+    topLevelBuildDesc.DestAccelerationStructureData = tlas[index].pTopLevelAccelerationStructure->GetGPUVirtualAddress();
     topLevelBuildDesc.Inputs = topLevelInputs;
     topLevelBuildDesc.SourceAccelerationStructureData = NULL;
-    topLevelBuildDesc.ScratchAccelerationStructureData = pScratchResource->GetGPUVirtualAddress();
+    topLevelBuildDesc.ScratchAccelerationStructureData = tlas[index].pScratchResource->GetGPUVirtualAddress();
 
     // Build acceleration structure.
     pCommandList->GetDXRCommandList()->BuildRaytracingAccelerationStructure(&topLevelBuildDesc, 0, nullptr);

@@ -45,10 +45,6 @@ void DeferredLightingPass::Execute(D3D12CommandList* pCommandList)
     // Set the pipeline state.
     pCommandList->SetPipelineState(pPipelineState.Get());
 
-    // Bind the global CBV.
-    pCommandList->SetComputeRootConstantBufferView((UINT)eRootIndex::ConstantBufferViewGlobal,
-        pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
-
     // Bind the SRVs using in the shading.
     for (UINT i = 0; i < pViewManager->GetGBufferCount(); i++)
     {

@@ -10,8 +10,9 @@
 
 RaytracingAccelerationStructure Scene : register(t0);
 RWTexture2D<float4> Result : register(u0);
+uint VisData[GlobalConstants::kVisDataSize] : register(c10);
 
-float TraceFrustumCullingRay(float3 origin, float3 direction, in uint currentRayRecursionDepth)
+float TraceFrustumCullingRay(float3 origin, float3 direction)
 {
     FrustumCullingRayPayload payload =
     {
@@ -24,8 +25,7 @@ float TraceFrustumCullingRay(float3 origin, float3 direction, in uint currentRay
     rayDesc.TMin = 0.001;
     rayDesc.TMax = 10000.0;
 
-    uint flags = RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH
-        | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER;
+    uint flags = RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH;
     TraceRay(Scene, flags, 0xFF, 0, 0, 0, rayDesc, payload);
 
     return payload.vis;
@@ -37,8 +37,7 @@ void FrustumCullingRaygenShader()
     float3 origin, direction;
     GetRay(origin, direction);
 
-    uint currentRayRecursionDepth = 0;
-    float vis = TraceFrustumCullingRay(origin, direction, currentRayRecursionDepth);
+    float vis = TraceFrustumCullingRay(origin, direction);
     Result[DispatchRaysIndex().xy] = vis;
 }
 
@@ -46,6 +45,14 @@ void FrustumCullingRaygenShader()
 void FrustumCullingMissShader(inout FrustumCullingRayPayload payload)
 {
     payload.vis = 1.0f;
+}
+
+[shader("closesthit")]
+void FrustumCullingClosestHitShader(inout FrustumCullingRayPayload payload, in AABBAttributes attr)
+{
+    uint index = GeometryIndex() >> 5;
+    // VisData[index] &= GeometryIndex() & (1 << 5 - 1);
+    payload.vis = GeometryIndex() / 3.0f + 0.1f;
 }
 
 Ray GetRayInAABBPrimitiveLocalSpace()
@@ -63,10 +70,7 @@ void FrustumCullingIntersectionShader()
 
     float thit = 5.0f;
     AABBAttributes attr = (AABBAttributes)0;
-    // if (RayAnalyticGeometryIntersectionTest(ray, primitiveType, thit, attr))
-    {
-        ReportHit(thit, /*hitKind*/ 0, attr);
-    }
+    ReportHit(thit, /*hitKind*/ 0, attr);
 }
 
 #endif

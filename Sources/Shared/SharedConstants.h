@@ -3,6 +3,12 @@
 #ifndef SHARED_CONSTANTS_H
 #define SHARED_CONSTANTS_H
 
+namespace GlobalConstants
+{
+	static const UINT kMaxNumObject = 1024;
+	static const UINT kVisDataSize = kMaxNumObject / 32;
+}
+
 namespace RaytracingConstants
 {
 	static const UINT kMaxRayRecursiveDepth = 3;

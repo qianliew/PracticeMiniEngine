@@ -15,11 +15,12 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
 {
     CD3DX12_STATE_OBJECT_DESC raytracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
     auto lib = raytracingPipeline.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
-    D3D12_SHADER_BYTECODE libdxil = CD3DX12_SHADER_BYTECODE((void*)g_pFrustumCulling, ARRAYSIZE(g_pFrustumCulling));
+    D3D12_SHADER_BYTECODE libdxil = CD3DX12_SHADER_BYTECODE((void*)g_pFrustumCulling, _countof(g_pFrustumCulling));
     lib->SetDXILLibrary(&libdxil);
 
     auto hitGroup = raytracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
     hitGroup->SetIntersectionShaderImport(kIntersectionShaderName);
+    hitGroup->SetClosestHitShaderImport(kClosestHitShaderName);
     hitGroup->SetHitGroupExport(kHitGroupName);
     hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_PROCEDURAL_PRIMITIVE);
 
@@ -28,9 +29,9 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
     UINT attributeSize = sizeof(AABBAttributes);
     shaderConfig->Config(payloadSize, attributeSize);
 
-    CD3DX12_ROOT_PARAMETER rootParameters[1];
-    rootParameters[0].InitAsConstants(32, 1, 0);
-    CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
+    CD3DX12_ROOT_PARAMETER rootParameters[(UINT)eFrustumCullingRootIndex::Count];
+    rootParameters[(UINT)eFrustumCullingRootIndex::ConstantsVisData].InitAsConstants(GlobalConstants::kVisDataSize, 10, 0);
+    CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(_countof(rootParameters), rootParameters);
     localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
 
     ComPtr<ID3DBlob> blob;
@@ -109,7 +110,11 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
         UINT shaderRecordSize = shaderIdentifierSize;
         ShaderTable hitGroupShaderTable(numShaderRecords, shaderRecordSize);
         hitGroupShaderTable.CreateBuffer(pDevice->GetDevice().Get());
-        hitGroupShaderTable.PushBack(ShaderRecord(hitGroupShaderIdentifier, shaderIdentifierSize));
+        hitGroupShaderTable.PushBack(ShaderRecord(
+            hitGroupShaderIdentifier,
+            shaderIdentifierSize,
+            pSceneManager->GetVisData(),
+            GlobalConstants::kMaxNumObject));
         pHitGroupShaderTable = hitGroupShaderTable.ResourceLocation.Resource;
     }
 }
@@ -138,7 +143,7 @@ void FrustumCullingPass::Execute(D3D12CommandList* pCommandList)
     };
 
     // Bind resources for the frustum culling.
-    pSceneManager->SetDXRResources(pCommandList);
+    pSceneManager->SetFrustumCullingResources(pCommandList);
 
     // Bind the UAV heap for the output.
     pDevice->GetDescriptorHeapManager()->SetComputeViews(

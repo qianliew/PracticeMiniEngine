@@ -30,6 +30,13 @@ enum class eDXRRootIndex
     Count,
 };
 
+// Root index in FrustumCullingPass
+enum class eFrustumCullingRootIndex
+{
+    ConstantsVisData = 0,
+    Count,
+};
+
 class D3D12RootSignature
 {
 private:

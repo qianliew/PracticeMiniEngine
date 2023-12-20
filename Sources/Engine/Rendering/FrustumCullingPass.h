@@ -9,6 +9,7 @@ private:
 	const wchar_t* kHitGroupName = L"FrustumCullingHitGroup";
 	const wchar_t* kRaygenShaderName = L"FrustumCullingRaygenShader";
 	const wchar_t* kIntersectionShaderName = L"FrustumCullingIntersectionShader";
+	const wchar_t* kClosestHitShaderName = L"FrustumCullingClosestHitShader";
 	const wchar_t* kMissShaderName = L"FrustumCullingMissShader";
 
 	ComPtr<ID3D12RootSignature> pRaytracingLocalRootSignature;

@@ -46,6 +46,11 @@ public:
         pCommandList->SetGraphicsRootConstantBufferView(index, location);
     }
 
+    inline void SetComputeRoot32BitConstant(UINT index, UINT num, const void* pSrcData, UINT offset = 0)
+    {
+        pCommandList->SetComputeRoot32BitConstants(index, num, pSrcData, offset);
+    }
+
     inline void SetComputeRootConstantBufferView(UINT index, D3D12_GPU_VIRTUAL_ADDRESS location)
     {
         pCommandList->SetComputeRootConstantBufferView(index, location);
