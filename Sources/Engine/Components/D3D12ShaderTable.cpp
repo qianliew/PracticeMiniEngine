@@ -8,7 +8,11 @@ ShaderTable::ShaderTable(UINT numShaderRecords, UINT inShaderRecordSize) :
     bufferSize = numShaderRecords * shaderRecordSize;
 }
 
-void ShaderTable::CreateBuffer(ID3D12Device* device, UINT64 size)
+void ShaderTable::CreateBuffer(
+	ID3D12Device* device,
+	UINT64 size,
+	D3D12_RESOURCE_STATES state,
+	const wchar_t* name)
 {
 	ThrowIfFailed(device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),

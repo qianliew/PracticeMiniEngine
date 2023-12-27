@@ -25,7 +25,6 @@ private:
 
 	std::vector<Model*> pObjects;
 	std::map<wstring, AbstractMaterial*> pMaterialPool;
-	UINT visData[GlobalConstants::kVisDataSize];
 	AbstractMaterial* pSkyboxMaterial;
 	Camera* pCamera;
 	Model* pSkyboxMesh;
@@ -81,7 +80,6 @@ public:
 	void Release();
 
 	inline const std::vector<Model*>& GetObjects() const { return pObjects; }
-	inline UINT* GetVisData() { return visData; }
 	inline Camera* GetCamera() const { return pCamera; }
 	inline Model* GetSkybox() const { return pSkyboxMesh; }
 };

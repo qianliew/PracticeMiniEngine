@@ -145,6 +145,7 @@ void MiniEngine::OnUpdate()
     pSceneManager->UpdateScene();
     pSceneManager->UpdateTransforms();
     pSceneManager->UpdateCamera();
+    pFrustumCullingPass->Update();
 }
 
 // Render the scene.

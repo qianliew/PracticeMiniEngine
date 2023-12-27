@@ -6,22 +6,30 @@ D3D12BufferManager::D3D12BufferManager(ComPtr<ID3D12Device>& device) :
 {
     for (int i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++)
     {
-        UploadBufferPool[i] = nullptr;
+        uploadBufferPool[i] = nullptr;
     }
 }
 
 D3D12BufferManager::~D3D12BufferManager()
 {
+    // Release buffers in pools.
     for (int i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++)
     {
-        if (UploadBufferPool[i] != nullptr)
+        if (uploadBufferPool[i] != nullptr)
         {
-            delete UploadBufferPool[i];
-            UploadBufferPool[i] = nullptr;
+            delete uploadBufferPool[i];
+            uploadBufferPool[i] = nullptr;
         }
     }
-
-    for (auto it = DefaultBufferPool.begin(); it != DefaultBufferPool.end(); it++)
+    for (auto it = uploadBufferPool2.begin(); it != uploadBufferPool2.end(); it++)
+    {
+        if (it->second != nullptr)
+        {
+            delete it->second;
+            it->second = nullptr;
+        }
+    }
+    for (auto it = defaultBufferPool.begin(); it != defaultBufferPool.end(); it++)
     {
         if (it->second != nullptr)
         {
@@ -41,9 +49,12 @@ D3D12BufferManager::~D3D12BufferManager()
     }
 }
 
-void D3D12BufferManager::AllocateUploadBuffer(D3D12UploadBuffer* pBuffer, UINT64 size)
+void D3D12BufferManager::AllocateUploadBuffer(
+    D3D12UploadBuffer* pBuffer,
+    UINT64 size,
+    const wchar_t* name)
 {
-    D3D12UploadBuffer** ppBuffer = UploadBufferPool;
+    D3D12UploadBuffer** ppBuffer = uploadBufferPool;
 
     for (UINT i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++, ppBuffer++)
     {
@@ -53,8 +64,24 @@ void D3D12BufferManager::AllocateUploadBuffer(D3D12UploadBuffer* pBuffer, UINT64
         }
 
         *ppBuffer = pBuffer;
-        pBuffer->CreateBuffer(pDevice.Get(), size);
+        pBuffer->CreateBuffer(pDevice.Get(), size, D3D12_RESOURCE_STATE_GENERIC_READ, name);
         break;
+    }
+}
+
+void D3D12BufferManager::AllocateUploadBuffer(
+    D3D12Resource* pResource,
+    D3D12_RESOURCE_STATES state,
+    const wchar_t* name)
+{
+    if (pResource->GetResource().Get() == nullptr
+        || uploadBufferPool2.find(pResource) == uploadBufferPool2.end())
+    {
+        D3D12UploadBuffer* pbuffer = new D3D12UploadBuffer();
+        pbuffer->CreateBuffer(pDevice.Get(), pResource->GetResourceDesc(), state, name);
+        uploadBufferPool2.insert(std::make_pair(pResource, pbuffer));
+        pResource->SetResourceState(state);
+        pResource->SetResourceLoaction(pbuffer->ResourceLocation.Resource);
     }
 }
 
@@ -62,11 +89,11 @@ void D3D12BufferManager::ReleaseUploadBuffer()
 {
     for (int i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++)
     {
-        if (UploadBufferPool[i] != nullptr
-            && !UploadBufferPool[i]->IsConstant())
+        if (uploadBufferPool[i] != nullptr
+            && !uploadBufferPool[i]->IsConstant())
         {
-            delete UploadBufferPool[i];
-            UploadBufferPool[i] = nullptr;
+            delete uploadBufferPool[i];
+            uploadBufferPool[i] = nullptr;
         }
     }
 }
@@ -74,14 +101,15 @@ void D3D12BufferManager::ReleaseUploadBuffer()
 void D3D12BufferManager::AllocateDefaultBuffer(
     D3D12Resource* pResource,
     D3D12_RESOURCE_STATES state,
+    const wchar_t* name,
     const D3D12_CLEAR_VALUE* clearValue)
 {
     if (pResource->GetResource().Get() == nullptr
-        || DefaultBufferPool.find(pResource) == DefaultBufferPool.end())
+        || defaultBufferPool.find(pResource) == defaultBufferPool.end())
     {
         D3D12DefaultBuffer* pbuffer = new D3D12DefaultBuffer();
-        pbuffer->CreateBuffer(pDevice.Get(), &pResource->GetResourceDesc(), state, clearValue);
-        DefaultBufferPool.insert(std::make_pair(pResource, pbuffer));
+        pbuffer->CreateBuffer(pDevice.Get(), &pResource->GetResourceDesc(), state, name, clearValue);
+        defaultBufferPool.insert(std::make_pair(pResource, pbuffer));
         pResource->SetResourceState(state);
         pResource->SetResourceLoaction(pbuffer->ResourceLocation.Resource);
     }
@@ -120,6 +148,15 @@ D3D12ConstantBuffer* D3D12BufferManager::GetPerObjectConstantBufferAtIndex(UINT 
     if (perObjectConstantBuffers[index] != nullptr)
     {
         return perObjectConstantBuffers[index];
+    }
+    return nullptr;
+}
+
+D3D12UploadBuffer* D3D12BufferManager::GetUploadBufferFromPool(D3D12Resource* pResource)
+{
+    if (uploadBufferPool2.find(pResource) != uploadBufferPool2.end())
+    {
+        return uploadBufferPool2[pResource];
     }
     return nullptr;
 }

@@ -301,11 +301,6 @@ void SceneManager::SetDXRResources(D3D12CommandList* pCommandList)
 
 void SceneManager::UpdateScene()
 {
-    // Reset VisData.
-    for (UINT i = 0; i < GlobalConstants::kVisDataSize; i++)
-    {
-        visData[i] = 0;
-    }
 }
 
 void SceneManager::UpdateTransforms()

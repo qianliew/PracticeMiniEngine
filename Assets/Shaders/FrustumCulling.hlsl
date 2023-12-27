@@ -10,7 +10,7 @@
 
 RaytracingAccelerationStructure Scene : register(t0);
 RWTexture2D<float4> Result : register(u0);
-uint VisData[GlobalConstants::kVisDataSize] : register(c10);
+RWBuffer<uint> VisData : register(u10);
 
 float TraceFrustumCullingRay(float3 origin, float3 direction)
 {

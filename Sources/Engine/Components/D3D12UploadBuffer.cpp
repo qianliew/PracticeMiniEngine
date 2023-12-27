@@ -16,7 +16,11 @@ D3D12UploadBuffer::~D3D12UploadBuffer()
 	}
 }
 
-void D3D12UploadBuffer::CreateBuffer(ID3D12Device* device, UINT64 size)
+void D3D12UploadBuffer::CreateBuffer(
+	ID3D12Device* device,
+	UINT64 size,
+	D3D12_RESOURCE_STATES state,
+	const wchar_t* name)
 {
 	bufferSize = size;
 	resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
@@ -25,29 +29,40 @@ void D3D12UploadBuffer::CreateBuffer(ID3D12Device* device, UINT64 size)
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 		D3D12_HEAP_FLAG_NONE,
 		&resourceDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
+		state,
 		nullptr,
 		IID_PPV_ARGS(ResourceLocation.Resource.GetAddressOf())));
 
 	CD3DX12_RANGE readRange(0, 0);
 	ThrowIfFailed(ResourceLocation.Resource->Map(0, &readRange, reinterpret_cast<void**>(&startLocation)));
+
+	if (name)
+	{
+		ResourceLocation.Resource->SetName(name);
+	}
 }
 
-void D3D12UploadBuffer::CreateConstantBuffer(ID3D12Device* device, UINT64 size)
+void D3D12UploadBuffer::CreateBuffer(
+	ID3D12Device* device,
+	const D3D12_RESOURCE_DESC& desc,
+	D3D12_RESOURCE_STATES state,
+	const wchar_t* name)
 {
-	bufferSize = size;
-	resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
-
 	ThrowIfFailed(device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 		D3D12_HEAP_FLAG_NONE,
-		&resourceDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
+		&desc,
+		state,
 		nullptr,
 		IID_PPV_ARGS(ResourceLocation.Resource.GetAddressOf())));
 
 	CD3DX12_RANGE readRange(0, 0);
 	ThrowIfFailed(ResourceLocation.Resource->Map(0, &readRange, reinterpret_cast<void**>(&startLocation)));
+
+	if (name)
+	{
+		ResourceLocation.Resource->SetName(name);
+	}
 }
 
 void D3D12UploadBuffer::CopyData(void const* source, UINT64 size)

@@ -30,7 +30,7 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
     shaderConfig->Config(payloadSize, attributeSize);
 
     CD3DX12_ROOT_PARAMETER rootParameters[(UINT)eFrustumCullingRootIndex::Count];
-    rootParameters[(UINT)eFrustumCullingRootIndex::ConstantsVisData].InitAsConstants(GlobalConstants::kVisDataSize, 10, 0);
+    rootParameters[(UINT)eFrustumCullingRootIndex::UnorderedAccessViewVisData].InitAsUnorderedAccessView(10, 0, D3D12_SHADER_VISIBILITY_ALL);
     CD3DX12_ROOT_SIGNATURE_DESC localRootSignatureDesc(_countof(rootParameters), rootParameters);
     localRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
 
@@ -113,10 +113,49 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
         hitGroupShaderTable.PushBack(ShaderRecord(
             hitGroupShaderIdentifier,
             shaderIdentifierSize,
-            pSceneManager->GetVisData(),
+            visData,
             GlobalConstants::kMaxNumObject));
         pHitGroupShaderTable = hitGroupShaderTable.ResourceLocation.Resource;
     }
+
+    // Create a UAV for keeping frustum culling data.
+    D3D12_RESOURCE_DESC desc;
+
+    desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    desc.Alignment = 0;
+    desc.Width = GlobalConstants::kVisDataSize;
+    desc.Height = 1;
+    desc.DepthOrArraySize = 1;
+    desc.MipLevels = 1;
+    desc.Format = DXGI_FORMAT_UNKNOWN;
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
+    desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+    D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc;
+    viewDesc.Format = DXGI_FORMAT_UNKNOWN;
+    viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+    viewDesc.Texture2D.MipSlice = 0;
+    viewDesc.Texture2D.PlaneSlice = 0;
+
+    //pFrustumCullingData = new D3D12UnorderedAccessBuffer(desc, viewDesc);
+    //pDevice->GetBufferManager()->AllocateDefaultBuffer(
+    //    pFrustumCullingData,
+    //    D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+    //    L"FrustumCullingData");
+    //pFrustumCullingData->CreateView(pDevice->GetDevice(),
+    //    pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, 1));
+}
+
+void FrustumCullingPass::Update()
+{
+    // Reset VisData.
+    for (UINT i = 0; i < GlobalConstants::kVisDataSize; i++)
+    {
+        visData[i] = 0;
+    }
+
 }
 
 void FrustumCullingPass::Execute(D3D12CommandList* pCommandList)

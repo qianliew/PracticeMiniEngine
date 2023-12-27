@@ -5,6 +5,7 @@ void D3D12DefaultBuffer::CreateBuffer(
     ID3D12Device* device,
     const D3D12_RESOURCE_DESC* desc,
     D3D12_RESOURCE_STATES state,
+    const wchar_t* name,
     const D3D12_CLEAR_VALUE* clearValue)
 {
     ThrowIfFailed(device->CreateCommittedResource(
@@ -14,4 +15,9 @@ void D3D12DefaultBuffer::CreateBuffer(
         state,
         clearValue,
         IID_PPV_ARGS(ResourceLocation.Resource.GetAddressOf())));
+
+    if (name)
+    {
+        ResourceLocation.Resource->SetName(name);
+    }
 }

@@ -7,5 +7,6 @@ public:
 		ID3D12Device* device,
 		const D3D12_RESOURCE_DESC* desc,
 		D3D12_RESOURCE_STATES state,
+		const wchar_t* name,
 		const D3D12_CLEAR_VALUE* clearValue);
 };

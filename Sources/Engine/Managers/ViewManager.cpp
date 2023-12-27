@@ -97,6 +97,7 @@ UINT ViewManager::CreateRenderTarget()
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         pRenderTarget->GetTextureBuffer(),
         D3D12_RESOURCE_STATE_RENDER_TARGET,
+        L"RenderTargetView",
         &renderTargetClearValue);
 
     const UINT rtvHandle = pRenderTarget->GetRTVHandle();
@@ -122,6 +123,7 @@ UINT ViewManager::CreateDepthStencilView()
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         pDepthStencil->GetTextureBuffer(),
         D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        L"DepthStencilView",
         &depthOptimizedClearValue);
 
     const UINT dsvHandle = pDepthStencil->GetDSVHandle();

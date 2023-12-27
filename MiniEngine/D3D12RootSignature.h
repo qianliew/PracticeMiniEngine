@@ -33,7 +33,7 @@ enum class eDXRRootIndex
 // Root index in FrustumCullingPass
 enum class eFrustumCullingRootIndex
 {
-    ConstantsVisData = 0,
+    UnorderedAccessViewVisData = 0,
     Count,
 };
 
