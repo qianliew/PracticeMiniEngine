@@ -6,7 +6,8 @@
 namespace GlobalConstants
 {
 	static const UINT kMaxNumObject = 1024;
-	static const UINT kVisDataSize = kMaxNumObject / 32;
+	static const UINT kSizeOfUint = 32;
+	static const UINT kVisDataSize = kMaxNumObject / kSizeOfUint;
 }
 
 namespace RaytracingConstants

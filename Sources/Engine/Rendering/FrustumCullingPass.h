@@ -19,6 +19,7 @@ private:
 	ComPtr<ID3D12Resource> pRayGenShaderTable;
 
 	D3D12UnorderedAccessBuffer* pFrustumCullingData;
+	D3D12UploadBuffer* pTempBuffer;
 	UINT visData[GlobalConstants::kVisDataSize];
 
 public:

@@ -8,7 +8,6 @@
 #include <wincodec.h>
 
 // dxguid.lib
-// #include <initguid.h> 
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <D3Dcompiler.h>
@@ -24,8 +23,8 @@
 #include <unordered_map>
 
 #include "SharedPrimitives.h"
-#include "SharedTypes.h"
 #include "SharedConstants.h"
+#include "SharedTypes.h"
 
 #include "Macros.h"
 #include "PathHelper.h"

@@ -3,6 +3,8 @@
 #ifndef SHARED_TYPES_H
 #define SHARED_TYPES_H
 
+#include "SharedConstants.h"
+
 struct CameraConstant
 {
     XMMATRIX WorldToProjectionMatrix;

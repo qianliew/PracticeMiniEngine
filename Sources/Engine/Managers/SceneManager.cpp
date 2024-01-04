@@ -301,6 +301,7 @@ void SceneManager::SetDXRResources(D3D12CommandList* pCommandList)
 
 void SceneManager::UpdateScene()
 {
+
 }
 
 void SceneManager::UpdateTransforms()

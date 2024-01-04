@@ -61,6 +61,11 @@ public:
         pCommandList->SetComputeRootShaderResourceView(index, location);
     }
 
+    inline void SetComputeRootUnorderedAccessView(UINT index, D3D12_GPU_VIRTUAL_ADDRESS location)
+    {
+        pCommandList->SetComputeRootUnorderedAccessView(index, location);
+    }
+
     inline void SetViewports(const D3D12_VIEWPORT* pViewports, UINT NumViewports = 1)
     {
         pCommandList->RSSetViewports(NumViewports, pViewports);

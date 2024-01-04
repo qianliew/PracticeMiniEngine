@@ -84,6 +84,7 @@ void D3D12RootSignature::CreateDXRRootSignature()
     rootParameters[(UINT)eDXRRootIndex::Sampler].InitAsDescriptorTable(1, &descriptorTableRanges[3]);
     rootParameters[(UINT)eDXRRootIndex::ConstantBufferViewGlobal].InitAsConstantBufferView(0);
     rootParameters[(UINT)eDXRRootIndex::UnorderedAccessViewGlobal].InitAsDescriptorTable(1, &descriptorTableRanges[0]);
+    rootParameters[(UINT)eDXRRootIndex::UnorderedAccessViewVisData].InitAsUnorderedAccessView(10, 0, D3D12_SHADER_VISIBILITY_ALL);
 
     CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters, 1, &staticSamplerDesc);
 

@@ -27,13 +27,7 @@ enum class eDXRRootIndex
     Sampler,
     ConstantBufferViewGlobal,
     UnorderedAccessViewGlobal,
-    Count,
-};
-
-// Root index in FrustumCullingPass
-enum class eFrustumCullingRootIndex
-{
-    UnorderedAccessViewVisData = 0,
+    UnorderedAccessViewVisData,
     Count,
 };
 
