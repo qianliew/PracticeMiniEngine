@@ -32,6 +32,7 @@
 #include "D3D12Buffer.h"
 #include "D3D12UploadBuffer.h"
 #include "D3D12DefaultBuffer.h"
+#include "D3D12ReadbackBuffer.h"
 #include "D3D12View.h"
 #include "D3D12Sampler.h"
 #include "D3D12Resource.h"

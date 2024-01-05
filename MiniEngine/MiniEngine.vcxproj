@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="..\Sources\Engine\Components\D3D12Buffer.h" />
     <ClInclude Include="..\Sources\Engine\Components\D3D12DefaultBuffer.h" />
+    <ClInclude Include="..\Sources\Engine\Components\D3D12ReadbackBuffer.h" />
     <ClInclude Include="..\Sources\Engine\Components\D3D12Resource.h" />
     <ClInclude Include="..\Sources\Engine\Components\D3D12Sampler.h" />
     <ClInclude Include="..\Sources\Engine\Components\D3D12UploadBuffer.h" />
@@ -202,6 +203,7 @@
   <ItemGroup>
     <ClCompile Include="..\Sources\Engine\Components\D3D12Buffer.cpp" />
     <ClCompile Include="..\Sources\Engine\Components\D3D12DefaultBuffer.cpp" />
+    <ClCompile Include="..\Sources\Engine\Components\D3D12ReadbackBuffer.cpp" />
     <ClCompile Include="..\Sources\Engine\Components\D3D12Resource.cpp" />
     <ClCompile Include="..\Sources\Engine\Components\D3D12Sampler.cpp" />
     <ClCompile Include="..\Sources\Engine\Components\D3D12ShaderTable.cpp" />

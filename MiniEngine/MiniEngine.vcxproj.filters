@@ -193,6 +193,9 @@
     <ClInclude Include="..\Sources\Engine\Rendering\FrustumCullingPass.h">
       <Filter>Engine\Rendering\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Components\D3D12ReadbackBuffer.h">
+      <Filter>Engine\Components\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Sources\Engine\Objects\D3D12IndexBuffer.cpp">
@@ -311,6 +314,9 @@
     </ClCompile>
     <ClCompile Include="..\Sources\Engine\Rendering\FrustumCullingPass.cpp">
       <Filter>Engine\Rendering\Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Components\D3D12ReadbackBuffer.cpp">
+      <Filter>Engine\Components\Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

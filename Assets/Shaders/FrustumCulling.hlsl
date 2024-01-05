@@ -54,6 +54,7 @@ void FrustumCullingClosestHitShader(inout FrustumCullingRayPayload payload, in A
     uint bitIndex = GeometryIndex() - (index << 5);
     VisData[index] = VisData[index] & (1 << bitIndex);
     payload.vis = GeometryIndex() / 3.0f + 0.1f;
+    VisData[1] = 10;
 }
 
 Ray GetRayInAABBPrimitiveLocalSpace()

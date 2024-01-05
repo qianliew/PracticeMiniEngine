@@ -8,6 +8,10 @@ D3D12BufferManager::D3D12BufferManager(ComPtr<ID3D12Device>& device) :
     {
         uploadBufferPool[i] = nullptr;
     }
+    for (int i = 0; i < MAX_READBACK_BUFFER_COUNT; i++)
+    {
+        readbackBufferPool[i] = nullptr;
+    }
 }
 
 D3D12BufferManager::~D3D12BufferManager()
@@ -19,6 +23,14 @@ D3D12BufferManager::~D3D12BufferManager()
         {
             delete uploadBufferPool[i];
             uploadBufferPool[i] = nullptr;
+        }
+    }
+    for (int i = 0; i < MAX_READBACK_BUFFER_COUNT; i++)
+    {
+        if (readbackBufferPool[i] != nullptr)
+        {
+            delete readbackBufferPool[i];
+            readbackBufferPool[i] = nullptr;
         }
     }
     for (auto it = uploadBufferPool2.begin(); it != uploadBufferPool2.end(); it++)
@@ -95,6 +107,26 @@ void D3D12BufferManager::ReleaseUploadBuffer()
             delete uploadBufferPool[i];
             uploadBufferPool[i] = nullptr;
         }
+    }
+}
+
+void D3D12BufferManager::AllocateReadbackBuffer(
+    D3D12ReadbackBuffer* pBuffer,
+    UINT64 size,
+    const wchar_t* name)
+{
+    D3D12ReadbackBuffer** ppBuffer = readbackBufferPool;
+
+    for (UINT i = 0; i < MAX_READBACK_BUFFER_COUNT; i++, ppBuffer++)
+    {
+        if (*ppBuffer != nullptr)
+        {
+            continue;
+        }
+
+        *ppBuffer = pBuffer;
+        pBuffer->CreateBuffer(pDevice.Get(), size, D3D12_RESOURCE_STATE_COPY_DEST, name);
+        break;
     }
 }
 

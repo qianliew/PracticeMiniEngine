@@ -11,6 +11,11 @@ FrustumCullingPass::FrustumCullingPass(
 
 }
 
+FrustumCullingPass::~FrustumCullingPass()
+{
+    delete pFrustumCullingData;
+}
+
 void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
 {
     CD3DX12_STATE_OBJECT_DESC raytracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
@@ -144,13 +149,24 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
     pFrustumCullingData->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, 1));
 
+    // Create a upload buffer to upload.
     pTempBuffer = new D3D12UploadBuffer();
     pDevice->GetBufferManager()->AllocateUploadBuffer(pTempBuffer, desc.Width);
     pTempBuffer->CopyData(visData, desc.Width);
 
+    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
+        pFrustumCullingData->GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
+    pCommandList->FlushResourceBarriers();
     pCommandList->CopyResource(
         pFrustumCullingData->GetResource().Get(),
         pTempBuffer->ResourceLocation.Resource.Get());
+    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
+        D3D12_RESOURCE_STATE_COPY_DEST, pFrustumCullingData->GetResourceState());
+    pCommandList->FlushResourceBarriers();
+
+    // Create a readback buffer to read data back.
+    pReadbackBuffer = new D3D12ReadbackBuffer();
+    pDevice->GetBufferManager()->AllocateReadbackBuffer(pReadbackBuffer, desc.Width);
 }
 
 void FrustumCullingPass::Update()
@@ -158,9 +174,8 @@ void FrustumCullingPass::Update()
     // Reset VisData.
     for (UINT i = 0; i < GlobalConstants::kVisDataSize; i++)
     {
-        visData[i];
-    }
 
+    }
 }
 
 void FrustumCullingPass::Execute(D3D12CommandList* pCommandList)
@@ -207,4 +222,16 @@ void FrustumCullingPass::Execute(D3D12CommandList* pCommandList)
     const D3D12Resource* pColorResource = pViewManager->GetCurrentRTVBuffer(pViewManager->GetCurrentColorHandle());
     const D3D12Resource* pOutputResource = pViewManager->GetUAVBuffer(pViewManager->GetUAVColorHandle());
     CopyBuffer(pCommandList, pColorResource, pOutputResource);
+
+    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
+        pFrustumCullingData->GetResourceState(), D3D12_RESOURCE_STATE_COPY_SOURCE);
+    pCommandList->FlushResourceBarriers();
+    pCommandList->CopyResource(
+        pReadbackBuffer->ResourceLocation.Resource.Get(),
+        pFrustumCullingData->GetResource().Get());
+    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
+        D3D12_RESOURCE_STATE_COPY_SOURCE, pFrustumCullingData->GetResourceState());
+    pCommandList->FlushResourceBarriers();
+
+    pReadbackBuffer->ReadbackData(visData);
 }
