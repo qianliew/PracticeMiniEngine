@@ -11,5 +11,7 @@ public:
 		UINT64 size,
 		D3D12_RESOURCE_STATES state,
 		const wchar_t* name);
+
 	void ReadbackData(void* destination);
+	void ReadbackData(void* destination, UINT size);
 };

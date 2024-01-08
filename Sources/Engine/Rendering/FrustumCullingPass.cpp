@@ -171,10 +171,11 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
 
 void FrustumCullingPass::Update()
 {
+    return;
     // Reset VisData.
     for (UINT i = 0; i < GlobalConstants::kVisDataSize; i++)
     {
-
+        visData[i] = 0;
     }
 }
 
@@ -233,5 +234,5 @@ void FrustumCullingPass::Execute(D3D12CommandList* pCommandList)
         D3D12_RESOURCE_STATE_COPY_SOURCE, pFrustumCullingData->GetResourceState());
     pCommandList->FlushResourceBarriers();
 
-    pReadbackBuffer->ReadbackData(visData);
+    pReadbackBuffer->ReadbackData(visData, sizeof(visData));
 }

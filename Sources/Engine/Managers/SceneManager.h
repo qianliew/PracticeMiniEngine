@@ -7,14 +7,14 @@
 struct BLAS
 {
 	std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> geometryDescs;
-	ComPtr<ID3D12Resource> pScratchResource;
-	ComPtr<ID3D12Resource> pBottomLevelAccelerationStructure;
+	std::shared_ptr<D3D12UnorderedAccessBuffer> pScratchResource;
+	std::shared_ptr<D3D12UnorderedAccessBuffer> pBottomLevelAccelerationStructure;
 };
 
 struct TLAS
 {
-	ComPtr<ID3D12Resource> pScratchResource;
-	ComPtr<ID3D12Resource> pTopLevelAccelerationStructure;
+	std::shared_ptr<D3D12UnorderedAccessBuffer> pScratchResource;
+	std::shared_ptr<D3D12UnorderedAccessBuffer> pTopLevelAccelerationStructure;
 };
 
 class SceneManager

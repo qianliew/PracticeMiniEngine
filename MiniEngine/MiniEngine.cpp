@@ -205,10 +205,10 @@ void MiniEngine::PopulateCommandList()
     pDeferredLightingPass->Execute(pCommandList);
 
     pCommandList->SetComputeRootSignature(pRootSignature->GetDRXRootSignature());
-    // pRayTracingPass->Execute(pCommandList);
+    pRayTracingPass->Execute(pCommandList);
 
     pCommandList->SetRootSignature(pRootSignature->GetRootSignature());
-    // pTemporalAAPass->Execute(pCommandList);
+    pTemporalAAPass->Execute(pCommandList);
     pBlitPass->Execute(pCommandList);
 
     // Indicate that the back buffer will now be used to present.

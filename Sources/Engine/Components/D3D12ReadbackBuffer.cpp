@@ -29,5 +29,10 @@ void D3D12ReadbackBuffer::CreateBuffer(
 
 void D3D12ReadbackBuffer::ReadbackData(void* destination)
 {
-    memcpy(destination, startLocation, bufferSize);
+    memcpy(destination, startLocation, bufferSize / 8);
+}
+
+void D3D12ReadbackBuffer::ReadbackData(void* destination, UINT size)
+{
+    memcpy(destination, startLocation, size);
 }

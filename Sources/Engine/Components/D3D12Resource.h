@@ -33,20 +33,25 @@ protected:
 
 public:
 	TD3D12Resource(const D3D12_RESOURCE_DESC& desc) :
-		D3D12Resource(desc)
+		D3D12Resource(desc),
+		view(nullptr)
 	{
 
 	}
 
 	TD3D12Resource(const D3D12_RESOURCE_DESC& desc, const TViewDesc& viewDesc) :
 		D3D12Resource(desc),
-		viewDesc(viewDesc)
+		viewDesc(viewDesc),
+		view(nullptr)
 	{
 
 	}
 
 	virtual ~TD3D12Resource() override
 	{
-		delete view;
+		if (view != nullptr)
+		{
+			delete view;
+		}
 	}
 };

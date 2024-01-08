@@ -50,27 +50,6 @@ public:
 		const wchar_t* name = nullptr,
 		const D3D12_CLEAR_VALUE* clearValue = nullptr);
 
-	inline void AllocateUAVBuffer(
-		UINT64 bufferSize,
-		ID3D12Resource** ppResource,
-		D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON,
-		const wchar_t* resourceName = nullptr)
-	{
-		auto uploadHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-		auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-		ThrowIfFailed(pDevice->CreateCommittedResource(
-			&uploadHeapProperties,
-			D3D12_HEAP_FLAG_NONE,
-			&bufferDesc,
-			initialResourceState,
-			nullptr,
-			IID_PPV_ARGS(ppResource)));
-		if (resourceName)
-		{
-			(*ppResource)->SetName(resourceName);
-		}
-	}
-
 	void AllocateGlobalConstantBuffer();
 	void AllocatePerObjectConstantBuffers(UINT offset);
 
