@@ -11,13 +11,13 @@ SceneManager::SceneManager(shared_ptr<D3D12Device>& device, BOOL isDXR) :
     isDXR(isDXR)
 {
     pTempVertexBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(pTempVertexBuffer, 1024 * 1024);
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempVertexBuffer, 1024 * 1024);
     pTempIndexBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(pTempIndexBuffer, 1024 * 1024);
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempIndexBuffer, 1024 * 1024);
     pTempOffsetBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(pTempOffsetBuffer, 1024);
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempOffsetBuffer, 1024);
     pTempBoundingBoxBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(pTempBoundingBoxBuffer, 1024);
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempBoundingBoxBuffer, 1024);
 }
 
 SceneManager::~SceneManager()
@@ -350,12 +350,12 @@ void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList* pComma
 
     // Create the vertex buffer and index buffer and their view.
     D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(tempVertexBuffer, object->GetMesh()->GetVerticesSize());
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(tempVertexBuffer, object->GetMesh()->GetVerticesSize());
     pDevice->GetBufferManager()->AllocateDefaultBuffer(object->GetMesh()->GetVertexBuffer());
     tempVertexBuffer->CopyData(object->GetMesh()->GetVerticesData(), object->GetMesh()->GetVerticesSize());
 
     D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(tempIndexBuffer, object->GetMesh()->GetIndicesSize());
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(tempIndexBuffer, object->GetMesh()->GetIndicesSize());
     pDevice->GetBufferManager()->AllocateDefaultBuffer(object->GetMesh()->GetIndexBuffer());
     tempIndexBuffer->CopyData(object->GetMesh()->GetIndicesData(), object->GetMesh()->GetIndicesSize());
 
@@ -454,7 +454,7 @@ void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList* pCommandList, D
         textureData.SlicePitch = totalBytes;
 
         D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
-        pDevice->GetBufferManager()->AllocateUploadBuffer(tempBuffer, totalBytes);
+        pDevice->GetBufferManager()->AllocateTempUploadBuffer(tempBuffer, totalBytes);
 
         // Update texture data from upload buffer to gpu buffer.
         pCommandList->CopyTextureBuffer(texture->GetTextureBuffer()->GetResource().Get(),
@@ -524,7 +524,7 @@ void SceneManager::BuildTopLevelAS(D3D12CommandList* pCommandList, UINT index)
     // Create instance descs for the bottom-level acceleration structure.
     const UINT64 instanceDescsSize = sizeof(D3D12_RAYTRACING_INSTANCE_DESC);
     pInstanceDescBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(pInstanceDescBuffer, instanceDescsSize);
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pInstanceDescBuffer, instanceDescsSize);
 
     D3D12_RAYTRACING_INSTANCE_DESC desc = {};
     desc.Transform[0][0] = desc.Transform[1][1] = desc.Transform[2][2] = 1;

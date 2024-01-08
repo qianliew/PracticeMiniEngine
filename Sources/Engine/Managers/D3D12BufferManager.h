@@ -18,9 +18,9 @@ class D3D12BufferManager
 {
 private:
 	ComPtr<ID3D12Device> pDevice;
-	D3D12UploadBuffer* uploadBufferPool[MAX_UPLOAD_BUFFER_COUNT];
+	D3D12UploadBuffer* tempUploadBufferPool[MAX_UPLOAD_BUFFER_COUNT];
 	D3D12ReadbackBuffer* readbackBufferPool[MAX_READBACK_BUFFER_COUNT];
-	std::unordered_map<const void*, D3D12UploadBuffer*> uploadBufferPool2;
+	std::unordered_map<const void*, D3D12UploadBuffer*> uploadBufferPool;
 	std::unordered_map<const void*, D3D12DefaultBuffer*> defaultBufferPool;
 	D3D12ConstantBuffer* globalConstantBuffer;
 	std::map<UINT, D3D12ConstantBuffer*> perObjectConstantBuffers;
@@ -29,21 +29,20 @@ public:
 	D3D12BufferManager(ComPtr<ID3D12Device>& device);
 	~D3D12BufferManager();
 
-	void AllocateUploadBuffer(
+	void AllocateTempUploadBuffer(
 		D3D12UploadBuffer* pBuffer,
 		UINT64 size,
 		const wchar_t* name = nullptr);
+	void ReleaseTempUploadBuffer();
+
 	void AllocateUploadBuffer(
 		D3D12Resource* pResource,
 		D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COMMON,
 		const wchar_t* name = nullptr);
-	void ReleaseUploadBuffer();
-
 	void AllocateReadbackBuffer(
 		D3D12ReadbackBuffer* pResource,
 		UINT64 size,
 		const wchar_t* name = nullptr);
-
 	void AllocateDefaultBuffer(
 		D3D12Resource* pResource,
 		D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COPY_DEST,
@@ -55,5 +54,4 @@ public:
 
 	inline D3D12ConstantBuffer* GetGlobalConstantBuffer() const { return globalConstantBuffer; }
 	D3D12ConstantBuffer* GetPerObjectConstantBufferAtIndex(UINT);
-	D3D12UploadBuffer* GetUploadBufferFromPool(D3D12Resource* pResource);
 };

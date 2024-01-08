@@ -240,7 +240,7 @@ void MiniEngine::WaitForPreviousFrame()
     pViewManager->UpdateFrameIndex();
 
     // Release upload buffers from last frame.
-    pDevice->GetBufferManager()->ReleaseUploadBuffer();
+    pDevice->GetBufferManager()->ReleaseTempUploadBuffer();
     // TODO: Add a event system to handle event.
     pSceneManager->Release();
 }

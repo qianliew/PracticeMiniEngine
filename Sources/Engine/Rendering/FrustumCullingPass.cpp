@@ -151,7 +151,7 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
 
     // Create a upload buffer to upload.
     pTempBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(pTempBuffer, desc.Width);
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempBuffer, desc.Width);
     pTempBuffer->CopyData(visData, desc.Width);
 
     pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),

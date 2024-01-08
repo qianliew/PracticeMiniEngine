@@ -6,7 +6,7 @@ D3D12BufferManager::D3D12BufferManager(ComPtr<ID3D12Device>& device) :
 {
     for (int i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++)
     {
-        uploadBufferPool[i] = nullptr;
+        tempUploadBufferPool[i] = nullptr;
     }
     for (int i = 0; i < MAX_READBACK_BUFFER_COUNT; i++)
     {
@@ -19,10 +19,10 @@ D3D12BufferManager::~D3D12BufferManager()
     // Release buffers in pools.
     for (int i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++)
     {
-        if (uploadBufferPool[i] != nullptr)
+        if (tempUploadBufferPool[i] != nullptr)
         {
-            delete uploadBufferPool[i];
-            uploadBufferPool[i] = nullptr;
+            delete tempUploadBufferPool[i];
+            tempUploadBufferPool[i] = nullptr;
         }
     }
     for (int i = 0; i < MAX_READBACK_BUFFER_COUNT; i++)
@@ -33,7 +33,7 @@ D3D12BufferManager::~D3D12BufferManager()
             readbackBufferPool[i] = nullptr;
         }
     }
-    for (auto it = uploadBufferPool2.begin(); it != uploadBufferPool2.end(); it++)
+    for (auto it = uploadBufferPool.begin(); it != uploadBufferPool.end(); it++)
     {
         if (it->second != nullptr)
         {
@@ -61,12 +61,12 @@ D3D12BufferManager::~D3D12BufferManager()
     }
 }
 
-void D3D12BufferManager::AllocateUploadBuffer(
+void D3D12BufferManager::AllocateTempUploadBuffer(
     D3D12UploadBuffer* pBuffer,
     UINT64 size,
     const wchar_t* name)
 {
-    D3D12UploadBuffer** ppBuffer = uploadBufferPool;
+    D3D12UploadBuffer** ppBuffer = tempUploadBufferPool;
 
     for (UINT i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++, ppBuffer++)
     {
@@ -81,32 +81,32 @@ void D3D12BufferManager::AllocateUploadBuffer(
     }
 }
 
+void D3D12BufferManager::ReleaseTempUploadBuffer()
+{
+    for (int i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++)
+    {
+        if (tempUploadBufferPool[i] != nullptr
+            && !tempUploadBufferPool[i]->IsConstant())
+        {
+            delete tempUploadBufferPool[i];
+            tempUploadBufferPool[i] = nullptr;
+        }
+    }
+}
+
 void D3D12BufferManager::AllocateUploadBuffer(
     D3D12Resource* pResource,
     D3D12_RESOURCE_STATES state,
     const wchar_t* name)
 {
     if (pResource->GetResource().Get() == nullptr
-        || uploadBufferPool2.find(pResource) == uploadBufferPool2.end())
+        || uploadBufferPool.find(pResource) == uploadBufferPool.end())
     {
         D3D12UploadBuffer* pbuffer = new D3D12UploadBuffer();
         pbuffer->CreateBuffer(pDevice.Get(), pResource->GetResourceDesc(), state, name);
-        uploadBufferPool2.insert(std::make_pair(pResource, pbuffer));
+        uploadBufferPool.insert(std::make_pair(pResource, pbuffer));
         pResource->SetResourceState(state);
         pResource->SetResourceLoaction(pbuffer->ResourceLocation.Resource);
-    }
-}
-
-void D3D12BufferManager::ReleaseUploadBuffer()
-{
-    for (int i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++)
-    {
-        if (uploadBufferPool[i] != nullptr
-            && !uploadBufferPool[i]->IsConstant())
-        {
-            delete uploadBufferPool[i];
-            uploadBufferPool[i] = nullptr;
-        }
     }
 }
 
@@ -150,13 +150,15 @@ void D3D12BufferManager::AllocateDefaultBuffer(
 // Overflow case and Initialization problem.
 void D3D12BufferManager::AllocateGlobalConstantBuffer()
 {
-    D3D12_RESOURCE_DESC desc;
-    globalConstantBuffer = new D3D12ConstantBuffer(desc, 1024);
-    D3D12UploadBuffer* pBuffer = new D3D12UploadBuffer(TRUE);
-    AllocateUploadBuffer(pBuffer, 1024);
+    const UINT size = 1024;
+    D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size, D3D12_RESOURCE_FLAG_NONE);
+    globalConstantBuffer = new D3D12ConstantBuffer(desc, size);
+    AllocateUploadBuffer(globalConstantBuffer, D3D12_RESOURCE_STATE_GENERIC_READ, L"GlobalConstantBuffer");
 
-    globalConstantBuffer->SetResourceLoaction(pBuffer->ResourceLocation.Resource);
-    globalConstantBuffer->SetStartLocation(pBuffer->GetStartLocation());
+    if (uploadBufferPool[globalConstantBuffer] != nullptr)
+    {
+        globalConstantBuffer->SetStartLocation(uploadBufferPool[globalConstantBuffer]->GetStartLocation());
+    }
 }
 
 void D3D12BufferManager::AllocatePerObjectConstantBuffers(UINT offset)
@@ -166,13 +168,14 @@ void D3D12BufferManager::AllocatePerObjectConstantBuffers(UINT offset)
         delete perObjectConstantBuffers[offset];
     }
 
-    D3D12_RESOURCE_DESC desc;
-    perObjectConstantBuffers[offset] = new D3D12ConstantBuffer(desc, 1024);
-    D3D12UploadBuffer* pBuffer = new D3D12UploadBuffer(TRUE);
-    AllocateUploadBuffer(pBuffer, 1024);
-
-    perObjectConstantBuffers[offset]->SetResourceLoaction(pBuffer->ResourceLocation.Resource);
-    perObjectConstantBuffers[offset]->SetStartLocation(pBuffer->GetStartLocation());
+    const UINT size = 1024;
+    D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size, D3D12_RESOURCE_FLAG_NONE);
+    perObjectConstantBuffers[offset] = new D3D12ConstantBuffer(desc, size);
+    AllocateUploadBuffer(perObjectConstantBuffers[offset], D3D12_RESOURCE_STATE_GENERIC_READ, L"PerObjectConstantBuffer");
+    if (uploadBufferPool[perObjectConstantBuffers[offset]])
+    {
+        perObjectConstantBuffers[offset]->SetStartLocation(uploadBufferPool[perObjectConstantBuffers[offset]]->GetStartLocation());
+    }
 }
 
 D3D12ConstantBuffer* D3D12BufferManager::GetPerObjectConstantBufferAtIndex(UINT index)
@@ -180,15 +183,6 @@ D3D12ConstantBuffer* D3D12BufferManager::GetPerObjectConstantBufferAtIndex(UINT 
     if (perObjectConstantBuffers[index] != nullptr)
     {
         return perObjectConstantBuffers[index];
-    }
-    return nullptr;
-}
-
-D3D12UploadBuffer* D3D12BufferManager::GetUploadBufferFromPool(D3D12Resource* pResource)
-{
-    if (uploadBufferPool2.find(pResource) != uploadBufferPool2.end())
-    {
-        return uploadBufferPool2[pResource];
     }
     return nullptr;
 }
