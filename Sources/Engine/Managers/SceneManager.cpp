@@ -257,6 +257,13 @@ void SceneManager::DrawObjects(D3D12CommandList* pCommandList)
         Model* model = pObjects[i];
         UINT id = pObjects[i]->GetObjectID();
 
+        UINT index = id >> 5;
+        UINT bitIndex = id % 32;
+        if ((visData[index] & (1 << bitIndex)) == 0)
+        {
+            continue;
+        }
+
         // Set the per object views.
         pCommandList->SetRootConstantBufferView((UINT)eRootIndex::ConstantBufferViewPerObject,
             pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->GetResource()->GetGPUVirtualAddress());
@@ -281,6 +288,8 @@ void SceneManager::DrawObjects(D3D12CommandList* pCommandList)
         pCommandList->SetIndexBuffer(&model->GetMesh()->GetIndexBuffer()->IndexBufferView);
         pCommandList->DrawIndexedInstanced(model->GetMesh()->GetIndicesNum());
     }
+
+    ResetVisData();
 }
 
 void SceneManager::DrawSkybox(D3D12CommandList* pCommandList)
