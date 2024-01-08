@@ -18,11 +18,6 @@ private:
 	ComPtr<ID3D12Resource> pHitGroupShaderTable;
 	ComPtr<ID3D12Resource> pRayGenShaderTable;
 
-	D3D12UnorderedAccessBuffer* pFrustumCullingData;
-	D3D12UploadBuffer* pTempBuffer;
-	D3D12ReadbackBuffer* pReadbackBuffer;
-	UINT visData[GlobalConstants::kVisDataSize];
-
 public:
 	FrustumCullingPass(shared_ptr<D3D12Device>&, shared_ptr<SceneManager>&, shared_ptr<ViewManager>&);
 	~FrustumCullingPass();

@@ -32,6 +32,12 @@ private:
 
 	UINT objectID;
 
+	// Frustum Culling data.
+	D3D12UnorderedAccessBuffer* pFrustumCullingData;
+	D3D12UploadBuffer* pTempBuffer;
+	D3D12ReadbackBuffer* pReadbackBuffer;
+	UINT visData[GlobalConstants::kVisDataSize];
+
 	// DXR member variables.
 	BOOL isDXR;
 
@@ -55,6 +61,8 @@ private:
 	void BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index);
 	void BuildTopLevelAS(D3D12CommandList* pCommandList, UINT index);
 
+	void ResetVisData();
+
 public:
 	SceneManager(shared_ptr<D3D12Device>&, BOOL isDXR);
 	~SceneManager();
@@ -71,6 +79,7 @@ public:
 	void DrawSkybox(D3D12CommandList*);
 	void DrawFullScreenMesh(D3D12CommandList*);
 	void SetFrustumCullingResources(D3D12CommandList*);
+	void ReadbackFrustumCullingData(D3D12CommandList*);
 	void SetDXRResources(D3D12CommandList*);
 
 	void UpdateScene();

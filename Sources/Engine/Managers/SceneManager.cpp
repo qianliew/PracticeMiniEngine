@@ -35,6 +35,7 @@ SceneManager::~SceneManager()
         delete pIndexBuffer;
         delete pOffsetBuffer;
     }
+    delete pFrustumCullingData;
 }
 
 void SceneManager::InitFBXImporter()
@@ -168,6 +169,59 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList)
     pDevice->GetBufferManager()->AllocateGlobalConstantBuffer();
     pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_GLOBAL, 0));
+
+
+    // Create a UAV for keeping frustum culling data.
+    D3D12_RESOURCE_DESC desc;
+
+    desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    desc.Alignment = 0;
+    desc.Width = GlobalConstants::kMaxNumObject;
+    desc.Height = 1;
+    desc.DepthOrArraySize = 1;
+    desc.MipLevels = 1;
+    desc.Format = DXGI_FORMAT_UNKNOWN;
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
+    desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+    D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc;
+    viewDesc.Format = DXGI_FORMAT_UNKNOWN;
+    viewDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+    viewDesc.Buffer.FirstElement = 0;
+    viewDesc.Buffer.NumElements = GlobalConstants::kVisDataSize;
+    viewDesc.Buffer.StructureByteStride = GlobalConstants::kSizeOfUint;
+    viewDesc.Buffer.CounterOffsetInBytes = 0;
+    viewDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+
+    pFrustumCullingData = new D3D12UnorderedAccessBuffer(desc, viewDesc);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(
+        pFrustumCullingData,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        L"FrustumCullingData");
+    pFrustumCullingData->CreateView(pDevice->GetDevice(),
+        pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, 1));
+    ResetVisData();
+
+    // Create a upload buffer to upload.
+    pTempBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempBuffer, desc.Width);
+    pTempBuffer->CopyData(visData, desc.Width);
+
+    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
+        pFrustumCullingData->GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
+    pCommandList->FlushResourceBarriers();
+    pCommandList->CopyResource(
+        pFrustumCullingData->GetResource().Get(),
+        pTempBuffer->ResourceLocation.Resource.Get());
+    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
+        D3D12_RESOURCE_STATE_COPY_DEST, pFrustumCullingData->GetResourceState());
+    pCommandList->FlushResourceBarriers();
+
+    // Create a readback buffer to read data back.
+    pReadbackBuffer = new D3D12ReadbackBuffer();
+    pDevice->GetBufferManager()->AllocateReadbackBuffer(pReadbackBuffer, desc.Width);
 }
 
 void SceneManager::UnloadScene()
@@ -274,6 +328,26 @@ void SceneManager::SetFrustumCullingResources(D3D12CommandList* pCommandList)
     pCommandList->SetComputeRootShaderResourceView(
         (UINT)eDXRRootIndex::ShaderResourceViewTLAS,
         tlas[GeometryType::AABB].pTopLevelAccelerationStructure->GetResource()->GetGPUVirtualAddress());
+
+    // Bind the vis data.
+    pCommandList->SetComputeRootUnorderedAccessView(
+        (UINT)eDXRRootIndex::UnorderedAccessViewVisData,
+        pFrustumCullingData->GetResource()->GetGPUVirtualAddress());
+}
+
+void SceneManager::ReadbackFrustumCullingData(D3D12CommandList* pCommandList)
+{
+    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
+        pFrustumCullingData->GetResourceState(), D3D12_RESOURCE_STATE_COPY_SOURCE);
+    pCommandList->FlushResourceBarriers();
+    pCommandList->CopyResource(
+        pReadbackBuffer->ResourceLocation.Resource.Get(),
+        pFrustumCullingData->GetResource().Get());
+    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
+        D3D12_RESOURCE_STATE_COPY_SOURCE, pFrustumCullingData->GetResourceState());
+    pCommandList->FlushResourceBarriers();
+
+    pReadbackBuffer->ReadbackData(visData, sizeof(visData));
 }
 
 void SceneManager::SetDXRResources(D3D12CommandList* pCommandList)
@@ -580,4 +654,13 @@ void SceneManager::BuildTopLevelAS(D3D12CommandList* pCommandList, UINT index)
 
     // Build acceleration structure.
     pCommandList->GetDXRCommandList()->BuildRaytracingAccelerationStructure(&topLevelBuildDesc, 0, nullptr);
+}
+
+void SceneManager::ResetVisData()
+{
+    // Reset VisData.
+    for (UINT i = 0; i < GlobalConstants::kVisDataSize; i++)
+    {
+        visData[i] = 0;
+    }
 }

@@ -13,7 +13,7 @@ FrustumCullingPass::FrustumCullingPass(
 
 FrustumCullingPass::~FrustumCullingPass()
 {
-    delete pFrustumCullingData;
+
 }
 
 void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
@@ -116,67 +116,11 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
         hitGroupShaderTable.PushBack(ShaderRecord(hitGroupShaderIdentifier, shaderIdentifierSize));
         pHitGroupShaderTable = hitGroupShaderTable.ResourceLocation.Resource;
     }
-
-    // Create a UAV for keeping frustum culling data.
-    D3D12_RESOURCE_DESC desc;
-
-    desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    desc.Alignment = 0;
-    desc.Width = GlobalConstants::kMaxNumObject;
-    desc.Height = 1;
-    desc.DepthOrArraySize = 1;
-    desc.MipLevels = 1;
-    desc.Format = DXGI_FORMAT_UNKNOWN;
-    desc.SampleDesc.Count = 1;
-    desc.SampleDesc.Quality = 0;
-    desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-
-    D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc;
-    viewDesc.Format = DXGI_FORMAT_UNKNOWN;
-    viewDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-    viewDesc.Buffer.FirstElement = 0;
-    viewDesc.Buffer.NumElements = GlobalConstants::kVisDataSize;
-    viewDesc.Buffer.StructureByteStride = GlobalConstants::kSizeOfUint;
-    viewDesc.Buffer.CounterOffsetInBytes = 0;
-    viewDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-
-    pFrustumCullingData = new D3D12UnorderedAccessBuffer(desc, viewDesc);
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(
-        pFrustumCullingData,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-        L"FrustumCullingData");
-    pFrustumCullingData->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, 1));
-
-    // Create a upload buffer to upload.
-    pTempBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempBuffer, desc.Width);
-    pTempBuffer->CopyData(visData, desc.Width);
-
-    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
-        pFrustumCullingData->GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
-    pCommandList->FlushResourceBarriers();
-    pCommandList->CopyResource(
-        pFrustumCullingData->GetResource().Get(),
-        pTempBuffer->ResourceLocation.Resource.Get());
-    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
-        D3D12_RESOURCE_STATE_COPY_DEST, pFrustumCullingData->GetResourceState());
-    pCommandList->FlushResourceBarriers();
-
-    // Create a readback buffer to read data back.
-    pReadbackBuffer = new D3D12ReadbackBuffer();
-    pDevice->GetBufferManager()->AllocateReadbackBuffer(pReadbackBuffer, desc.Width);
 }
 
 void FrustumCullingPass::Update()
 {
-    return;
-    // Reset VisData.
-    for (UINT i = 0; i < GlobalConstants::kVisDataSize; i++)
-    {
-        visData[i] = 0;
-    }
+
 }
 
 void FrustumCullingPass::Execute(D3D12CommandList* pCommandList)
@@ -204,9 +148,6 @@ void FrustumCullingPass::Execute(D3D12CommandList* pCommandList)
 
     // Bind resources for the frustum culling.
     pSceneManager->SetFrustumCullingResources(pCommandList);
-    pCommandList->SetComputeRootUnorderedAccessView(
-        (UINT)eDXRRootIndex::UnorderedAccessViewVisData,
-        pFrustumCullingData->GetResource()->GetGPUVirtualAddress());
 
     // Bind the UAV heap for the output.
     pDevice->GetDescriptorHeapManager()->SetComputeViews(
@@ -224,15 +165,5 @@ void FrustumCullingPass::Execute(D3D12CommandList* pCommandList)
     const D3D12Resource* pOutputResource = pViewManager->GetUAVBuffer(pViewManager->GetUAVColorHandle());
     CopyBuffer(pCommandList, pColorResource, pOutputResource);
 
-    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
-        pFrustumCullingData->GetResourceState(), D3D12_RESOURCE_STATE_COPY_SOURCE);
-    pCommandList->FlushResourceBarriers();
-    pCommandList->CopyResource(
-        pReadbackBuffer->ResourceLocation.Resource.Get(),
-        pFrustumCullingData->GetResource().Get());
-    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
-        D3D12_RESOURCE_STATE_COPY_SOURCE, pFrustumCullingData->GetResourceState());
-    pCommandList->FlushResourceBarriers();
-
-    pReadbackBuffer->ReadbackData(visData, sizeof(visData));
+    pSceneManager->ReadbackFrustumCullingData(pCommandList);
 }
