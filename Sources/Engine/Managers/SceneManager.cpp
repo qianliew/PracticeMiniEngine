@@ -7,8 +7,7 @@ UINT SceneManager::sTextureID = 0;
 
 SceneManager::SceneManager(shared_ptr<D3D12Device>& device, BOOL isDXR) :
     pDevice(device),
-    objectID(0),
-    isDXR(isDXR)
+    objectID(0)
 {
     pTempVertexBuffer = new D3D12UploadBuffer();
     pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempVertexBuffer, 1024 * 1024);
@@ -29,12 +28,9 @@ SceneManager::~SceneManager()
     // delete pFullScreenMesh;
     delete pCamera;
 
-    if (isDXR)
-    {
-        delete pVertexBuffer;
-        delete pIndexBuffer;
-        delete pOffsetBuffer;
-    }
+    delete pVertexBuffer;
+    delete pIndexBuffer;
+    delete pOffsetBuffer;
     delete pFrustumCullingData;
 }
 

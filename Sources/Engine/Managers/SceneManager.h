@@ -39,8 +39,6 @@ private:
 	UINT visData[GlobalConstants::kVisDataSize];
 
 	// DXR member variables.
-	BOOL isDXR;
-
 	BLAS blas[GeometryType::Count];
 	TLAS tlas[GeometryType::Count];
 
