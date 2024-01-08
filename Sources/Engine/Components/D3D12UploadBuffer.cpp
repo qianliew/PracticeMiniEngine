@@ -1,9 +1,8 @@
 #include "stdafx.h"
 #include "D3D12UploadBuffer.h"
 
-D3D12UploadBuffer::D3D12UploadBuffer(BOOL inIsConstant) :
-	D3D12Buffer(),
-	isConstant(inIsConstant)
+D3D12UploadBuffer::D3D12UploadBuffer() :
+	D3D12Buffer()
 {
 
 }
@@ -23,7 +22,7 @@ void D3D12UploadBuffer::CreateBuffer(
 	const wchar_t* name)
 {
 	bufferSize = size;
-	resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
+	D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
 
 	ThrowIfFailed(device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),

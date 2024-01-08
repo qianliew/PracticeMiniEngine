@@ -84,15 +84,16 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
     }
 
     // Create the SRV of indices and vertices.
+    D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempIndexBuffer->GetBufferSize());
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.Format = DXGI_FORMAT_UNKNOWN;
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.Buffer.NumElements = pTempVertexBuffer->GetBufferUsage() / sizeof(Vertex);
+    srvDesc.Buffer.NumElements = pTempIndexBuffer->GetBufferUsage() / sizeof(UINT16);
     srvDesc.Buffer.StructureByteStride = sizeof(Vertex);
     srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-    pIndexBuffer = new D3D12ShaderResourceBuffer(pTempIndexBuffer->GetResourceDesc(), srvDesc);
+    pIndexBuffer = new D3D12ShaderResourceBuffer(resourceDesc, srvDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(pIndexBuffer);
     pIndexBuffer->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_GLOBAL, 1));
@@ -100,15 +101,16 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
         pTempIndexBuffer->ResourceLocation.Resource.Get(),
         pTempIndexBuffer->GetBufferUsage());
 
+    resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempVertexBuffer->GetBufferSize());
     srvDesc = {};
     srvDesc.Format = DXGI_FORMAT_UNKNOWN;
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.Buffer.NumElements = pTempVertexBuffer->GetBufferUsage() / sizeof(UINT16);
+    srvDesc.Buffer.NumElements = pTempVertexBuffer->GetBufferUsage() / sizeof(Vertex);
     srvDesc.Buffer.StructureByteStride = sizeof(UINT16);
     srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-    pVertexBuffer = new D3D12ShaderResourceBuffer(pTempVertexBuffer->GetResourceDesc(), srvDesc);
+    pVertexBuffer = new D3D12ShaderResourceBuffer(resourceDesc, srvDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(pVertexBuffer);
     pVertexBuffer->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_GLOBAL, 2));
@@ -116,6 +118,7 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
         pTempVertexBuffer->ResourceLocation.Resource.Get(),
         pTempVertexBuffer->GetBufferUsage());
 
+    resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempOffsetBuffer->GetBufferSize());
     srvDesc = {};
     srvDesc.Format = DXGI_FORMAT_UNKNOWN;
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
@@ -124,7 +127,7 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
     srvDesc.Buffer.StructureByteStride = sizeof(UINT);
     srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-    pOffsetBuffer = new D3D12ShaderResourceBuffer(pTempOffsetBuffer->GetResourceDesc(), srvDesc);
+    pOffsetBuffer = new D3D12ShaderResourceBuffer(resourceDesc, srvDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(pOffsetBuffer);
     pOffsetBuffer->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_GLOBAL, 3));

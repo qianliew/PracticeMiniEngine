@@ -17,14 +17,7 @@ D3D12BufferManager::D3D12BufferManager(ComPtr<ID3D12Device>& device) :
 D3D12BufferManager::~D3D12BufferManager()
 {
     // Release buffers in pools.
-    for (int i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++)
-    {
-        if (tempUploadBufferPool[i] != nullptr)
-        {
-            delete tempUploadBufferPool[i];
-            tempUploadBufferPool[i] = nullptr;
-        }
-    }
+    ReleaseTempUploadBuffer();
     for (int i = 0; i < MAX_READBACK_BUFFER_COUNT; i++)
     {
         if (readbackBufferPool[i] != nullptr)
@@ -85,8 +78,7 @@ void D3D12BufferManager::ReleaseTempUploadBuffer()
 {
     for (int i = 0; i < MAX_UPLOAD_BUFFER_COUNT; i++)
     {
-        if (tempUploadBufferPool[i] != nullptr
-            && !tempUploadBufferPool[i]->IsConstant())
+        if (tempUploadBufferPool[i] != nullptr)
         {
             delete tempUploadBufferPool[i];
             tempUploadBufferPool[i] = nullptr;
