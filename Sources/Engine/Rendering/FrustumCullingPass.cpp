@@ -125,9 +125,9 @@ void FrustumCullingPass::Update()
 
 void FrustumCullingPass::Execute(D3D12CommandList* pCommandList)
 {
-    FLOAT scale = 0.05;
-    UINT width = pSceneManager->GetCamera()->GetCameraWidth();
-    UINT height = pSceneManager->GetCamera()->GetCameraHeight();
+    FLOAT scale = 1.0f;
+    UINT width = pSceneManager->GetCamera()->GetCameraWidth() * scale;
+    UINT height = pSceneManager->GetCamera()->GetCameraHeight() * scale;
 
     auto DispatchRays = [&](auto* commandList, auto* stateObject, auto* dispatchDesc)
     {

@@ -199,26 +199,14 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList)
     pFrustumCullingData->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, 1));
 
-    // Create a upload buffer to upload.
+    // Create a upload buffer to upload and reset the vis data.
     pUploadBuffer = new D3D12UploadBuffer();
     pDevice->GetBufferManager()->AllocateUploadBuffer(pUploadBuffer, desc.Width);
-    pUploadBuffer->CopyData(visData, desc.Width);
-
-    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
-        pFrustumCullingData->GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
-    pCommandList->FlushResourceBarriers();
-    pCommandList->CopyResource(
-        pFrustumCullingData->GetResource().Get(),
-        pUploadBuffer->ResourceLocation.Resource.Get());
-    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
-        D3D12_RESOURCE_STATE_COPY_DEST, pFrustumCullingData->GetResourceState());
-    pCommandList->FlushResourceBarriers();
+    ResetVisData(pCommandList);
 
     // Create a readback buffer to read data back.
     pReadbackBuffer = new D3D12ReadbackBuffer();
     pDevice->GetBufferManager()->AllocateReadbackBuffer(pReadbackBuffer, desc.Width);
-
-    ResetVisData(pCommandList);
 }
 
 void SceneManager::UnloadScene()
@@ -259,11 +247,8 @@ void SceneManager::DrawObjects(D3D12CommandList* pCommandList)
         UINT id = pObjects[i]->GetObjectID();
 
         UINT index = id >> 5;
-        UINT bitIndex = id % 32;
-        if ((visData[index] & (1 << bitIndex)) == 0)
-        {
-            continue;
-        }
+        UINT bitIndex = id & (1 << 5) - 1;
+        if ((visData[index] & (1 << bitIndex)) == 0) continue;
 
         // Set the per object views.
         pCommandList->SetRootConstantBufferView((UINT)eRootIndex::ConstantBufferViewPerObject,
@@ -354,7 +339,6 @@ void SceneManager::ReadbackFrustumCullingData(D3D12CommandList* pCommandList)
     pCommandList->FlushResourceBarriers();
 
     pReadbackBuffer->ReadbackData(visData, sizeof(visData));
-    ResetVisData(pCommandList);
 }
 
 void SceneManager::SetDXRResources(D3D12CommandList* pCommandList)
@@ -671,17 +655,15 @@ void SceneManager::ResetVisData(D3D12CommandList* pCommandList)
         visData[i] = 0;
     }
 
-    //pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
-    //    pFrustumCullingData->GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
-    //pCommandList->AddTransitionResourceBarriers(pReadbackBuffer->ResourceLocation.Resource.Get(),
-    //    D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COPY_SOURCE);
-    //pCommandList->FlushResourceBarriers();
-    //pCommandList->CopyResource(
-    //    pReadbackBuffer->ResourceLocation.Resource.Get(),
-    //    pFrustumCullingData->GetResource().Get());
-    //pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
-    //    D3D12_RESOURCE_STATE_COPY_DEST, pFrustumCullingData->GetResourceState());
-    //pCommandList->AddTransitionResourceBarriers(pReadbackBuffer->ResourceLocation.Resource.Get(),
-    //    D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
-    //pCommandList->FlushResourceBarriers();
+    pUploadBuffer->CopyData(visData, sizeof(visData));
+
+    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
+        pFrustumCullingData->GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
+    pCommandList->FlushResourceBarriers();
+    pCommandList->CopyResource(
+        pFrustumCullingData->GetResource().Get(),
+        pUploadBuffer->ResourceLocation.Resource.Get());
+    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
+        D3D12_RESOURCE_STATE_COPY_DEST, pFrustumCullingData->GetResourceState());
+    pCommandList->FlushResourceBarriers();
 }

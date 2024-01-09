@@ -51,9 +51,9 @@ void FrustumCullingMissShader(inout FrustumCullingRayPayload payload)
 void FrustumCullingClosestHitShader(inout FrustumCullingRayPayload payload, in AABBAttributes attr)
 {
     uint index = GeometryIndex() >> 5;
-    uint bitIndex = GeometryIndex() % 32;
+    uint bitIndex = GeometryIndex() & (1 << 5) - 1;
     VisData[index] = VisData[index] | (1 << bitIndex);
-    payload.vis = GeometryIndex() / 3.0f + 0.1f;
+    payload.vis = GeometryIndex() / 4.0f;
 }
 
 Ray GetRayInAABBPrimitiveLocalSpace()
