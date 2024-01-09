@@ -34,7 +34,7 @@ private:
 
 	// Frustum Culling data.
 	D3D12UnorderedAccessBuffer* pFrustumCullingData;
-	D3D12UploadBuffer* pTempBuffer;
+	D3D12UploadBuffer* pUploadBuffer;
 	D3D12ReadbackBuffer* pReadbackBuffer;
 	UINT visData[GlobalConstants::kVisDataSize];
 
@@ -59,7 +59,7 @@ private:
 	void BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index);
 	void BuildTopLevelAS(D3D12CommandList* pCommandList, UINT index);
 
-	void ResetVisData();
+	void ResetVisData(D3D12CommandList* pCommandList);
 
 public:
 	SceneManager(shared_ptr<D3D12Device>&, BOOL isDXR);

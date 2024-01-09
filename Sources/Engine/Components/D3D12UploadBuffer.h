@@ -22,6 +22,7 @@ public:
 		const D3D12_RESOURCE_DESC& desc,
 		D3D12_RESOURCE_STATES state,
 		const wchar_t* name);
+
 	void CopyData(void const* source, UINT64 size);
 	void CopyData(void const* source, UINT64 size, UINT64 offset);
 };
