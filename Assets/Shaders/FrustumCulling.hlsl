@@ -22,10 +22,10 @@ float TraceFrustumCullingRay(float3 origin, float3 direction)
     RayDesc rayDesc;
     rayDesc.Origin = origin;
     rayDesc.Direction = direction;
-    rayDesc.TMin = 0.001;
-    rayDesc.TMax = 10000.0;
+    rayDesc.TMin = 0.001f;
+    rayDesc.TMax = 1000.0f;
 
-    uint flags = RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH;
+    uint flags = RAY_FLAG_NONE;
     TraceRay(Scene, flags, 0xFF, 0, 0, 0, rayDesc, payload);
 
     return payload.vis;
@@ -50,9 +50,10 @@ void FrustumCullingMissShader(inout FrustumCullingRayPayload payload)
 [shader("closesthit")]
 void FrustumCullingClosestHitShader(inout FrustumCullingRayPayload payload, in AABBAttributes attr)
 {
-    uint index = GeometryIndex() >> 5;
-    uint bitIndex = GeometryIndex() & (1 << 5) - 1;
-    VisData[index] = VisData[index] | (1 << bitIndex);
+    //uint index = GeometryIndex() >> 5;
+    //uint bitIndex = GeometryIndex() & (1 << 5) - 1;
+    //VisData[index] = VisData[index] | (1 << bitIndex);
+    VisData[GeometryIndex()] = 1;
     payload.vis = GeometryIndex() / 4.0f;
 }
 

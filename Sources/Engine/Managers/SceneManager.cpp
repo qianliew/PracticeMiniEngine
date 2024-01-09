@@ -245,10 +245,7 @@ void SceneManager::DrawObjects(D3D12CommandList* pCommandList)
     {
         Model* model = pObjects[i];
         UINT id = pObjects[i]->GetObjectID();
-
-        UINT index = id >> 5;
-        UINT bitIndex = id & (1 << 5) - 1;
-        if ((visData[index] & (1 << bitIndex)) == 0) continue;
+        if (visData[id] == 0) continue;
 
         // Set the per object views.
         pCommandList->SetRootConstantBufferView((UINT)eRootIndex::ConstantBufferViewPerObject,

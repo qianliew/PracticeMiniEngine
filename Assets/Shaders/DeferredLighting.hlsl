@@ -23,7 +23,7 @@ void CSMain(uint3 threadID : SV_DispatchThreadID)
 	float a = attributes.y; // roughness
 	float a2 = a * a; // roughness square
 	float3 viewDirWS = normalize(GetWorldSpaceViewDir(positionWS));
-	float3 lightDirWS = normalize(float3(1.0f, 1.0f, 0.0f));
+	float3 lightDirWS = normalize(float3(1.0f, 1.0f, -1.0f));
 	float3 halfDir = normalize(lightDirWS + viewDirWS);
 	float NdotH = saturate(dot(normalWS, halfDir));
 	float NdotL = saturate(dot(normalWS, lightDirWS));

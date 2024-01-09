@@ -82,4 +82,9 @@ void DeferredLightingPass::Execute(D3D12CommandList* pCommandList)
             D3D12TextureType::RenderTarget,
             FALSE);
     }
+
+    // Copy the output to the color buffer.
+    //const D3D12Resource* pColorResource = pViewManager->GetCurrentRTVBuffer(pViewManager->GetCurrentColorHandle());
+    //const D3D12Resource* pOutputResource = pViewManager->GetUAVBuffer(pViewManager->GetUAVColorHandle());
+    //CopyBuffer(pCommandList, pColorResource, pOutputResource);
 }

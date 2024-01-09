@@ -6,7 +6,7 @@
 namespace GlobalConstants
 {
 	static const UINT kMaxNumObject = 1024;
-	static const UINT kSizeOfUint = 32;
+	static const UINT kSizeOfUint = 32 / 8;
 	static const UINT kVisDataSize = kMaxNumObject / kSizeOfUint;
 }
 
