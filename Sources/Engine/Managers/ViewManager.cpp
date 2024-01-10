@@ -136,7 +136,7 @@ UINT ViewManager::CreateDepthStencilView()
 
 UINT ViewManager::CreateUnorderedAccessView()
 {
-    D3D12Texture* pUAV = new D3D12Texture(globalSRVID++, rtvID++, width, height,
+    D3D12Texture* pUAV = new D3D12Texture(globalSRVID++, uavID++, width, height,
         D3D12TextureType::UnorderedAccess, DXGI_FORMAT_R8G8B8A8_UNORM);
     pUAV->CreateTextureResource();
 
@@ -147,7 +147,7 @@ UINT ViewManager::CreateUnorderedAccessView()
 
     const UINT uavHandle = pUAV->GetUAVHandle();
     pUAV->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, 0));
+        pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, uavHandle));
 
     pUnorderedAccessViews[uavHandle] = pUAV;
     return uavHandle;
@@ -195,8 +195,8 @@ void ViewManager::ConvertTextureType(
     {
         D3D12_RESOURCE_STATES stateBefore = GetResourceState(resource->GetType(), isPixelShaderResource);
         UINT offset = targetType == D3D12TextureType::ShaderResource ? resource->GetTextureID()
-            : targetType == D3D12TextureType::UnorderedAccess ? 0
-            : targetType == D3D12TextureType::DepthStencil ? 0
+            // : targetType == D3D12TextureType::UnorderedAccess ? handleIndex
+            // : targetType == D3D12TextureType::DepthStencil ? handleIndex
             : handleIndex;
 
         resource->ChangeTextureType(targetType);
@@ -209,7 +209,7 @@ void ViewManager::ConvertTextureType(
     };
 
     convert(type == D3D12TextureType::UnorderedAccess ? pUnorderedAccessViews[handleIndex]
-        : type == D3D12TextureType::DepthStencil ? pDepthStencilViews[0]
+        : type == D3D12TextureType::DepthStencil ? pDepthStencilViews[handleIndex]
         : pRenderTargetViews[handleIndex]);
     pCommandList->FlushResourceBarriers();
 }
