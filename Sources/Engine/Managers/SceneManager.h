@@ -17,6 +17,11 @@ struct TLAS
 	std::shared_ptr<D3D12UnorderedAccessBuffer> pTopLevelAccelerationStructure;
 };
 
+enum class eCommandSignatureIndex
+{
+	CBV = 0,
+};
+
 class SceneManager
 {
 private:
@@ -37,6 +42,10 @@ private:
 	D3D12UploadBuffer* pUploadBuffer;
 	D3D12ReadbackBuffer* pReadbackBuffer;
 	UINT visData[GlobalConstants::kVisDataSize];
+
+	std::shared_ptr<D3D12ShaderResourceBuffer> pCommandBuffer;
+	D3D12UploadBuffer* pTempCommandBuffer;
+	ComPtr<ID3D12CommandSignature> pCommandSignature;
 
 	// DXR member variables.
 	BLAS blas[GeometryType::Count];
@@ -70,7 +79,7 @@ public:
 
 	void InitFBXImporter();
 	void ParseScene(D3D12CommandList*);
-	void LoadScene(D3D12CommandList*);
+	void LoadScene(D3D12CommandList*, ComPtr<ID3D12RootSignature>&);
 	void UnloadScene();
 	void CreateCamera(UINT width, UINT height);
 	void AddObject(Model* object);

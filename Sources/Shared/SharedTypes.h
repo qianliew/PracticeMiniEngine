@@ -25,6 +25,12 @@ struct Vertex
     XMFLOAT4 color;
 };
 
+struct IndirectCommand
+{
+    D3D12_GPU_VIRTUAL_ADDRESS cbv;
+    D3D12_DRAW_ARGUMENTS drawArguments;
+};
+
 struct Ray
 {
     XMFLOAT3 origin;

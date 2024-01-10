@@ -83,51 +83,24 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
     // Create the SRV of indices and vertices.
     D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempIndexBuffer->GetBufferSize());
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.Buffer.NumElements = pTempIndexBuffer->GetBufferUsage() / sizeof(UINT16);
-    srvDesc.Buffer.StructureByteStride = sizeof(Vertex);
-    srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-
     pIndexBuffer = new D3D12ShaderResourceBuffer(resourceDesc, srvDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(pIndexBuffer);
-    pIndexBuffer->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_GLOBAL, 1));
     pCommandList->CopyBufferRegion(pIndexBuffer->GetResource().Get(),
         pTempIndexBuffer->ResourceLocation.Resource.Get(),
         pTempIndexBuffer->GetBufferUsage());
 
     resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempVertexBuffer->GetBufferSize());
     srvDesc = {};
-    srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.Buffer.NumElements = pTempVertexBuffer->GetBufferUsage() / sizeof(Vertex);
-    srvDesc.Buffer.StructureByteStride = sizeof(UINT16);
-    srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-
     pVertexBuffer = new D3D12ShaderResourceBuffer(resourceDesc, srvDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(pVertexBuffer);
-    pVertexBuffer->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_GLOBAL, 2));
     pCommandList->CopyBufferRegion(pVertexBuffer->GetResource().Get(),
         pTempVertexBuffer->ResourceLocation.Resource.Get(),
         pTempVertexBuffer->GetBufferUsage());
 
     resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempOffsetBuffer->GetBufferSize());
     srvDesc = {};
-    srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.Buffer.NumElements = numModels;
-    srvDesc.Buffer.StructureByteStride = sizeof(UINT);
-    srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-
     pOffsetBuffer = new D3D12ShaderResourceBuffer(resourceDesc, srvDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(pOffsetBuffer);
-    pOffsetBuffer->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_GLOBAL, 3));
     pCommandList->CopyBufferRegion(pOffsetBuffer->GetResource().Get(),
         pTempOffsetBuffer->ResourceLocation.Resource.Get(),
         pTempOffsetBuffer->GetBufferUsage());
@@ -140,7 +113,7 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
     inFile.close();
 }
 
-void SceneManager::LoadScene(D3D12CommandList* pCommandList)
+void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
 {
     // Parse the scene file.
     ParseScene(pCommandList);
@@ -166,38 +139,15 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList)
     pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_GLOBAL, 0));
 
-
     // Create a UAV for keeping frustum culling data.
-    D3D12_RESOURCE_DESC desc;
-
-    desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    desc.Alignment = 0;
-    desc.Width = GlobalConstants::kMaxNumObject;
-    desc.Height = 1;
-    desc.DepthOrArraySize = 1;
-    desc.MipLevels = 1;
-    desc.Format = DXGI_FORMAT_UNKNOWN;
-    desc.SampleDesc.Count = 1;
-    desc.SampleDesc.Quality = 0;
-    desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(GlobalConstants::kMaxNumObject);
     desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-
-    D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc;
-    viewDesc.Format = DXGI_FORMAT_UNKNOWN;
-    viewDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-    viewDesc.Buffer.FirstElement = 0;
-    viewDesc.Buffer.NumElements = GlobalConstants::kVisDataSize;
-    viewDesc.Buffer.StructureByteStride = GlobalConstants::kSizeOfUint;
-    viewDesc.Buffer.CounterOffsetInBytes = 0;
-    viewDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-
+    D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
     pFrustumCullingData = new D3D12UnorderedAccessBuffer(desc, viewDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         pFrustumCullingData,
         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
         L"FrustumCullingData");
-    pFrustumCullingData->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, 1));
 
     // Create a upload buffer to upload and reset the vis data.
     pUploadBuffer = new D3D12UploadBuffer();
@@ -207,6 +157,34 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList)
     // Create a readback buffer to read data back.
     pReadbackBuffer = new D3D12ReadbackBuffer();
     pDevice->GetBufferManager()->AllocateReadbackBuffer(pReadbackBuffer, desc.Width);
+
+    // Create a command signature for indirect drawing.
+    D3D12_INDIRECT_ARGUMENT_DESC argumentDescs[2] = {};
+    argumentDescs[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
+    argumentDescs[0].ConstantBufferView.RootParameterIndex = (UINT)eCommandSignatureIndex::CBV;
+    argumentDescs[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
+
+    D3D12_COMMAND_SIGNATURE_DESC commandSignatureDesc = {};
+    commandSignatureDesc.pArgumentDescs = argumentDescs;
+    commandSignatureDesc.NumArgumentDescs = _countof(argumentDescs);
+    commandSignatureDesc.ByteStride = sizeof(IndirectCommand);
+
+    ThrowIfFailed(pDevice->GetDevice()->CreateCommandSignature(
+        &commandSignatureDesc,
+        pRootSignature.Get(),
+        IID_PPV_ARGS(&pCommandSignature)));
+
+    // Create......
+    std::vector<IndirectCommand> commands;
+    commands.resize(GlobalConstants::kVisDataSize);
+    const UINT commandBufferSize = GlobalConstants::kVisDataSize * sizeof(IndirectCommand);
+
+    D3D12_RESOURCE_DESC commandBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(commandBufferSize);
+    D3D12_SHADER_RESOURCE_VIEW_DESC commandBufferViewDesc = {};
+
+    pCommandBuffer = std::make_shared<D3D12ShaderResourceBuffer>(commandBufferDesc, commandBufferViewDesc);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(pCommandBuffer.get());
+    pTempCommandBuffer = new D3D12UploadBuffer();
 }
 
 void SceneManager::UnloadScene()

@@ -59,7 +59,7 @@ void MiniEngine::LoadAssets()
     // Create scene objects.
     pSceneManager = make_shared<SceneManager>(pDevice);
     pSceneManager->InitFBXImporter();
-    pSceneManager->LoadScene(pCommandList);
+    pSceneManager->LoadScene(pCommandList, pRootSignature->GetRootSignature());
     pSceneManager->CreateCamera(width, height);
     pCommandList->ExecuteCommandList();
     WaitForGPU();
