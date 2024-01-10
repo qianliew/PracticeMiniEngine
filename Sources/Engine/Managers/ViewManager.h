@@ -38,7 +38,7 @@ public:
     static UINT sFrameCount;
 
     void UpdateFrameIndex();
-    UINT CreateRenderTarget();
+    UINT CreateRenderTarget(DXGI_FORMAT format);
     UINT CreateDepthStencilView();
     UINT CreateUnorderedAccessView();
     const UINT GetNextColorHandle();

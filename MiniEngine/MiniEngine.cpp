@@ -204,11 +204,11 @@ void MiniEngine::PopulateCommandList()
         pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
     pDeferredLightingPass->Execute(pCommandList);
 
-    pCommandList->SetComputeRootSignature(pRootSignature->GetDRXRootSignature());
-    pRayTracingPass->Execute(pCommandList);
+    //pCommandList->SetComputeRootSignature(pRootSignature->GetDRXRootSignature());
+    //pRayTracingPass->Execute(pCommandList);
 
-    pCommandList->SetRootSignature(pRootSignature->GetRootSignature());
-    pTemporalAAPass->Execute(pCommandList);
+    //pCommandList->SetRootSignature(pRootSignature->GetRootSignature());
+    //pTemporalAAPass->Execute(pCommandList);
     pBlitPass->Execute(pCommandList);
 
     // Indicate that the back buffer will now be used to present.

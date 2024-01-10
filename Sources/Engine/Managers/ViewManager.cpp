@@ -16,7 +16,7 @@ ViewManager::ViewManager(std::shared_ptr<D3D12Device>& device, UINT inWidth, UIN
     swapChainDesc.BufferCount = FRAME_COUNT;
     swapChainDesc.Width = width;
     swapChainDesc.Height = height;
-    swapChainDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+    swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     swapChainDesc.SampleDesc.Count = 1;
@@ -48,14 +48,14 @@ ViewManager::ViewManager(std::shared_ptr<D3D12Device>& device, UINT inWidth, UIN
     }
 
     // Create a render target for the color buffer.
-    colorHandles[0] = CreateRenderTarget();
-    colorHandles[1] = CreateRenderTarget();
+    colorHandles[0] = CreateRenderTarget(DXGI_FORMAT_R8G8B8A8_UNORM);
+    colorHandles[1] = CreateRenderTarget(DXGI_FORMAT_R8G8B8A8_UNORM);
     useFirstHandle = TRUE;
 
     // Create render targets for the GBuffer.
     for (UINT i = 0; i < GetGBufferCount(); i++)
     {
-        gBufferHandle[i] = CreateRenderTarget();
+        gBufferHandle[i] = CreateRenderTarget(DXGI_FORMAT_R16G16B16A16_FLOAT);
     }
 
     dsvHandle = CreateDepthStencilView();
@@ -82,10 +82,10 @@ void ViewManager::UpdateFrameIndex()
     sFrameCount++;
 }
 
-UINT ViewManager::CreateRenderTarget()
+UINT ViewManager::CreateRenderTarget(DXGI_FORMAT format)
 {
     D3D12Texture* pRenderTarget = new D3D12Texture(globalSRVID++, rtvID++, width, height,
-        D3D12TextureType::RenderTarget, DXGI_FORMAT_R16G16B16A16_FLOAT);
+        D3D12TextureType::RenderTarget, format);
     pRenderTarget->CreateTextureResource();
 
     D3D12_CLEAR_VALUE renderTargetClearValue = {};
@@ -93,7 +93,7 @@ UINT ViewManager::CreateRenderTarget()
     renderTargetClearValue.Color[1] = 0.0f;
     renderTargetClearValue.Color[2] = 0.0f;
     renderTargetClearValue.Color[3] = 1.0f;
-    renderTargetClearValue.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+    renderTargetClearValue.Format = format;
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         pRenderTarget->GetTextureBuffer(),
         D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -137,7 +137,7 @@ UINT ViewManager::CreateDepthStencilView()
 UINT ViewManager::CreateUnorderedAccessView()
 {
     D3D12Texture* pUAV = new D3D12Texture(globalSRVID++, rtvID++, width, height,
-        D3D12TextureType::UnorderedAccess, DXGI_FORMAT_R16G16B16A16_FLOAT);
+        D3D12TextureType::UnorderedAccess, DXGI_FORMAT_R8G8B8A8_UNORM);
     pUAV->CreateTextureResource();
 
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
@@ -187,6 +187,7 @@ void ViewManager::ConvertTextureType(
     BOOL isPixelShaderResource)
 {
     UINT heapMapIndex = targetType == D3D12TextureType::ShaderResource ? SHADER_RESOURCE_VIEW_GLOBAL
+        : targetType == D3D12TextureType::UnorderedAccess ? UNORDERED_ACCESS_VIEW
         : targetType == D3D12TextureType::DepthStencil ? DEPTH_STENCIL_VIEW
         : RENDER_TARGET_VIEW;
 
@@ -194,6 +195,7 @@ void ViewManager::ConvertTextureType(
     {
         D3D12_RESOURCE_STATES stateBefore = GetResourceState(resource->GetType(), isPixelShaderResource);
         UINT offset = targetType == D3D12TextureType::ShaderResource ? resource->GetTextureID()
+            : targetType == D3D12TextureType::UnorderedAccess ? 0
             : targetType == D3D12TextureType::DepthStencil ? 0
             : handleIndex;
 
@@ -206,7 +208,9 @@ void ViewManager::ConvertTextureType(
             GetResourceState(targetType, isPixelShaderResource));
     };
 
-    convert(type == D3D12TextureType::DepthStencil ? pDepthStencilViews[0] : pRenderTargetViews[handleIndex]);
+    convert(type == D3D12TextureType::UnorderedAccess ? pUnorderedAccessViews[handleIndex]
+        : type == D3D12TextureType::DepthStencil ? pDepthStencilViews[0]
+        : pRenderTargetViews[handleIndex]);
     pCommandList->FlushResourceBarriers();
 }
 
@@ -217,6 +221,8 @@ D3D12_RESOURCE_STATES ViewManager::GetResourceState(D3D12TextureType type, BOOL 
     {
     case D3D12TextureType::ShaderResource:
         return isPixelShaderResource ? D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+    case D3D12TextureType::UnorderedAccess:
+        return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
     case D3D12TextureType::DepthStencil:
         return D3D12_RESOURCE_STATE_DEPTH_WRITE;
     case D3D12TextureType::RenderTarget:
