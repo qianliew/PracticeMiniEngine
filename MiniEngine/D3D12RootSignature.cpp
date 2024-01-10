@@ -70,9 +70,9 @@ void D3D12RootSignature::CreateDXRRootSignature()
 {
     CD3DX12_DESCRIPTOR_RANGE descriptorTableRanges[5];
     descriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
-    descriptorTableRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4);
-    descriptorTableRanges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5);
-    descriptorTableRanges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 6);
+    descriptorTableRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 10);
+    descriptorTableRanges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 11);
+    descriptorTableRanges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 12);
     descriptorTableRanges[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1);
 
     CD3DX12_ROOT_PARAMETER rootParameters[(UINT)eDXRRootIndex::Count];
@@ -80,6 +80,7 @@ void D3D12RootSignature::CreateDXRRootSignature()
     rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewIndex].InitAsShaderResourceView(1);
     rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewVertex].InitAsShaderResourceView(2);
     rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewOffset].InitAsShaderResourceView(3);
+    rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewCommandBuffer].InitAsShaderResourceView(4);
     rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewSkybox].InitAsDescriptorTable(1, &descriptorTableRanges[1]);
     rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewDepth].InitAsDescriptorTable(1, &descriptorTableRanges[2]);
     rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewColor].InitAsDescriptorTable(1, &descriptorTableRanges[3]);
@@ -87,6 +88,7 @@ void D3D12RootSignature::CreateDXRRootSignature()
     rootParameters[(UINT)eDXRRootIndex::ConstantBufferViewGlobal].InitAsConstantBufferView(0);
     rootParameters[(UINT)eDXRRootIndex::UnorderedAccessViewGlobal].InitAsDescriptorTable(1, &descriptorTableRanges[0]);
     rootParameters[(UINT)eDXRRootIndex::UnorderedAccessViewVisData].InitAsUnorderedAccessView(10, 0, D3D12_SHADER_VISIBILITY_ALL);
+    rootParameters[(UINT)eDXRRootIndex::UnorderedAccessViewCommandBuffer].InitAsUnorderedAccessView(11, 0 , D3D12_SHADER_VISIBILITY_ALL);
 
     CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters, 1, &staticSamplerDesc);
 

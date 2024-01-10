@@ -45,6 +45,8 @@ private:
 
 	std::shared_ptr<D3D12ShaderResourceBuffer> pCommandBuffer;
 	D3D12UploadBuffer* pTempCommandBuffer;
+	std::shared_ptr<D3D12UnorderedAccessBuffer> pProcessedCommandBuffer;
+	D3D12UploadBuffer* pCountBuffer;
 	ComPtr<ID3D12CommandSignature> pCommandSignature;
 
 	// DXR member variables.

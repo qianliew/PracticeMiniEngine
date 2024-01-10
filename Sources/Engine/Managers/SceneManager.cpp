@@ -174,17 +174,59 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
         pRootSignature.Get(),
         IID_PPV_ARGS(&pCommandSignature)));
 
-    // Create......
+    // Create the command buffer.
     std::vector<IndirectCommand> commands;
     commands.resize(GlobalConstants::kVisDataSize);
+    for (UINT i = 0; i < pObjects.size(); i++)
+    {
+        Model* model = pObjects[i];
+        UINT id = pObjects[i]->GetObjectID();
+        commands[i].cbv = pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->GetResource()->GetGPUVirtualAddress();
+        commands[i].drawArguments.VertexCountPerInstance = model->GetMesh()->GetIndicesNum();
+        commands[i].drawArguments.InstanceCount = 1;
+        commands[i].drawArguments.StartVertexLocation = 0;
+        commands[i].drawArguments.StartInstanceLocation = 0;
+    }
+
     const UINT commandBufferSize = GlobalConstants::kVisDataSize * sizeof(IndirectCommand);
-
     D3D12_RESOURCE_DESC commandBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(commandBufferSize);
-    D3D12_SHADER_RESOURCE_VIEW_DESC commandBufferViewDesc = {};
+    D3D12_SHADER_RESOURCE_VIEW_DESC commandBufferSRVDesc = {};
 
-    pCommandBuffer = std::make_shared<D3D12ShaderResourceBuffer>(commandBufferDesc, commandBufferViewDesc);
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(pCommandBuffer.get());
+    pCommandBuffer = std::make_shared<D3D12ShaderResourceBuffer>(commandBufferDesc, commandBufferSRVDesc);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(pCommandBuffer.get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
     pTempCommandBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempCommandBuffer, commandBufferSize);
+    pTempCommandBuffer->CopyData(&commands.data()[0], commandBufferSize);
+
+    pCommandList->AddTransitionResourceBarriers(pCommandBuffer->GetResource().Get(),
+        pCommandBuffer->GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
+    pCommandList->FlushResourceBarriers();
+    pCommandList->CopyResource(
+        pCommandBuffer->GetResource().Get(),
+        pTempCommandBuffer->ResourceLocation.Resource.Get());
+    pCommandList->AddTransitionResourceBarriers(pCommandBuffer->GetResource().Get(),
+        D3D12_RESOURCE_STATE_COPY_DEST, pCommandBuffer->GetResourceState());
+    pCommandList->FlushResourceBarriers();
+
+    // Create the processed command buffer
+    commandBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(commandBufferSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    D3D12_UNORDERED_ACCESS_VIEW_DESC commandBufferUAVDesc = {};
+
+    pProcessedCommandBuffer = std::make_shared<D3D12UnorderedAccessBuffer>(commandBufferDesc, commandBufferUAVDesc);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(pProcessedCommandBuffer.get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    pCountBuffer = new D3D12UploadBuffer();
+    pDevice->GetBufferManager()->AllocateUploadBuffer(pCountBuffer, sizeof(UINT));
+    //pCountBuffer->ZeroData(sizeof(UINT));
+
+    //pCommandList->AddTransitionResourceBarriers(pProcessedCommandBuffer->GetResource().Get(),
+    //    pProcessedCommandBuffer->GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
+    //pCommandList->FlushResourceBarriers();
+    //pCommandList->CopyResource(
+    //    pProcessedCommandBuffer->GetResource().Get(),
+    //    pCountBuffer->ResourceLocation.Resource.Get());
+    //pCommandList->AddTransitionResourceBarriers(pProcessedCommandBuffer->GetResource().Get(),
+    //    D3D12_RESOURCE_STATE_COPY_DEST, pProcessedCommandBuffer->GetResourceState());
+    //pCommandList->FlushResourceBarriers();
 }
 
 void SceneManager::UnloadScene()
@@ -299,6 +341,14 @@ void SceneManager::SetFrustumCullingResources(D3D12CommandList* pCommandList)
     pCommandList->SetComputeRootUnorderedAccessView(
         (UINT)eDXRRootIndex::UnorderedAccessViewVisData,
         pFrustumCullingData->GetResource()->GetGPUVirtualAddress());
+
+    // Bind the command buffer.
+    pCommandList->SetComputeRootShaderResourceView(
+        (UINT)eDXRRootIndex::ShaderResourceViewCommandBuffer,
+        pCommandBuffer->GetResource()->GetGPUVirtualAddress());
+    pCommandList->SetComputeRootUnorderedAccessView(
+        (UINT)eDXRRootIndex::UnorderedAccessViewCommandBuffer,
+        pProcessedCommandBuffer->GetResource()->GetGPUVirtualAddress());
 }
 
 void SceneManager::ReadbackFrustumCullingData(D3D12CommandList* pCommandList)

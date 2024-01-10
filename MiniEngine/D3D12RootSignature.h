@@ -22,6 +22,7 @@ enum class eDXRRootIndex
     ShaderResourceViewIndex,
     ShaderResourceViewVertex,
     ShaderResourceViewOffset,
+    ShaderResourceViewCommandBuffer,
     ShaderResourceViewSkybox,
     ShaderResourceViewDepth,
     ShaderResourceViewColor,
@@ -29,6 +30,7 @@ enum class eDXRRootIndex
     ConstantBufferViewGlobal,
     UnorderedAccessViewGlobal,
     UnorderedAccessViewVisData,
+    UnorderedAccessViewCommandBuffer,
     Count,
 };
 

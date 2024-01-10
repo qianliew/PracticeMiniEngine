@@ -16,9 +16,9 @@ StructuredBuffer<uint16_t> Indices : register(t1);
 StructuredBuffer<Vertex> Vertices : register(t2);
 StructuredBuffer<uint> Offsets : register(t3);
 
-TextureCube SkyboxCube  : register(t4);
-Texture2D DepthTexture : register(t5);
-Texture2D ColorTexture : register(t6);
+TextureCube SkyboxCube  : register(t10);
+Texture2D DepthTexture : register(t11);
+Texture2D ColorTexture : register(t12);
 
 RayPayload TraceRadianceRay(float3 origin, float3 direction, in uint currentRayRecursionDepth)
 {

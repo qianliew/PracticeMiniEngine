@@ -17,12 +17,8 @@ public:
 		UINT64 size,
 		D3D12_RESOURCE_STATES state,
 		const wchar_t* name);
-	virtual void CreateBuffer(
-		ID3D12Device* device,
-		const D3D12_RESOURCE_DESC& desc,
-		D3D12_RESOURCE_STATES state,
-		const wchar_t* name);
 
 	void CopyData(void const* source, UINT64 size);
 	void CopyData(void const* source, UINT64 size, UINT64 offset);
+	void ZeroData(UINT64 size);
 };
