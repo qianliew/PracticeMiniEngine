@@ -5,7 +5,7 @@
 
 UINT SceneManager::sTextureID = 0;
 
-SceneManager::SceneManager(shared_ptr<D3D12Device>& device, BOOL isDXR) :
+SceneManager::SceneManager(shared_ptr<D3D12Device>& device) :
     pDevice(device),
     objectID(0)
 {

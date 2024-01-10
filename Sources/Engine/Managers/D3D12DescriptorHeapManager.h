@@ -16,7 +16,7 @@ private:
 	std::map<UINT, UINT> sizeTable;
 
 public:
-	D3D12DescriptorHeapManager(ComPtr<ID3D12Device>& device, BOOL isDXR);
+	D3D12DescriptorHeapManager(ComPtr<ID3D12Device>& device);
 	~D3D12DescriptorHeapManager();
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetHandle(UINT index, INT offset);

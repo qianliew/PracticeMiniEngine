@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "D3D12DescriptorHeapManager.h"
 
-D3D12DescriptorHeapManager::D3D12DescriptorHeapManager(ComPtr<ID3D12Device> &device, BOOL isDXR)
+D3D12DescriptorHeapManager::D3D12DescriptorHeapManager(ComPtr<ID3D12Device> &device)
 {
     // Describe and create constant buffer view (CBV) descriptor heaps.
     D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};

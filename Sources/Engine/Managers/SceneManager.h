@@ -62,7 +62,8 @@ private:
 	void ResetVisData(D3D12CommandList* pCommandList);
 
 public:
-	SceneManager(shared_ptr<D3D12Device>&, BOOL isDXR);
+	SceneManager() = delete;
+	SceneManager(shared_ptr<D3D12Device>&);
 	~SceneManager();
 
 	static UINT sTextureID;

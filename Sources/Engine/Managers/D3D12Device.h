@@ -6,7 +6,6 @@ class D3D12Device
 {
 protected:
     BOOL useWarpDevice;
-    BOOL isDXR;
 
     ComPtr<ID3D12Device> pDevice;
     ComPtr<IDXGIFactory4> pFactory;
@@ -25,7 +24,7 @@ protected:
         bool requestHighPerformanceAdapter = false);
 
 public:
-    D3D12Device(BOOL isDXR);
+    D3D12Device();
     ~D3D12Device();
 
     void CreateDevice();

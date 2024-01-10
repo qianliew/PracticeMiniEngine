@@ -19,8 +19,6 @@ using std::shared_ptr;
 class MiniEngine : public Window
 {
 private:
-    BOOL isDXR;
-
     // Pipeline objects.
     shared_ptr<D3D12Device> pDevice;
     D3D12RootSignature* pRootSignature;

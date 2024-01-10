@@ -4,8 +4,7 @@
 using namespace Microsoft::WRL;
 
 MiniEngine::MiniEngine(UINT width, UINT height, std::wstring name) :
-    Window(width, height, name),
-    isDXR(TRUE)
+    Window(width, height, name)
 {
 
 }
@@ -26,7 +25,7 @@ void MiniEngine::OnInit()
 void MiniEngine::LoadPipeline()
 {
     // Create the device.
-    pDevice = std::make_shared<D3D12Device>(isDXR);
+    pDevice = std::make_shared<D3D12Device>();
     pDevice->CreateDevice();
     pDevice->CreateDescriptorHeapManager();
     pDevice->CreateBufferManager();
@@ -58,7 +57,7 @@ void MiniEngine::LoadAssets()
     }
 
     // Create scene objects.
-    pSceneManager = make_shared<SceneManager>(pDevice, isDXR);
+    pSceneManager = make_shared<SceneManager>(pDevice);
     pSceneManager->InitFBXImporter();
     pSceneManager->LoadScene(pCommandList);
     pSceneManager->CreateCamera(width, height);
