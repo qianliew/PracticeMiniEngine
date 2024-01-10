@@ -68,11 +68,12 @@ void D3D12RootSignature::CreateRootSignature()
 
 void D3D12RootSignature::CreateDXRRootSignature()
 {
-    CD3DX12_DESCRIPTOR_RANGE descriptorTableRanges[4];
+    CD3DX12_DESCRIPTOR_RANGE descriptorTableRanges[5];
     descriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
     descriptorTableRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4);
     descriptorTableRanges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5);
-    descriptorTableRanges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1);
+    descriptorTableRanges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 6);
+    descriptorTableRanges[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1);
 
     CD3DX12_ROOT_PARAMETER rootParameters[(UINT)eDXRRootIndex::Count];
     rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewTLAS].InitAsShaderResourceView(0);
@@ -81,7 +82,8 @@ void D3D12RootSignature::CreateDXRRootSignature()
     rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewOffset].InitAsShaderResourceView(3);
     rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewSkybox].InitAsDescriptorTable(1, &descriptorTableRanges[1]);
     rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewDepth].InitAsDescriptorTable(1, &descriptorTableRanges[2]);
-    rootParameters[(UINT)eDXRRootIndex::Sampler].InitAsDescriptorTable(1, &descriptorTableRanges[3]);
+    rootParameters[(UINT)eDXRRootIndex::ShaderResourceViewColor].InitAsDescriptorTable(1, &descriptorTableRanges[3]);
+    rootParameters[(UINT)eDXRRootIndex::Sampler].InitAsDescriptorTable(1, &descriptorTableRanges[4]);
     rootParameters[(UINT)eDXRRootIndex::ConstantBufferViewGlobal].InitAsConstantBufferView(0);
     rootParameters[(UINT)eDXRRootIndex::UnorderedAccessViewGlobal].InitAsDescriptorTable(1, &descriptorTableRanges[0]);
     rootParameters[(UINT)eDXRRootIndex::UnorderedAccessViewVisData].InitAsUnorderedAccessView(10, 0, D3D12_SHADER_VISIBILITY_ALL);

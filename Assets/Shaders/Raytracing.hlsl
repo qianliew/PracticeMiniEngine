@@ -18,6 +18,7 @@ StructuredBuffer<uint> Offsets : register(t3);
 
 TextureCube SkyboxCube  : register(t4);
 Texture2D DepthTexture : register(t5);
+Texture2D ColorTexture : register(t6);
 
 RayPayload TraceRadianceRay(float3 origin, float3 direction, in uint currentRayRecursionDepth)
 {
@@ -103,7 +104,7 @@ float TraceShadowRay(float3 origin, float3 direction, in uint currentRayRecursio
 {
     if (currentRayRecursionDepth >= RaytracingConstants::kMaxRayRecursiveDepth)
     {
-        return 0.0f;
+        return 0.2f;
     }
     
     RayDesc rayDesc;
@@ -116,7 +117,7 @@ float TraceShadowRay(float3 origin, float3 direction, in uint currentRayRecursio
         | RAY_FLAG_CULL_BACK_FACING_TRIANGLES
         | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER;
 
-    ShadowRayPayload shadowRayPayload = { 0.0f };
+    ShadowRayPayload shadowRayPayload = { 0.2f };
     TraceRay(Scene, flags, 0xFF, RayType::Shadow, 0, RayType::Shadow, rayDesc, shadowRayPayload);
 
     return shadowRayPayload.attenuation;
@@ -145,11 +146,8 @@ void ClosestHitShader(inout RayPayload payload, in BuiltInTriangleIntersectionAt
     float3 normalOS = Vertices[vertId + 0].normalOS * barycentrics.x +
         Vertices[vertId + 1].normalOS * barycentrics.y +
         Vertices[vertId + 2].normalOS * barycentrics.z;
-    float2 uv = Vertices[vertId + 0].texCoord * barycentrics.x +
-        Vertices[vertId + 1].texCoord * barycentrics.y +
-        Vertices[vertId + 2].texCoord * barycentrics.z;
 
-    const float3 lightDirWS = float3(1.0f, 1.0f, 0.0f);
+    const float3 lightDirWS = float3(1.0f, 1.0f, -1.0f);
 
     // Calculate GI.
     const uint GIRayCount = 10;
@@ -177,7 +175,7 @@ void ClosestHitShader(inout RayPayload payload, in BuiltInTriangleIntersectionAt
     payload.color *= max(aoVal, 0.5f);
 
     // Calculate Shadow.
-    float3 direction = normalize(float3(1.0f, 1.0f, 0.0f));
+    float3 direction = normalize(float3(1.0f, 1.0f, -1.0f));
     payload.attenuation = TraceShadowRay(hitPosition, direction, payload.depth);
 }
 
@@ -204,18 +202,16 @@ void GIClosestHitShader(inout GIRayPayload payload, in BuiltInTriangleIntersecti
     float3 normalOS = Vertices[vertId + 0].normalOS * barycentrics.x +
         Vertices[vertId + 1].normalOS * barycentrics.y +
         Vertices[vertId + 2].normalOS * barycentrics.z;
-    float2 uv = Vertices[vertId + 0].texCoord * barycentrics.x +
-        Vertices[vertId + 1].texCoord * barycentrics.y +
-        Vertices[vertId + 2].texCoord * barycentrics.z;
 
     float4 positionCS = mul(WorldToProjectionMatrix, hitPosition);
     float3 positionNDC = positionCS.xyz / positionCS.w;
     float2 screenUV = (positionNDC.xy + 1.0f) / 2.0f;
     screenUV.y = 1 - screenUV.y;
-    uint2 coord = screenUV * uint2(rcp(TAAJitter.zw));
+    float4 color = ColorTexture.SampleLevel(StaticLinearClampSampler, screenUV, 0.0f);
     float depth = DepthTexture.SampleLevel(StaticLinearClampSampler, screenUV, 0.0f).r;
+    depth = max(depth + 0.0001f, 1.0f);
     float4 skybox = SkyboxCube.SampleLevel(StaticLinearClampSampler, payload.direction, 0.0f);
-    payload.color = lerp(skybox, Result[coord], step(depth, positionNDC.z));
+    payload.color = lerp(color, skybox, step(depth, positionNDC.z));
 
     // Calculate GI.
     const uint GIRayCount = 10 / payload.depth;
