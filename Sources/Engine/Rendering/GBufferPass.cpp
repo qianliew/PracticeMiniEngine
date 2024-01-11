@@ -89,4 +89,5 @@ void GBufferPass::Execute(D3D12CommandList* pCommandList)
     pCommandList->ClearDepth(dsvHandle);
 
     pSceneManager->DrawObjects(pCommandList);
+    // pSceneManager->DrawObjectsIndirectly(pCommandList);
 }

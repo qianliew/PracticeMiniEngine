@@ -220,7 +220,8 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
 
     pArgumentBuffer = std::make_shared<D3D12UnorderedAccessBuffer>(commandBufferDesc, argumentBufferUAVDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(pArgumentBuffer.get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-    pArgumentBuffer->CreateViewWithCounterResource(pDevice->GetDevice(),
+    pArgumentBuffer->SetCounterResource();
+    pArgumentBuffer->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, 1));
     pCountBuffer = new D3D12UploadBuffer();
     pDevice->GetBufferManager()->AllocateUploadBuffer(pCountBuffer, sizeof(UINT));
@@ -307,6 +308,7 @@ void SceneManager::DrawObjects(D3D12CommandList* pCommandList)
 
 void SceneManager::DrawObjectsIndirectly(D3D12CommandList* pCommandList)
 {
+    pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     pCommandList->ExecuteIndirect(
         pCommandSignature.Get(),
         pObjects.size(),

@@ -4,14 +4,17 @@ class D3D12View
 {
 protected:
 	ID3D12Resource* pResource;
+	ID3D12Resource* pCounterResource;
 
 public:
 	virtual ~D3D12View()
 	{
 		pResource = nullptr;
+		pCounterResource = nullptr;
 	}
 
 	virtual void SetResource(ID3D12Resource* pResource) = 0;
+	virtual void SetCounterResource(ID3D12Resource* pCounterResource) = 0;
 	virtual void CreateView(const ComPtr<ID3D12Device>& pDevice, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) = 0;
 };
 
@@ -26,11 +29,18 @@ public:
 	TD3D12View(const TDesc& inDesc) :
 		Desc(inDesc)
 	{
+		pResource = nullptr;
+		pCounterResource = nullptr;
+	}
+
+	virtual ~TD3D12View()
+	{
 
 	}
 
 	inline TDesc& GetDesc() { return Desc; }
 	inline void SetResource(ID3D12Resource* inResource) override { pResource = inResource; }
+	inline void SetCounterResource(ID3D12Resource* inResource) override { pCounterResource = inResource; }
 };
 
 class D3D12CBV final : public TD3D12View<D3D12CBV, D3D12_CONSTANT_BUFFER_VIEW_DESC>
@@ -91,5 +101,4 @@ public:
 	}
 
 	void CreateView(const ComPtr<ID3D12Device>& pDevice, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
-	void CreateViewWithCounterResource(const ComPtr<ID3D12Device>& pDevice, const D3D12_CPU_DESCRIPTOR_HANDLE& handle);
 };
