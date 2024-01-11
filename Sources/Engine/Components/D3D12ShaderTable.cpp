@@ -20,10 +20,10 @@ void ShaderTable::CreateBuffer(
 		&CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(ResourceLocation.Resource.GetAddressOf())));
+		IID_PPV_ARGS(pResource.GetAddressOf())));
 
 	CD3DX12_RANGE readRange(0, 0);
-	ThrowIfFailed(ResourceLocation.Resource->Map(0, &readRange, reinterpret_cast<void**>(&pMappedShaderRecords)));
+	ThrowIfFailed(pResource->Map(0, &readRange, reinterpret_cast<void**>(&pMappedShaderRecords)));
 }
 
 void ShaderTable::PushBack(const ShaderRecord& shaderRecord)

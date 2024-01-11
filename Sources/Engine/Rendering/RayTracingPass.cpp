@@ -138,7 +138,7 @@ void RayTracingPass::BuildShaderTables()
         ShaderTable rayGenShaderTable(numShaderRecords, shaderRecordSize);
         rayGenShaderTable.CreateBuffer(pDevice->GetDevice().Get());
         rayGenShaderTable.PushBack(ShaderRecord(rayGenShaderIdentifier[0], shaderIdentifierSize));
-        pRayGenShaderTable = rayGenShaderTable.ResourceLocation.Resource;
+        pRayGenShaderTable = rayGenShaderTable.GetResource();
     }
 
     // Miss shader table
@@ -151,7 +151,7 @@ void RayTracingPass::BuildShaderTables()
         {
             missShaderTable.PushBack(ShaderRecord(missShaderIdentifier[i], shaderIdentifierSize));
         }
-        pMissShaderTable = missShaderTable.ResourceLocation.Resource;
+        pMissShaderTable = missShaderTable.GetResource();
     }
 
     // Hit group shader table
@@ -164,7 +164,7 @@ void RayTracingPass::BuildShaderTables()
         {
             hitGroupShaderTable.PushBack(ShaderRecord(hitGroupShaderIdentifier[i], shaderIdentifierSize));
         }
-        pHitGroupShaderTable = hitGroupShaderTable.ResourceLocation.Resource;
+        pHitGroupShaderTable = hitGroupShaderTable.GetResource();
     }
 }
 

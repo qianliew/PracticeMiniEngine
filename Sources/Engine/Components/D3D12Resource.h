@@ -6,7 +6,7 @@ class D3D12Resource
 {
 protected:
 	D3D12_RESOURCE_STATES resourceState;
-	D3D12ResourceLocation resourceLocation;
+	ComPtr<ID3D12Resource> pResource;
 	const D3D12_RESOURCE_DESC resourceDesc;
 
 public:
@@ -19,7 +19,7 @@ public:
 	virtual void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) = 0;
 
 	inline const D3D12_RESOURCE_DESC& GetResourceDesc() const { return resourceDesc; }
-	inline const ComPtr<ID3D12Resource>& GetResource() const { return resourceLocation.Resource; }
+	inline const ComPtr<ID3D12Resource>& GetResource() const { return pResource; }
 	inline const D3D12_RESOURCE_STATES GetResourceState() const { return resourceState; }
 	inline void SetResourceState(D3D12_RESOURCE_STATES state) { resourceState = state; }
 };

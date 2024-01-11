@@ -15,20 +15,20 @@ D3D12ConstantBuffer::~D3D12ConstantBuffer()
 
 void D3D12ConstantBuffer::CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle)
 {
-	viewDesc.BufferLocation = resourceLocation.Resource->GetGPUVirtualAddress();
+	viewDesc.BufferLocation = pResource->GetGPUVirtualAddress();
 	viewDesc.SizeInBytes = size;
 
 	view = new D3D12CBV(viewDesc);
-	view->SetResource(resourceLocation.Resource.Get());
+	view->SetResource(pResource.Get());
 	view->CreateView(device, handle);
 }
 
 void D3D12ConstantBuffer::CopyData(void const* source, size_t size)
 {
-	memcpy(startLocation, source, size);
+	memcpy(pLocation, source, size);
 }
 
 void D3D12ConstantBuffer::SetStartLocation(void* location)
 {
-	startLocation = location;
+	pLocation = location;
 }

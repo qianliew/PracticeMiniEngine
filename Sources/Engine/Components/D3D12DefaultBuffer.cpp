@@ -14,10 +14,10 @@ void D3D12DefaultBuffer::CreateBuffer(
         desc,
         state,
         clearValue,
-        IID_PPV_ARGS(ResourceLocation.Resource.GetAddressOf())));
+        IID_PPV_ARGS(pResource.GetAddressOf())));
 
     if (name)
     {
-        ResourceLocation.Resource->SetName(name);
+        pResource->SetName(name);
     }
 }

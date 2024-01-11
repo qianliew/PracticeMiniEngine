@@ -94,7 +94,7 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
         ShaderTable rayGenShaderTable(numShaderRecords, shaderRecordSize);
         rayGenShaderTable.CreateBuffer(pDevice->GetDevice().Get());
         rayGenShaderTable.PushBack(ShaderRecord(rayGenShaderIdentifier, shaderIdentifierSize));
-        pRayGenShaderTable = rayGenShaderTable.ResourceLocation.Resource;
+        pRayGenShaderTable = rayGenShaderTable.GetResource();
     }
 
     // Miss shader table
@@ -104,7 +104,7 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
         ShaderTable missShaderTable(numShaderRecords, shaderRecordSize);
         missShaderTable.CreateBuffer(pDevice->GetDevice().Get());
         missShaderTable.PushBack(ShaderRecord(missShaderIdentifier, shaderIdentifierSize));
-        pMissShaderTable = missShaderTable.ResourceLocation.Resource;
+        pMissShaderTable = missShaderTable.GetResource();
     }
 
     // Hit group shader table
@@ -114,7 +114,7 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
         ShaderTable hitGroupShaderTable(numShaderRecords, shaderRecordSize);
         hitGroupShaderTable.CreateBuffer(pDevice->GetDevice().Get());
         hitGroupShaderTable.PushBack(ShaderRecord(hitGroupShaderIdentifier, shaderIdentifierSize));
-        pHitGroupShaderTable = hitGroupShaderTable.ResourceLocation.Resource;
+        pHitGroupShaderTable = hitGroupShaderTable.GetResource();
     }
 }
 

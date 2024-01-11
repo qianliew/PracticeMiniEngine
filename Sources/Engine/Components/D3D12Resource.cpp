@@ -15,5 +15,5 @@ D3D12Resource::~D3D12Resource()
 
 void D3D12Resource::SetResourceLoaction(const ComPtr<ID3D12Resource>& resource)
 {
-	resourceLocation.Resource = resource;
+	pResource = resource;
 }

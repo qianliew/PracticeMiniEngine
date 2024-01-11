@@ -86,7 +86,7 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
     pIndexBuffer = new D3D12ShaderResourceBuffer(resourceDesc, srvDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(pIndexBuffer);
     pCommandList->CopyBufferRegion(pIndexBuffer->GetResource().Get(),
-        pTempIndexBuffer->ResourceLocation.Resource.Get(),
+        pTempIndexBuffer->GetResource().Get(),
         pTempIndexBuffer->GetBufferUsage());
 
     resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempVertexBuffer->GetBufferSize());
@@ -94,7 +94,7 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
     pVertexBuffer = new D3D12ShaderResourceBuffer(resourceDesc, srvDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(pVertexBuffer);
     pCommandList->CopyBufferRegion(pVertexBuffer->GetResource().Get(),
-        pTempVertexBuffer->ResourceLocation.Resource.Get(),
+        pTempVertexBuffer->GetResource().Get(),
         pTempVertexBuffer->GetBufferUsage());
 
     resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempOffsetBuffer->GetBufferSize());
@@ -102,7 +102,7 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
     pOffsetBuffer = new D3D12ShaderResourceBuffer(resourceDesc, srvDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(pOffsetBuffer);
     pCommandList->CopyBufferRegion(pOffsetBuffer->GetResource().Get(),
-        pTempOffsetBuffer->ResourceLocation.Resource.Get(),
+        pTempOffsetBuffer->GetResource().Get(),
         pTempOffsetBuffer->GetBufferUsage());
 
     BuildBottomLevelAS(pCommandList, GeometryType::Triangle);
@@ -202,7 +202,7 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
     pCommandList->FlushResourceBarriers();
     pCommandList->CopyResource(
         pCommandBuffer->GetResource().Get(),
-        pTempCommandBuffer->ResourceLocation.Resource.Get());
+        pTempCommandBuffer->GetResource().Get());
     pCommandList->AddTransitionResourceBarriers(pCommandBuffer->GetResource().Get(),
         D3D12_RESOURCE_STATE_COPY_DEST, pCommandBuffer->GetResourceState());
     pCommandList->FlushResourceBarriers();
@@ -232,7 +232,7 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
     pCommandList->FlushResourceBarriers();
     pCommandList->CopyBufferRegion(
         pArgumentBuffer->GetResource().Get(),
-        pCountBuffer->ResourceLocation.Resource.Get(),
+        pCountBuffer->GetResource().Get(),
         sizeof(UINT),
         argumentBufferSize);
     pCommandList->AddTransitionResourceBarriers(pArgumentBuffer->GetResource().Get(),
@@ -382,7 +382,7 @@ void SceneManager::ReadbackFrustumCullingData(D3D12CommandList* pCommandList)
         pFrustumCullingData->GetResourceState(), D3D12_RESOURCE_STATE_COPY_SOURCE);
     pCommandList->FlushResourceBarriers();
     pCommandList->CopyResource(
-        pReadbackBuffer->ResourceLocation.Resource.Get(),
+        pReadbackBuffer->GetResource().Get(),
         pFrustumCullingData->GetResource().Get());
     pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
         D3D12_RESOURCE_STATE_COPY_SOURCE, pFrustumCullingData->GetResourceState());
@@ -479,10 +479,10 @@ void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList* pComma
 
     object->GetMesh()->CreateView();
     pCommandList->CopyBufferRegion(object->GetMesh()->GetVertexBuffer()->GetResource().Get(),
-        tempVertexBuffer->ResourceLocation.Resource.Get(),
+        tempVertexBuffer->GetResource().Get(),
         object->GetMesh()->GetVerticesSize());
     pCommandList->CopyBufferRegion(object->GetMesh()->GetIndexBuffer()->GetResource().Get(),
-        tempIndexBuffer->ResourceLocation.Resource.Get(),
+        tempIndexBuffer->GetResource().Get(),
         object->GetMesh()->GetIndicesSize());
 
     // Setup transition barriers.
@@ -506,9 +506,9 @@ void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList* pCo
     geometryDesc.Triangles.IndexCount = object->GetMesh()->GetIndicesNum();
     geometryDesc.Triangles.VertexCount = object->GetMesh()->GetVerticesNum();
     geometryDesc.Triangles.IndexBuffer =
-        pTempIndexBuffer->ResourceLocation.Resource->GetGPUVirtualAddress() + pTempIndexBuffer->GetBufferUsage();
+        pTempIndexBuffer->GetResource()->GetGPUVirtualAddress() + pTempIndexBuffer->GetBufferUsage();
     geometryDesc.Triangles.VertexBuffer.StartAddress =
-        pTempVertexBuffer->ResourceLocation.Resource->GetGPUVirtualAddress() + pTempVertexBuffer->GetBufferUsage();
+        pTempVertexBuffer->GetResource()->GetGPUVirtualAddress() + pTempVertexBuffer->GetBufferUsage();
     geometryDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(Vertex);
     blas[GeometryType::Triangle].geometryDescs.push_back(geometryDesc);
 
@@ -535,7 +535,7 @@ void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList* pCo
     geometryDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
     geometryDesc.AABBs.AABBCount = 1;
     geometryDesc.AABBs.AABBs.StartAddress =
-        pTempBoundingBoxBuffer->ResourceLocation.Resource->GetGPUVirtualAddress() + pTempBoundingBoxBuffer->GetBufferUsage();
+        pTempBoundingBoxBuffer->GetResource()->GetGPUVirtualAddress() + pTempBoundingBoxBuffer->GetBufferUsage();
     geometryDesc.AABBs.AABBs.StrideInBytes = sizeof(D3D12_RAYTRACING_AABB);
     blas[GeometryType::AABB].geometryDescs.push_back(geometryDesc);
 
@@ -569,8 +569,9 @@ void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList* pCommandList, D
         pDevice->GetBufferManager()->AllocateTempUploadBuffer(tempBuffer, totalBytes);
 
         // Update texture data from upload buffer to gpu buffer.
-        pCommandList->CopyTextureBuffer(texture->GetTextureBuffer()->GetResource().Get(),
-            tempBuffer->ResourceLocation.Resource.Get(), 0, i, 1, &textureData);
+        pCommandList->CopyTextureBuffer(
+            texture->GetTextureBuffer()->GetResource().Get(),
+            tempBuffer->GetResource().Get(), 0, i, 1, &textureData);
     }
 
     pCommandList->AddTransitionResourceBarriers(texture->GetTextureBuffer()->GetResource().Get(),
@@ -653,7 +654,7 @@ void SceneManager::BuildTopLevelAS(D3D12CommandList* pCommandList, UINT index)
     topLevelInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
     topLevelInputs.NumDescs =  1;
     topLevelInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
-    topLevelInputs.InstanceDescs = pInstanceDescBuffer->ResourceLocation.Resource->GetGPUVirtualAddress();
+    topLevelInputs.InstanceDescs = pInstanceDescBuffer->GetResource()->GetGPUVirtualAddress();
 
     D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO topLevelPrebuildInfo = {};
     pDevice->GetDXRDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&topLevelInputs, &topLevelPrebuildInfo);
@@ -706,7 +707,7 @@ void SceneManager::ResetVisData(D3D12CommandList* pCommandList)
     pCommandList->FlushResourceBarriers();
     pCommandList->CopyResource(
         pFrustumCullingData->GetResource().Get(),
-        pUploadBuffer->ResourceLocation.Resource.Get());
+        pUploadBuffer->GetResource().Get());
     pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
         D3D12_RESOURCE_STATE_COPY_DEST, pFrustumCullingData->GetResourceState());
     pCommandList->FlushResourceBarriers();

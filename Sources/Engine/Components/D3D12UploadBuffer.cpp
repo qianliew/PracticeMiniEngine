@@ -9,9 +9,9 @@ D3D12UploadBuffer::D3D12UploadBuffer() :
 
 D3D12UploadBuffer::~D3D12UploadBuffer()
 {
-	if (ResourceLocation.Resource != nullptr)
+	if (pResource != nullptr)
 	{
-		ResourceLocation.Resource->Unmap(0, nullptr);
+		pResource->Unmap(0, nullptr);
 	}
 }
 
@@ -30,30 +30,30 @@ void D3D12UploadBuffer::CreateBuffer(
 		&resourceDesc,
 		state,
 		nullptr,
-		IID_PPV_ARGS(ResourceLocation.Resource.GetAddressOf())));
+		IID_PPV_ARGS(pResource.GetAddressOf())));
 
 	CD3DX12_RANGE readRange(0, 0);
-	ThrowIfFailed(ResourceLocation.Resource->Map(0, &readRange, reinterpret_cast<void**>(&startLocation)));
+	ThrowIfFailed(pResource->Map(0, &readRange, reinterpret_cast<void**>(&pLocation)));
 
 	if (name)
 	{
-		ResourceLocation.Resource->SetName(name);
+		pResource->SetName(name);
 	}
 }
 
 void D3D12UploadBuffer::CopyData(void const* source, UINT64 size)
 {
-	memcpy(startLocation, source, size);
+	memcpy(pLocation, source, size);
 	bufferUsage += size;
 }
 
 void D3D12UploadBuffer::CopyData(void const* source, UINT64 size, UINT64 offset)
 {
-	memcpy((BYTE*)startLocation + offset, source, size);
+	memcpy((BYTE*)pLocation + offset, source, size);
 	bufferUsage += size;
 }
 
 void D3D12UploadBuffer::ZeroData(UINT64 size)
 {
-	memset((BYTE*)startLocation, 0, size);
+	memset((BYTE*)pLocation, 0, size);
 }

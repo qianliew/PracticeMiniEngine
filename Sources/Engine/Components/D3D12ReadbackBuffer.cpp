@@ -16,23 +16,23 @@ void D3D12ReadbackBuffer::CreateBuffer(
         &resourceDesc,
         state,
         nullptr,
-        IID_PPV_ARGS(ResourceLocation.Resource.GetAddressOf())));
+        IID_PPV_ARGS(pResource.GetAddressOf())));
 
     CD3DX12_RANGE readRange(0, 0);
-    ThrowIfFailed(ResourceLocation.Resource->Map(0, &readRange, reinterpret_cast<void**>(&startLocation)));
+    ThrowIfFailed(pResource->Map(0, &readRange, reinterpret_cast<void**>(&pLocation)));
 
     if (name)
     {
-        ResourceLocation.Resource->SetName(name);
+        pResource->SetName(name);
     }
 }
 
 void D3D12ReadbackBuffer::ReadbackData(void* destination)
 {
-    memcpy(destination, startLocation, bufferSize / 8);
+    memcpy(destination, pLocation, bufferSize / 8);
 }
 
 void D3D12ReadbackBuffer::ReadbackData(void* destination, UINT size)
 {
-    memcpy(destination, startLocation, size);
+    memcpy(destination, pLocation, size);
 }
