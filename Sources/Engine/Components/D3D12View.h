@@ -12,7 +12,7 @@ public:
 	}
 
 	virtual void SetResource(ID3D12Resource* pResource) = 0;
-	virtual void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) = 0;
+	virtual void CreateView(const ComPtr<ID3D12Device>& pDevice, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) = 0;
 };
 
 template<typename TParent, typename TDesc>
@@ -42,7 +42,7 @@ public:
 
 	}
 
-	void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
+	void CreateView(const ComPtr<ID3D12Device>& pDevice, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
 };
 
 class D3D12SRV final : public TD3D12View<D3D12SRV, D3D12_SHADER_RESOURCE_VIEW_DESC>
@@ -54,7 +54,7 @@ public:
 
 	}
 
-	void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
+	void CreateView(const ComPtr<ID3D12Device>& pDevice, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
 };
 
 class D3D12RTV final : public TD3D12View<D3D12RTV, D3D12_RENDER_TARGET_VIEW_DESC>
@@ -66,7 +66,7 @@ public:
 
 	}
 
-	void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
+	void CreateView(const ComPtr<ID3D12Device>& pDevice, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
 };
 
 class D3D12DSV final : public TD3D12View<D3D12DSV, D3D12_DEPTH_STENCIL_VIEW_DESC>
@@ -78,7 +78,7 @@ public:
 
 	}
 
-	void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
+	void CreateView(const ComPtr<ID3D12Device>& pDevice, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
 };
 
 class D3D12UAV final : public TD3D12View<D3D12UAV, D3D12_UNORDERED_ACCESS_VIEW_DESC>
@@ -90,5 +90,6 @@ public:
 
 	}
 
-	void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
+	void CreateView(const ComPtr<ID3D12Device>& pDevice, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
+	void CreateViewWithCounterResource(const ComPtr<ID3D12Device>& pDevice, const D3D12_CPU_DESCRIPTOR_HANDLE& handle);
 };

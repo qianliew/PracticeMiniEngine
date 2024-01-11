@@ -29,8 +29,8 @@ enum class eDXRRootIndex
     Sampler,
     ConstantBufferViewGlobal,
     UnorderedAccessViewGlobal,
+    UnorderedAccessViewArgumentBuffer,
     UnorderedAccessViewVisData,
-    UnorderedAccessViewCommandBuffer,
     Count,
 };
 

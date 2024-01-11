@@ -43,9 +43,13 @@ private:
 	D3D12ReadbackBuffer* pReadbackBuffer;
 	UINT visData[GlobalConstants::kVisDataSize];
 
+	const UINT64 commandBufferSize = GlobalConstants::kVisDataSize * sizeof(IndirectCommand);
+	const UINT64 alignment = D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT;
+	const UINT64 argumentBufferSize = (commandBufferSize + (alignment - 1)) & ~(alignment - 1);
+
 	std::shared_ptr<D3D12ShaderResourceBuffer> pCommandBuffer;
 	D3D12UploadBuffer* pTempCommandBuffer;
-	std::shared_ptr<D3D12UnorderedAccessBuffer> pProcessedCommandBuffer;
+	std::shared_ptr<D3D12UnorderedAccessBuffer> pArgumentBuffer;
 	D3D12UploadBuffer* pCountBuffer;
 	ComPtr<ID3D12CommandSignature> pCommandSignature;
 
@@ -86,6 +90,7 @@ public:
 	void CreateCamera(UINT width, UINT height);
 	void AddObject(Model* object);
 	void DrawObjects(D3D12CommandList*);
+	void DrawObjectsIndirectly(D3D12CommandList*);
 	void DrawSkybox(D3D12CommandList*);
 	void DrawFullScreenMesh(D3D12CommandList*);
 	void SetFrustumCullingResources(D3D12CommandList*);

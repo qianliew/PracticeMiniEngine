@@ -80,3 +80,10 @@ void D3D12UnorderedAccessBuffer::CreateView(const ComPtr<ID3D12Device>& device, 
     view->SetResource(resourceLocation.Resource.Get());
     view->CreateView(device, handle);
 }
+
+void D3D12UnorderedAccessBuffer::CreateViewWithCounterResource(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle)
+{
+    view = new D3D12UAV(viewDesc);
+    view->SetResource(resourceLocation.Resource.Get());
+    view->CreateViewWithCounterResource(device, handle);
+}

@@ -25,3 +25,8 @@ void D3D12UAV::CreateView(const ComPtr<ID3D12Device>& pDevice, const D3D12_CPU_D
 {
     pDevice->CreateUnorderedAccessView(pResource, nullptr, &Desc, handle);
 }
+
+void D3D12UAV::CreateViewWithCounterResource(const ComPtr<ID3D12Device>& pDevice, const D3D12_CPU_DESCRIPTOR_HANDLE& handle)
+{
+    pDevice->CreateUnorderedAccessView(pResource, pResource, &Desc, handle);
+}

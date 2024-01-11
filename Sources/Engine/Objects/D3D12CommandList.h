@@ -76,7 +76,8 @@ public:
         pCommandList->RSSetScissorRects(NumViewports, pViewports);
     }
 
-    inline void SetRenderTargets(UINT NumRenderTargetDescriptors,
+    inline void SetRenderTargets(
+        UINT NumRenderTargetDescriptors,
         const D3D12_CPU_DESCRIPTOR_HANDLE* pRenderTargetDescriptors,
         const D3D12_CPU_DESCRIPTOR_HANDLE* pDepthStencilDescriptor)
     {
@@ -111,6 +112,18 @@ public:
     inline void DrawIndexedInstanced(UINT IndexCountPerInstance)
     {
         pCommandList->DrawIndexedInstanced(IndexCountPerInstance, 1, 0, 0, 0);
+    }
+
+    inline void ExecuteIndirect(
+        ID3D12CommandSignature* pCommandSignature,
+        UINT MaxCommandCount,
+        ID3D12Resource* pArgumentBuffer,
+        UINT64 ArgumentBufferOffset,
+        ID3D12Resource* pCountBuffer,
+        UINT64 CountBufferOffset)
+    {
+        pCommandList->ExecuteIndirect(pCommandSignature, MaxCommandCount, pArgumentBuffer,
+            ArgumentBufferOffset, pCountBuffer, CountBufferOffset);
     }
 
     inline void DispatchThreads(UINT ThreadGroupCountX, UINT ThreadGroupCountY, UINT ThreadGroupCountZ)

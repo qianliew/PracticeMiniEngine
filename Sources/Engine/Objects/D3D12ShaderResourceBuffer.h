@@ -42,4 +42,5 @@ public:
 	~D3D12UnorderedAccessBuffer();
 
 	virtual void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
+	void CreateViewWithCounterResource(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle);
 };
