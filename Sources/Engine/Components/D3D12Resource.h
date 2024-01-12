@@ -5,23 +5,19 @@
 class D3D12Resource
 {
 protected:
-	D3D12_RESOURCE_STATES resourceState;
-	ComPtr<ID3D12Resource> pResource;
-	const D3D12_RESOURCE_DESC resourceDesc;
+	D3D12Buffer* pBuffer;
 
 public:
-	D3D12Resource() = delete;
-	D3D12Resource(const D3D12_RESOURCE_DESC&);
+	D3D12Resource();
 	virtual ~D3D12Resource();
 
-	void SetResourceLoaction(const ComPtr<ID3D12Resource>&);
-	// TODO: Check nullptr.
+	void SetBuffer(D3D12Buffer* buffer);
 	virtual void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) = 0;
 
-	inline const D3D12_RESOURCE_DESC& GetResourceDesc() const { return resourceDesc; }
-	inline const ComPtr<ID3D12Resource>& GetResource() const { return pResource; }
-	inline const D3D12_RESOURCE_STATES GetResourceState() const { return resourceState; }
-	inline void SetResourceState(D3D12_RESOURCE_STATES state) { resourceState = state; }
+	inline const D3D12_RESOURCE_DESC& GetResourceDesc() const { return pBuffer->GetResourceDesc(); }
+	inline const ComPtr<ID3D12Resource>& GetResource() const { return pBuffer->GetResource(); }
+	inline const D3D12_RESOURCE_STATES GetResourceState() const { return pBuffer->ResourceState; }
+	inline void SetResourceState(D3D12_RESOURCE_STATES state) { pBuffer->ResourceState = state; }
 };
 
 template<typename TView, typename TViewDesc>
