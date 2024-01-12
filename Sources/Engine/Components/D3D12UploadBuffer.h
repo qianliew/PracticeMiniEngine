@@ -6,16 +6,12 @@ class D3D12CBV;
 
 class D3D12UploadBuffer : public D3D12Buffer
 {
-private:
-
 public:
-	D3D12UploadBuffer();
-	~D3D12UploadBuffer();
+	D3D12UploadBuffer(const D3D12_RESOURCE_DESC& desc);
+	virtual ~D3D12UploadBuffer();
 
 	virtual void CreateBuffer(
 		ID3D12Device* device,
-		UINT64 size,
-		D3D12_RESOURCE_STATES state,
 		const wchar_t* name);
 
 	void CopyData(void const* source, UINT64 size);

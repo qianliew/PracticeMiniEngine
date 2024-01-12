@@ -47,6 +47,7 @@ public:
 		const wchar_t* name = nullptr);
 	void AllocateDefaultBuffer(
 		D3D12Resource* pResource,
+		const D3D12_RESOURCE_DESC& desc,
 		D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COPY_DEST,
 		const wchar_t* name = nullptr,
 		const D3D12_CLEAR_VALUE* clearValue = nullptr);

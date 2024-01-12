@@ -12,6 +12,8 @@ protected:
 
 public:
 	D3D12Buffer() = delete;
+	D3D12Buffer(const D3D12Buffer&) = delete;
+	D3D12Buffer& operator= (const D3D12Buffer&) = delete;
 	D3D12Buffer(const D3D12_RESOURCE_DESC& desc);
 	virtual ~D3D12Buffer();
 
