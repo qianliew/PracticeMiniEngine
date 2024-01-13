@@ -14,13 +14,17 @@ D3D12ReadbackBuffer::~D3D12ReadbackBuffer()
 
 void D3D12ReadbackBuffer::CreateBuffer(
     ID3D12Device* device,
-    const wchar_t* name)
+    const wchar_t* name,
+    const D3D12_CLEAR_VALUE* clearValue,
+    const D3D12_RESOURCE_STATES state)
 {
+    resourceState = state;
+
     ThrowIfFailed(device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK),
         D3D12_HEAP_FLAG_NONE,
         &resourceDesc,
-        ResourceState,
+        resourceState,
         nullptr,
         IID_PPV_ARGS(pResource.GetAddressOf())));
 

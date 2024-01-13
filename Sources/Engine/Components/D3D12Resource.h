@@ -16,8 +16,6 @@ public:
 
 	inline const D3D12_RESOURCE_DESC& GetResourceDesc() const { return pBuffer->GetResourceDesc(); }
 	inline const ComPtr<ID3D12Resource>& GetResource() const { return pBuffer->GetResource(); }
-	inline const D3D12_RESOURCE_STATES GetResourceState() const { return pBuffer->ResourceState; }
-	inline void SetResourceState(D3D12_RESOURCE_STATES state) { pBuffer->ResourceState = state; }
 };
 
 template<typename TView, typename TViewDesc>

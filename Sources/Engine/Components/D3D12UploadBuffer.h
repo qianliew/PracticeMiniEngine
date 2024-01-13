@@ -12,7 +12,9 @@ public:
 
 	virtual void CreateBuffer(
 		ID3D12Device* device,
-		const wchar_t* name);
+		const wchar_t* name,
+		const D3D12_CLEAR_VALUE* clearValue,
+		const D3D12_RESOURCE_STATES state) override;
 
 	void CopyData(void const* source, UINT64 size);
 	void CopyData(void const* source, UINT64 size, UINT64 offset);

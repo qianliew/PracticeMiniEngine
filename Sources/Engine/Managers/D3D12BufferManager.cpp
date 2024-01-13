@@ -61,6 +61,7 @@ D3D12BufferManager::~D3D12BufferManager()
 void D3D12BufferManager::AllocateTempUploadBuffer(
     D3D12UploadBuffer* pBuffer,
     UINT64 size,
+    const D3D12_RESOURCE_STATES state,
     const wchar_t* name)
 {
     D3D12UploadBuffer** ppBuffer = tempUploadBufferPool;
@@ -73,7 +74,7 @@ void D3D12BufferManager::AllocateTempUploadBuffer(
         }
 
         *ppBuffer = pBuffer;
-        pBuffer->CreateBuffer(pDevice.Get(), name);
+        pBuffer->CreateBuffer(pDevice.Get(), name, nullptr, state);
         break;
     }
 }
@@ -93,7 +94,7 @@ void D3D12BufferManager::ReleaseTempUploadBuffer()
 void D3D12BufferManager::AllocateUploadBuffer(
     D3D12UploadBuffer* pBuffer,
     UINT64 size,
-    D3D12_RESOURCE_STATES state,
+    const D3D12_RESOURCE_STATES state,
     const wchar_t* name)
 {
     D3D12UploadBuffer** ppBuffer = uploadBufferPool;
@@ -106,7 +107,7 @@ void D3D12BufferManager::AllocateUploadBuffer(
         }
 
         *ppBuffer = pBuffer;
-        pBuffer->CreateBuffer(pDevice.Get(), name);
+        pBuffer->CreateBuffer(pDevice.Get(), name, nullptr, state);
         break;
     }
 }
@@ -114,6 +115,7 @@ void D3D12BufferManager::AllocateUploadBuffer(
 void D3D12BufferManager::AllocateReadbackBuffer(
     D3D12ReadbackBuffer* pBuffer,
     UINT64 size,
+    const D3D12_RESOURCE_STATES state,
     const wchar_t* name)
 {
     D3D12ReadbackBuffer** ppBuffer = readbackBufferPool;
@@ -126,7 +128,7 @@ void D3D12BufferManager::AllocateReadbackBuffer(
         }
 
         *ppBuffer = pBuffer;
-        pBuffer->CreateBuffer(pDevice.Get(), name);
+        pBuffer->CreateBuffer(pDevice.Get(), name, nullptr, state);
         break;
     }
 }
@@ -134,7 +136,7 @@ void D3D12BufferManager::AllocateReadbackBuffer(
 void D3D12BufferManager::AllocateDefaultBuffer(
     D3D12Resource* pResource,
     const D3D12_RESOURCE_DESC& desc,
-    D3D12_RESOURCE_STATES state,
+    const D3D12_RESOURCE_STATES state,
     const wchar_t* name,
     const D3D12_CLEAR_VALUE* clearValue)
 {
@@ -142,9 +144,8 @@ void D3D12BufferManager::AllocateDefaultBuffer(
         || defaultBufferPool.find(pResource) == defaultBufferPool.end())
     {
         D3D12DefaultBuffer* pbuffer = new D3D12DefaultBuffer(desc);
+        pbuffer->CreateBuffer(pDevice.Get(), name, clearValue, state);
         pResource->SetBuffer(pbuffer);
-        pResource->SetResourceState(state);
-        pbuffer->CreateBuffer(pDevice.Get(), name, clearValue);
         defaultBufferPool.insert(std::make_pair(pResource, pbuffer));
     }
 }

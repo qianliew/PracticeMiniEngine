@@ -9,5 +9,6 @@ public:
 	void CreateBuffer(
 		ID3D12Device* device,
 		const wchar_t* name,
-		const D3D12_CLEAR_VALUE* clearValue);
+		const D3D12_CLEAR_VALUE* clearValue,
+		const D3D12_RESOURCE_STATES state) override;
 };
