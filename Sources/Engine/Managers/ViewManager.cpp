@@ -48,14 +48,14 @@ ViewManager::ViewManager(std::shared_ptr<D3D12Device>& device, UINT inWidth, UIN
     }
 
     // Create a render target for the color buffer.
-    colorHandles[0] = CreateRenderTarget(DXGI_FORMAT_R8G8B8A8_UNORM);
-    colorHandles[1] = CreateRenderTarget(DXGI_FORMAT_R8G8B8A8_UNORM);
+    colorHandles[0] = CreateRenderTargetView(DXGI_FORMAT_R8G8B8A8_UNORM);
+    colorHandles[1] = CreateRenderTargetView(DXGI_FORMAT_R8G8B8A8_UNORM);
     useFirstHandle = TRUE;
 
     // Create render targets for the GBuffer.
     for (UINT i = 0; i < GetGBufferCount(); i++)
     {
-        gBufferHandle[i] = CreateRenderTarget(DXGI_FORMAT_R16G16B16A16_FLOAT);
+        gBufferHandle[i] = CreateRenderTargetView(DXGI_FORMAT_R16G16B16A16_FLOAT);
     }
 
     dsvHandle = CreateDepthStencilView();
@@ -82,11 +82,11 @@ void ViewManager::UpdateFrameIndex()
     sFrameCount++;
 }
 
-UINT ViewManager::CreateRenderTarget(DXGI_FORMAT format)
+UINT ViewManager::CreateRenderTargetView(DXGI_FORMAT format)
 {
-    D3D12Texture* pRenderTarget = new D3D12Texture(globalSRVID++, rtvID++, width, height,
+    D3D12Texture* pRTV = new D3D12Texture(globalSRVID++, rtvID++, width, height,
         D3D12TextureType::RenderTarget, format);
-    pRenderTarget->CreateTextureResource();
+    pRTV->CreateTextureResource();
 
     D3D12_CLEAR_VALUE renderTargetClearValue = {};
     renderTargetClearValue.Color[0] = 0.0f;
@@ -95,16 +95,17 @@ UINT ViewManager::CreateRenderTarget(DXGI_FORMAT format)
     renderTargetClearValue.Color[3] = 1.0f;
     renderTargetClearValue.Format = format;
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
-        pRenderTarget->GetTextureBuffer(),
+        pRTV->GetTextureBuffer(),
+        pRTV->GetResourceDesc(),
         D3D12_RESOURCE_STATE_RENDER_TARGET,
         L"RenderTargetView",
         &renderTargetClearValue);
 
-    const UINT rtvHandle = pRenderTarget->GetRTVHandle();
-    pRenderTarget->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
+    const UINT rtvHandle = pRTV->GetRTVHandle();
+    pRTV->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(RENDER_TARGET_VIEW, rtvHandle));
 
-    pRenderTargetViews[rtvHandle] = pRenderTarget;
+    pRenderTargetViews[rtvHandle] = pRTV;
 
     return rtvHandle;
 }
@@ -112,25 +113,26 @@ UINT ViewManager::CreateRenderTarget(DXGI_FORMAT format)
 // Create a depth stencil buffer.
 UINT ViewManager::CreateDepthStencilView()
 {
-    D3D12Texture* pDepthStencil = new D3D12Texture(globalSRVID++, dsvID++, width, height,
+    D3D12Texture* pDSV = new D3D12Texture(globalSRVID++, dsvID++, width, height,
         D3D12TextureType::DepthStencil, DXGI_FORMAT_R32_TYPELESS);
-    pDepthStencil->CreateTextureResource();
+    pDSV->CreateTextureResource();
 
     D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
     depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
     depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
     depthOptimizedClearValue.DepthStencil.Stencil = 0;
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
-        pDepthStencil->GetTextureBuffer(),
+        pDSV->GetTextureBuffer(),
+        pDSV->GetResourceDesc(),
         D3D12_RESOURCE_STATE_DEPTH_WRITE,
         L"DepthStencilView",
         &depthOptimizedClearValue);
 
-    const UINT dsvHandle = pDepthStencil->GetDSVHandle();
-    pDepthStencil->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
+    const UINT dsvHandle = pDSV->GetDSVHandle();
+    pDSV->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(DEPTH_STENCIL_VIEW, dsvHandle));
 
-    pDepthStencilViews[dsvHandle] = pDepthStencil;
+    pDepthStencilViews[dsvHandle] = pDSV;
     return dsvHandle;
 }
 
@@ -142,6 +144,7 @@ UINT ViewManager::CreateUnorderedAccessView()
 
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         pUAV->GetTextureBuffer(),
+        pUAV->GetResourceDesc(),
         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
         nullptr);
 

@@ -27,6 +27,8 @@ public:
     void SetIndices(UINT16* triangleIndices, UINT size);
     void CopyVertices(void* destination);
     void CopyIndices(void* destination);
+    const D3D12_RESOURCE_DESC GetVertexResourceDesc();
+    const D3D12_RESOURCE_DESC GetIndexResourceDesc();
     void CreateView();
 
     inline const UINT GetVerticesSize() const { return verticesSize; }

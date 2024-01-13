@@ -84,24 +84,39 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
     D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempIndexBuffer->GetBufferSize());
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     pIndexBuffer = new D3D12ShaderResourceBuffer(resourceDesc, srvDesc);
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(pIndexBuffer);
-    pCommandList->CopyBufferRegion(pIndexBuffer->GetResource().Get(),
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(
+        pIndexBuffer,
+        resourceDesc,
+        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+        L"IndexBuffer");
+    pCommandList->CopyBufferRegion(
+        pIndexBuffer->GetResource().Get(),
         pTempIndexBuffer->GetResource().Get(),
         pTempIndexBuffer->GetBufferUsage());
 
     resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempVertexBuffer->GetBufferSize());
     srvDesc = {};
     pVertexBuffer = new D3D12ShaderResourceBuffer(resourceDesc, srvDesc);
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(pVertexBuffer);
-    pCommandList->CopyBufferRegion(pVertexBuffer->GetResource().Get(),
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(
+        pVertexBuffer,
+        resourceDesc,
+        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+        L"VertexBuffer");
+    pCommandList->CopyBufferRegion(
+        pVertexBuffer->GetResource().Get(),
         pTempVertexBuffer->GetResource().Get(),
         pTempVertexBuffer->GetBufferUsage());
 
     resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempOffsetBuffer->GetBufferSize());
     srvDesc = {};
     pOffsetBuffer = new D3D12ShaderResourceBuffer(resourceDesc, srvDesc);
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(pOffsetBuffer);
-    pCommandList->CopyBufferRegion(pOffsetBuffer->GetResource().Get(),
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(
+        pOffsetBuffer,
+        resourceDesc,
+        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+        L"OffsetBuffer");
+    pCommandList->CopyBufferRegion(
+        pOffsetBuffer->GetResource().Get(),
         pTempOffsetBuffer->GetResource().Get(),
         pTempOffsetBuffer->GetBufferUsage());
 
@@ -140,12 +155,14 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
         pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_GLOBAL, 0));
 
     // Create a UAV for keeping frustum culling data.
-    D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(GlobalConstants::kMaxNumObject);
-    desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+    D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(
+        GlobalConstants::kMaxNumObject,
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
-    pFrustumCullingData = new D3D12UnorderedAccessBuffer(desc, viewDesc);
+    pFrustumCullingData = new D3D12UnorderedAccessBuffer(resourceDesc, viewDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         pFrustumCullingData,
+        resourceDesc,
         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
         L"FrustumCullingData");
 
@@ -192,7 +209,11 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
     D3D12_SHADER_RESOURCE_VIEW_DESC commandBufferSRVDesc = {};
 
     pCommandBuffer = std::make_shared<D3D12ShaderResourceBuffer>(commandBufferDesc, commandBufferSRVDesc);
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(pCommandBuffer.get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(
+        pCommandBuffer.get(),
+        commandBufferDesc,
+        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+        L"CommandBuffer");
     pTempCommandBuffer = new D3D12UploadBuffer();
     pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempCommandBuffer, commandBufferSize);
     pTempCommandBuffer->CopyData(&commands.data()[0], commandBufferSize);
@@ -208,7 +229,9 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
     pCommandList->FlushResourceBarriers();
 
     // Create the processed command buffer
-    commandBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(argumentBufferSize + sizeof(UINT), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    D3D12_RESOURCE_DESC argumentBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(
+        argumentBufferSize + sizeof(UINT),
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     D3D12_UNORDERED_ACCESS_VIEW_DESC argumentBufferUAVDesc = {};
     argumentBufferUAVDesc.Format = DXGI_FORMAT_UNKNOWN;
     argumentBufferUAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
@@ -218,8 +241,12 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
     argumentBufferUAVDesc.Buffer.CounterOffsetInBytes = argumentBufferSize;
     argumentBufferUAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
-    pArgumentBuffer = std::make_shared<D3D12UnorderedAccessBuffer>(commandBufferDesc, argumentBufferUAVDesc);
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(pArgumentBuffer.get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    pArgumentBuffer = std::make_shared<D3D12UnorderedAccessBuffer>(argumentBufferDesc, argumentBufferUAVDesc);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(
+        pArgumentBuffer.get(),
+        argumentBufferDesc,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        L"ArgumentBuffer");
     pArgumentBuffer->SetCounterResource();
     pArgumentBuffer->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, 1));
@@ -469,12 +496,18 @@ void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList* pComma
     // Create the vertex buffer and index buffer and their view.
     D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
     pDevice->GetBufferManager()->AllocateTempUploadBuffer(tempVertexBuffer, object->GetMesh()->GetVerticesSize());
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(object->GetMesh()->GetVertexBuffer());
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(
+        object->GetMesh()->GetVertexBuffer(),
+        object->GetMesh()->GetVertexResourceDesc(),
+        D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
     tempVertexBuffer->CopyData(object->GetMesh()->GetVerticesData(), object->GetMesh()->GetVerticesSize());
 
     D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer();
     pDevice->GetBufferManager()->AllocateTempUploadBuffer(tempIndexBuffer, object->GetMesh()->GetIndicesSize());
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(object->GetMesh()->GetIndexBuffer());
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(
+        object->GetMesh()->GetIndexBuffer(),
+        object->GetMesh()->GetIndexResourceDesc(),
+        D3D12_RESOURCE_STATE_INDEX_BUFFER);
     tempIndexBuffer->CopyData(object->GetMesh()->GetIndicesData(), object->GetMesh()->GetIndicesSize());
 
     object->GetMesh()->CreateView();
@@ -550,7 +583,10 @@ void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList* pCommandList, D
     UINT id = texture->GetTextureID();
 
     // Create the texture buffer.
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(texture->GetTextureBuffer());
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(
+        texture->GetTextureBuffer(),
+        texture->GetResourceDesc(),
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     texture->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_PEROBJECT, id));
 
@@ -606,6 +642,7 @@ void SceneManager::BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index
     blas[index].pScratchResource = std::make_shared<D3D12UnorderedAccessBuffer>(resourceDesc, viewDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         blas[index].pScratchResource.get(),
+        resourceDesc,
         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
         L"ScratchResource");
 
@@ -615,6 +652,7 @@ void SceneManager::BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index
     blas[index].pBottomLevelAccelerationStructure = std::make_shared<D3D12UnorderedAccessBuffer>(resourceDesc, viewDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         blas[index].pBottomLevelAccelerationStructure.get(),
+        resourceDesc,
         D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
         L"BottomLevelAccelerationStructure");
 
@@ -667,6 +705,7 @@ void SceneManager::BuildTopLevelAS(D3D12CommandList* pCommandList, UINT index)
     tlas[index].pScratchResource = std::make_shared<D3D12UnorderedAccessBuffer>(resourceDesc, viewDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         tlas[index].pScratchResource.get(),
+        resourceDesc,
         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
         L"ScratchResource");
 
@@ -676,6 +715,7 @@ void SceneManager::BuildTopLevelAS(D3D12CommandList* pCommandList, UINT index)
     tlas[index].pTopLevelAccelerationStructure = std::make_shared<D3D12UnorderedAccessBuffer>(resourceDesc, viewDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         tlas[index].pTopLevelAccelerationStructure.get(),
+        resourceDesc,
         D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
         L"TopLevelAccelerationStructure");
 

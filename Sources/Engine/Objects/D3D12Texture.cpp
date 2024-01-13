@@ -86,23 +86,8 @@ void D3D12Texture::LoadTexture(std::wstring& texturePath, UINT inMipLevel,
 
 void D3D12Texture::CreateTextureResource()
 {
-    // Create texture desc.
-    D3D12_RESOURCE_DESC desc;
-    desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    desc.Alignment = 0;
-    desc.Width = width;
-    desc.Height = height;
-    desc.DepthOrArraySize = slice;
-    desc.MipLevels = mipLevel;
-    desc.SampleDesc.Count = 1;
-    desc.SampleDesc.Quality = 0;
-    desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-
     if (type == D3D12TextureType::ShaderResource)
     {
-        desc.Format = dxgiFormat;
-        desc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
         D3D12_SHADER_RESOURCE_VIEW_DESC viewDesc;
         viewDesc.Format = dxgiFormat == DXGI_FORMAT_R32_TYPELESS ? DXGI_FORMAT_R32_FLOAT : dxgiFormat;
         viewDesc.ViewDimension = srvDimension;
@@ -127,13 +112,6 @@ void D3D12Texture::CreateTextureResource()
     }
     else if (type == D3D12TextureType::RenderTarget)
     {
-        desc.Format = dxgiFormat;
-        desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-        desc.DepthOrArraySize = 1;
-        desc.MipLevels = 1;
-        desc.SampleDesc.Count = 1;
-        desc.SampleDesc.Quality = 0;
-
         D3D12_RENDER_TARGET_VIEW_DESC viewDesc;
         viewDesc.Format = dxgiFormat;
         viewDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
@@ -145,13 +123,6 @@ void D3D12Texture::CreateTextureResource()
     }
     else if (type == D3D12TextureType::DepthStencil)
     {
-        desc.Format = DXGI_FORMAT_D32_FLOAT;
-        desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-        desc.DepthOrArraySize = 1;
-        desc.MipLevels = 1;
-        desc.SampleDesc.Count = 1;
-        desc.SampleDesc.Quality = 0;
-
         D3D12_DEPTH_STENCIL_VIEW_DESC viewDesc;
         viewDesc.Format = DXGI_FORMAT_D32_FLOAT;
         viewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
@@ -163,13 +134,6 @@ void D3D12Texture::CreateTextureResource()
     }
     else if (type == D3D12TextureType::UnorderedAccess)
     {
-        desc.Format = dxgiFormat;
-        desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-        desc.DepthOrArraySize = 1;
-        desc.MipLevels = 1;
-        desc.SampleDesc.Count = 1;
-        desc.SampleDesc.Quality = 0;
-
         D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc;
         viewDesc.Format = dxgiFormat;
         viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
@@ -178,6 +142,47 @@ void D3D12Texture::CreateTextureResource()
 
         pTextureBuffer = new D3D12UnorderedAccessBuffer(desc, viewDesc);
         pTextureBuffer->SetResourceState(D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    }
+}
+
+const D3D12_RESOURCE_DESC D3D12Texture::GetResourceDesc()
+{
+    // Create the texture desc.
+    D3D12_RESOURCE_DESC resourceDesc = {};
+    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    resourceDesc.Alignment = 0;
+    resourceDesc.Width = width;
+    resourceDesc.Height = height;
+    resourceDesc.SampleDesc.Count = 1;
+    resourceDesc.SampleDesc.Quality = 0;
+    resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+
+    switch (type)
+    {
+    case D3D12TextureType::ShaderResource:
+        resourceDesc.DepthOrArraySize = slice;
+        resourceDesc.MipLevels = mipLevel;
+        resourceDesc.Format = dxgiFormat;
+        resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+        break;
+    case D3D12TextureType::RenderTarget:
+        resourceDesc.DepthOrArraySize = 1;
+        resourceDesc.MipLevels = 1;
+        resourceDesc.Format = dxgiFormat;
+        resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+        break;
+    case D3D12TextureType::DepthStencil:
+        resourceDesc.DepthOrArraySize = 1;
+        resourceDesc.MipLevels = 1;
+        resourceDesc.Format = DXGI_FORMAT_D32_FLOAT;
+        resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+        break;
+    case D3D12TextureType::UnorderedAccess:
+        resourceDesc.DepthOrArraySize = 1;
+        resourceDesc.MipLevels = 1;
+        resourceDesc.Format = dxgiFormat;
+        resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+        break;
     }
 }
 
