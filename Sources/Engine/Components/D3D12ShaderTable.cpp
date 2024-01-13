@@ -1,23 +1,23 @@
 #include "stdafx.h"
 #include "D3D12ShaderTable.h"
 
-ShaderTable::ShaderTable(UINT numShaderRecords, UINT inShaderRecordSize) :
-	shaderRecordSize(Align(inShaderRecordSize, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT))
+ShaderTable::ShaderTable(const D3D12_RESOURCE_DESC& desc, const UINT inShaderRecordSize, UINT numShaderRecords) :
+	shaderRecordSize(inShaderRecordSize),
+	D3D12UploadBuffer(desc)
 {
     shaderRecords.reserve(numShaderRecords);
-    bufferSize = numShaderRecords * shaderRecordSize;
 }
 
 void ShaderTable::CreateBuffer(
 	ID3D12Device* device,
-	UINT64 size,
-	D3D12_RESOURCE_STATES state,
-	const wchar_t* name)
+	const wchar_t* name,
+	const D3D12_CLEAR_VALUE* clearValue,
+	const D3D12_RESOURCE_STATES state)
 {
 	ThrowIfFailed(device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
+		&resourceDesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(pResource.GetAddressOf())));

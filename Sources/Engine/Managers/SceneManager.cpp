@@ -9,14 +9,16 @@ SceneManager::SceneManager(shared_ptr<D3D12Device>& device) :
     pDevice(device),
     objectID(0)
 {
-    pTempVertexBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempVertexBuffer, 1024 * 1024);
-    pTempIndexBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempIndexBuffer, 1024 * 1024);
-    pTempOffsetBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempOffsetBuffer, 1024);
-    pTempBoundingBoxBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempBoundingBoxBuffer, 1024);
+    const UINT64 size = 1024 * 1024;
+    D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(size);
+    pTempVertexBuffer = new D3D12UploadBuffer(resourceDesc);
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempVertexBuffer);
+    pTempIndexBuffer = new D3D12UploadBuffer(resourceDesc);
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempIndexBuffer);
+    pTempOffsetBuffer = new D3D12UploadBuffer(resourceDesc);
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempOffsetBuffer);
+    pTempBoundingBoxBuffer = new D3D12UploadBuffer(resourceDesc);
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempBoundingBoxBuffer);
 }
 
 SceneManager::~SceneManager()
@@ -167,13 +169,20 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
         L"FrustumCullingData");
 
     // Create a upload buffer to upload and reset the vis data.
-    pUploadBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(pUploadBuffer, desc.Width);
+    resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    pUploadBuffer = new D3D12UploadBuffer(resourceDesc);
+    pDevice->GetBufferManager()->AllocateUploadBuffer(
+        pUploadBuffer,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        L"FrustumCullingUploadBuffer");
     ResetVisData(pCommandList);
 
     // Create a readback buffer to read data back.
-    pReadbackBuffer = new D3D12ReadbackBuffer();
-    pDevice->GetBufferManager()->AllocateReadbackBuffer(pReadbackBuffer, desc.Width);
+    pReadbackBuffer = new D3D12ReadbackBuffer(resourceDesc);
+    pDevice->GetBufferManager()->AllocateReadbackBuffer(
+        pReadbackBuffer,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        L"FrustumCullingReadbackBuffer");
 
     // Create a command signature for indirect drawing.
     D3D12_INDIRECT_ARGUMENT_DESC argumentDescs[2] = {};
@@ -208,15 +217,16 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
     D3D12_RESOURCE_DESC commandBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(commandBufferSize);
     D3D12_SHADER_RESOURCE_VIEW_DESC commandBufferSRVDesc = {};
 
+    pTempCommandBuffer = new D3D12UploadBuffer(commandBufferDesc);
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempCommandBuffer);
+    pTempCommandBuffer->CopyData(&commands.data()[0], commandBufferSize);
+
     pCommandBuffer = std::make_shared<D3D12ShaderResourceBuffer>(commandBufferDesc, commandBufferSRVDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         pCommandBuffer.get(),
         commandBufferDesc,
         D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
         L"CommandBuffer");
-    pTempCommandBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempCommandBuffer, commandBufferSize);
-    pTempCommandBuffer->CopyData(&commands.data()[0], commandBufferSize);
 
     pCommandList->AddTransitionResourceBarriers(pCommandBuffer->GetResource().Get(),
         pCommandBuffer->GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
@@ -494,16 +504,18 @@ void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList* pComma
         pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_PEROBJECT, id));
 
     // Create the vertex buffer and index buffer and their view.
-    D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateTempUploadBuffer(tempVertexBuffer, object->GetMesh()->GetVerticesSize());
+    D3D12_RESOURCE_DESC resourceBuffer = CD3DX12_RESOURCE_DESC::Buffer(object->GetMesh()->GetVerticesSize());
+    D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer(resourceBuffer);
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(tempVertexBuffer);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         object->GetMesh()->GetVertexBuffer(),
         object->GetMesh()->GetVertexResourceDesc(),
         D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
     tempVertexBuffer->CopyData(object->GetMesh()->GetVerticesData(), object->GetMesh()->GetVerticesSize());
 
-    D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateTempUploadBuffer(tempIndexBuffer, object->GetMesh()->GetIndicesSize());
+    resourceBuffer = CD3DX12_RESOURCE_DESC::Buffer(object->GetMesh()->GetIndicesSize());
+    D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer(resourceBuffer);
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(tempIndexBuffer);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         object->GetMesh()->GetIndexBuffer(),
         object->GetMesh()->GetIndexResourceDesc(),
@@ -591,6 +603,7 @@ void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList* pCommandList, D
         pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_PEROBJECT, id));
 
     // Init texture data.
+    D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(0);
     for (UINT i = 0; i < texture->GetSubresourceNum(); i++)
     {
         D3D12_SUBRESOURCE_DATA textureData;
@@ -601,8 +614,9 @@ void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList* pCommandList, D
         textureData.RowPitch = rowSizeInBytes;
         textureData.SlicePitch = totalBytes;
 
-        D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer();
-        pDevice->GetBufferManager()->AllocateTempUploadBuffer(tempBuffer, totalBytes);
+        resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(totalBytes);
+        D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer(resourceDesc);
+        pDevice->GetBufferManager()->AllocateTempUploadBuffer(tempBuffer);
 
         // Update texture data from upload buffer to gpu buffer.
         pCommandList->CopyTextureBuffer(
@@ -674,8 +688,9 @@ void SceneManager::BuildTopLevelAS(D3D12CommandList* pCommandList, UINT index)
 {
     // Create instance descs for the bottom-level acceleration structure.
     const UINT64 instanceDescsSize = sizeof(D3D12_RAYTRACING_INSTANCE_DESC);
-    pInstanceDescBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pInstanceDescBuffer, instanceDescsSize);
+    D3D12_RESOURCE_DESC instanceResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(instanceDescsSize);
+    pInstanceDescBuffer = new D3D12UploadBuffer(instanceResourceDesc);
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pInstanceDescBuffer);
 
     D3D12_RAYTRACING_INSTANCE_DESC desc = {};
     desc.Transform[0][0] = desc.Transform[1][1] = desc.Transform[2][2] = 1;

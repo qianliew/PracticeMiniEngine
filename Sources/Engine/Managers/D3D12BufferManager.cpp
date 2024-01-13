@@ -60,7 +60,6 @@ D3D12BufferManager::~D3D12BufferManager()
 
 void D3D12BufferManager::AllocateTempUploadBuffer(
     D3D12UploadBuffer* pBuffer,
-    UINT64 size,
     const D3D12_RESOURCE_STATES state,
     const wchar_t* name)
 {
@@ -93,7 +92,6 @@ void D3D12BufferManager::ReleaseTempUploadBuffer()
 
 void D3D12BufferManager::AllocateUploadBuffer(
     D3D12UploadBuffer* pBuffer,
-    UINT64 size,
     const D3D12_RESOURCE_STATES state,
     const wchar_t* name)
 {
@@ -114,7 +112,6 @@ void D3D12BufferManager::AllocateUploadBuffer(
 
 void D3D12BufferManager::AllocateReadbackBuffer(
     D3D12ReadbackBuffer* pBuffer,
-    UINT64 size,
     const D3D12_RESOURCE_STATES state,
     const wchar_t* name)
 {
@@ -153,12 +150,12 @@ void D3D12BufferManager::AllocateDefaultBuffer(
 // Overflow case and Initialization problem.
 void D3D12BufferManager::AllocateGlobalConstantBuffer()
 {
-    const UINT size = 1024;
-    D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size, D3D12_RESOURCE_FLAG_NONE);
-    globalConstantBuffer = new D3D12ConstantBuffer(desc, size);
+    const UINT64 size = 1024;
+    D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(size);
+    D3D12UploadBuffer* uploadBuffer = new D3D12UploadBuffer(resourceDesc);
+    AllocateUploadBuffer(uploadBuffer, D3D12_RESOURCE_STATE_GENERIC_READ, L"GlobalConstantBuffer");
 
-    D3D12UploadBuffer* uploadBuffer = new D3D12UploadBuffer();
-    AllocateUploadBuffer(uploadBuffer, size, D3D12_RESOURCE_STATE_GENERIC_READ, L"GlobalConstantBuffer");
+    globalConstantBuffer = new D3D12ConstantBuffer(desc, size);
     globalConstantBuffer->SetResourceState(D3D12_RESOURCE_STATE_GENERIC_READ);
     globalConstantBuffer->SetResourceLoaction(uploadBuffer->GetResource());
     globalConstantBuffer->SetStartLocation(uploadBuffer->GetLocation());
@@ -171,12 +168,12 @@ void D3D12BufferManager::AllocatePerObjectConstantBuffers(UINT offset)
         delete perObjectConstantBuffers[offset];
     }
 
-    const UINT size = 1024;
-    D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size, D3D12_RESOURCE_FLAG_NONE);
-    perObjectConstantBuffers[offset] = new D3D12ConstantBuffer(desc, size);
+    const UINT64 size = 1024;
+    D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(size, D3D12_RESOURCE_FLAG_NONE);
+    D3D12UploadBuffer* uploadBuffer = new D3D12UploadBuffer(resourceDesc);
+    AllocateUploadBuffer(uploadBuffer, D3D12_RESOURCE_STATE_GENERIC_READ, L"PerObjectConstantBuffer");
 
-    D3D12UploadBuffer* uploadBuffer = new D3D12UploadBuffer();
-    AllocateUploadBuffer(uploadBuffer, size, D3D12_RESOURCE_STATE_GENERIC_READ, L"PerObjectConstantBuffer");
+    perObjectConstantBuffers[offset] = new D3D12ConstantBuffer(desc, size);
     perObjectConstantBuffers[offset]->SetResourceState(D3D12_RESOURCE_STATE_GENERIC_READ);
     perObjectConstantBuffers[offset]->SetResourceLoaction(uploadBuffer->GetResource());
     perObjectConstantBuffers[offset]->SetStartLocation(uploadBuffer->GetLocation());

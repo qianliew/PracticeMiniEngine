@@ -52,7 +52,7 @@ void TemporalAAPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSign
     ThrowIfFailed(pDevice->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(pPipelineState.GetAddressOf())));
 
     // Create a render target for TAA history.
-    taaHistoryHandle = pViewManager->CreateRenderTarget(DXGI_FORMAT_R8G8B8A8_UNORM);
+    taaHistoryHandle = pViewManager->CreateRenderTargetView(DXGI_FORMAT_R8G8B8A8_UNORM);
 }
 
 void TemporalAAPass::Execute(D3D12CommandList* pCommandList)
