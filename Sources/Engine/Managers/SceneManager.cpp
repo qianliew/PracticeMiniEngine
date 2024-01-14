@@ -85,7 +85,7 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
     // Create the SRV of indices and vertices.
     D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempIndexBuffer->GetBufferSize());
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    pIndexBuffer = new D3D12ShaderResourceBuffer(resourceDesc, srvDesc);
+    pIndexBuffer = new D3D12ShaderResourceBuffer(srvDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         pIndexBuffer,
         resourceDesc,
@@ -98,7 +98,7 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
 
     resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempVertexBuffer->GetBufferSize());
     srvDesc = {};
-    pVertexBuffer = new D3D12ShaderResourceBuffer(resourceDesc, srvDesc);
+    pVertexBuffer = new D3D12ShaderResourceBuffer(srvDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         pVertexBuffer,
         resourceDesc,
@@ -111,7 +111,7 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
 
     resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempOffsetBuffer->GetBufferSize());
     srvDesc = {};
-    pOffsetBuffer = new D3D12ShaderResourceBuffer(resourceDesc, srvDesc);
+    pOffsetBuffer = new D3D12ShaderResourceBuffer(srvDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         pOffsetBuffer,
         resourceDesc,
@@ -161,7 +161,7 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
         GlobalConstants::kMaxNumObject,
         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
-    pFrustumCullingData = new D3D12UnorderedAccessBuffer(resourceDesc, viewDesc);
+    pFrustumCullingData = new D3D12UnorderedAccessBuffer(viewDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         pFrustumCullingData,
         resourceDesc,
