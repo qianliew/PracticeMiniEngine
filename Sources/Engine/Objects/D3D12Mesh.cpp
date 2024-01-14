@@ -37,7 +37,7 @@ void D3D12Mesh::SetVertices(Vertex* triangleVertices, UINT size)
     {
         delete pVertexBuffer;
     }
-    pVertexBuffer = new D3D12VertexBuffer(desc);
+    pVertexBuffer = new D3D12VertexBuffer();
 }
 
 void D3D12Mesh::SetIndices(UINT16* triangleIndices, UINT size)
@@ -55,7 +55,7 @@ void D3D12Mesh::SetIndices(UINT16* triangleIndices, UINT size)
     {
         delete pIndexBuffer;
     }
-    pIndexBuffer = new D3D12IndexBuffer(desc);
+    pIndexBuffer = new D3D12IndexBuffer();
 }
 
 void D3D12Mesh::CopyVertices(void* destination)

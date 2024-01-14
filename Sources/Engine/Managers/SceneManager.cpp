@@ -260,8 +260,10 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
     pArgumentBuffer->SetCounterResource();
     pArgumentBuffer->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, 1));
-    pCountBuffer = new D3D12UploadBuffer();
-    pDevice->GetBufferManager()->AllocateUploadBuffer(pCountBuffer, sizeof(UINT));
+
+    D3D12_RESOURCE_DESC countBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT));
+    pCountBuffer = new D3D12UploadBuffer(countBufferDesc);
+    pDevice->GetBufferManager()->AllocateUploadBuffer(pCountBuffer);
     pCountBuffer->ZeroData(sizeof(UINT));
 
     pCommandList->AddTransitionResourceBarriers(pArgumentBuffer->GetResource().Get(),

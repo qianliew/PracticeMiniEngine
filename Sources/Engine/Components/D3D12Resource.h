@@ -15,6 +15,7 @@ public:
 	virtual void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) = 0;
 
 	inline const D3D12_RESOURCE_DESC& GetResourceDesc() const { return pBuffer->GetResourceDesc(); }
+	inline const D3D12_RESOURCE_STATES GetResourceState() const { return pBuffer->GetResourceState(); }
 	inline const ComPtr<ID3D12Resource>& GetResource() const { return pBuffer->GetResource(); }
 };
 
@@ -26,15 +27,15 @@ protected:
 	TViewDesc viewDesc;
 
 public:
-	TD3D12Resource(const D3D12_RESOURCE_DESC& desc) :
-		D3D12Resource(desc),
+	TD3D12Resource() :
+		D3D12Resource(),
 		view(nullptr)
 	{
 
 	}
 
-	TD3D12Resource(const D3D12_RESOURCE_DESC& desc, const TViewDesc& viewDesc) :
-		D3D12Resource(desc),
+	TD3D12Resource(const TViewDesc& viewDesc) :
+		D3D12Resource(),
 		viewDesc(viewDesc),
 		view(nullptr)
 	{
