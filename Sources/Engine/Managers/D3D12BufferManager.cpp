@@ -137,7 +137,7 @@ void D3D12BufferManager::AllocateDefaultBuffer(
     const wchar_t* name,
     const D3D12_CLEAR_VALUE* clearValue)
 {
-    if (pResource->GetResource().Get() == nullptr
+    if (pResource->GetBuffer() == nullptr
         || defaultBufferPool.find(pResource) == defaultBufferPool.end())
     {
         D3D12DefaultBuffer* pbuffer = new D3D12DefaultBuffer(desc);

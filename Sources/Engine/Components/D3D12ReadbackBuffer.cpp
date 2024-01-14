@@ -39,7 +39,7 @@ void D3D12ReadbackBuffer::CreateBuffer(
 
 void D3D12ReadbackBuffer::ReadbackData(void* destination)
 {
-    memcpy(destination, pLocation, bufferSize / 8);
+    memcpy(destination, pLocation, resourceDesc.Width);
 }
 
 void D3D12ReadbackBuffer::ReadbackData(void* destination, UINT size)

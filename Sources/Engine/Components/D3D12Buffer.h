@@ -8,7 +8,6 @@ protected:
 
 	const D3D12_RESOURCE_DESC resourceDesc;
 	D3D12_RESOURCE_STATES resourceState;
-	UINT64 bufferSize;
 	UINT64 bufferUsage;
 
 public:
@@ -28,6 +27,6 @@ public:
 	inline void* GetLocation() { return pLocation; }
 	inline const D3D12_RESOURCE_DESC& GetResourceDesc() const { return resourceDesc; }
 	inline const D3D12_RESOURCE_STATES GetResourceState() const { return resourceState; }
-	inline const UINT64 GetBufferSize() const { return bufferSize; }
+	inline const UINT64 GetBufferSize() const { return resourceDesc.Width; }
 	inline const UINT64 GetBufferUsage() const { return bufferUsage; }
 };

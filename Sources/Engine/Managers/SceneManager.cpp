@@ -181,7 +181,7 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
     pReadbackBuffer = new D3D12ReadbackBuffer(resourceDesc);
     pDevice->GetBufferManager()->AllocateReadbackBuffer(
         pReadbackBuffer,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
+        D3D12_RESOURCE_STATE_COPY_DEST,
         L"FrustumCullingReadbackBuffer");
 
     // Create a command signature for indirect drawing.
