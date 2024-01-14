@@ -180,6 +180,8 @@ const D3D12_RESOURCE_DESC D3D12Texture::GetResourceDesc()
         resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
         break;
     }
+
+    return resourceDesc;
 }
 
 void D3D12Texture::ChangeTextureType(D3D12TextureType newType)

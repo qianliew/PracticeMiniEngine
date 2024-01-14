@@ -221,7 +221,7 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
     pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempCommandBuffer);
     pTempCommandBuffer->CopyData(&commands.data()[0], commandBufferSize);
 
-    pCommandBuffer = std::make_shared<D3D12ShaderResourceBuffer>(commandBufferDesc, commandBufferSRVDesc);
+    pCommandBuffer = std::make_shared<D3D12ShaderResourceBuffer>(commandBufferSRVDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         pCommandBuffer.get(),
         commandBufferDesc,
@@ -251,7 +251,7 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
     argumentBufferUAVDesc.Buffer.CounterOffsetInBytes = argumentBufferSize;
     argumentBufferUAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
-    pArgumentBuffer = std::make_shared<D3D12UnorderedAccessBuffer>(argumentBufferDesc, argumentBufferUAVDesc);
+    pArgumentBuffer = std::make_shared<D3D12UnorderedAccessBuffer>(argumentBufferUAVDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         pArgumentBuffer.get(),
         argumentBufferDesc,
@@ -655,7 +655,7 @@ void SceneManager::BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index
         bottomLevelPrebuildInfo.ScratchDataSizeInBytes,
         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
-    blas[index].pScratchResource = std::make_shared<D3D12UnorderedAccessBuffer>(resourceDesc, viewDesc);
+    blas[index].pScratchResource = std::make_shared<D3D12UnorderedAccessBuffer>(viewDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         blas[index].pScratchResource.get(),
         resourceDesc,
@@ -665,7 +665,7 @@ void SceneManager::BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index
     resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(
         bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes,
         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-    blas[index].pBottomLevelAccelerationStructure = std::make_shared<D3D12UnorderedAccessBuffer>(resourceDesc, viewDesc);
+    blas[index].pBottomLevelAccelerationStructure = std::make_shared<D3D12UnorderedAccessBuffer>(viewDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         blas[index].pBottomLevelAccelerationStructure.get(),
         resourceDesc,
@@ -719,7 +719,7 @@ void SceneManager::BuildTopLevelAS(D3D12CommandList* pCommandList, UINT index)
         topLevelPrebuildInfo.ScratchDataSizeInBytes,
         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
-    tlas[index].pScratchResource = std::make_shared<D3D12UnorderedAccessBuffer>(resourceDesc, viewDesc);
+    tlas[index].pScratchResource = std::make_shared<D3D12UnorderedAccessBuffer>(viewDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         tlas[index].pScratchResource.get(),
         resourceDesc,
@@ -729,7 +729,7 @@ void SceneManager::BuildTopLevelAS(D3D12CommandList* pCommandList, UINT index)
     resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(
         topLevelPrebuildInfo.ScratchDataSizeInBytes,
         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-    tlas[index].pTopLevelAccelerationStructure = std::make_shared<D3D12UnorderedAccessBuffer>(resourceDesc, viewDesc);
+    tlas[index].pTopLevelAccelerationStructure = std::make_shared<D3D12UnorderedAccessBuffer>(viewDesc);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         tlas[index].pTopLevelAccelerationStructure.get(),
         resourceDesc,
