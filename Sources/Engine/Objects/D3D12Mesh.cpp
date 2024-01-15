@@ -33,24 +33,11 @@ void D3D12Mesh::SetVertices(Vertex* triangleVertices, UINT size)
         memcpy(pVertices, triangleVertices, verticesSize);
     }
 
-    D3D12_RESOURCE_DESC desc;
-    desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    desc.Alignment = 0;
-    desc.Width = verticesSize;
-    desc.Height = 1;
-    desc.DepthOrArraySize = 1;
-    desc.MipLevels = 1;
-    desc.Format = DXGI_FORMAT_UNKNOWN;
-    desc.SampleDesc.Count = 1;
-    desc.SampleDesc.Quality = 0;
-    desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    desc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
     if (pVertexBuffer != nullptr)
     {
         delete pVertexBuffer;
     }
-    pVertexBuffer = new D3D12VertexBuffer(desc);
+    pVertexBuffer = new D3D12VertexBuffer();
 }
 
 void D3D12Mesh::SetIndices(UINT16* triangleIndices, UINT size)
@@ -64,24 +51,11 @@ void D3D12Mesh::SetIndices(UINT16* triangleIndices, UINT size)
         memcpy(pIndices, triangleIndices, indicesSize);
     }
 
-    D3D12_RESOURCE_DESC desc;
-    desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    desc.Alignment = 0;
-    desc.Width = indicesSize;
-    desc.Height = 1;
-    desc.DepthOrArraySize = 1;
-    desc.MipLevels = 1;
-    desc.Format = DXGI_FORMAT_UNKNOWN;
-    desc.SampleDesc.Count = 1;
-    desc.SampleDesc.Quality = 0;
-    desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    desc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
     if (pIndexBuffer != nullptr)
     {
         delete pIndexBuffer;
     }
-    pIndexBuffer = new D3D12IndexBuffer(desc);
+    pIndexBuffer = new D3D12IndexBuffer();
 }
 
 void D3D12Mesh::CopyVertices(void* destination)
@@ -92,6 +66,42 @@ void D3D12Mesh::CopyVertices(void* destination)
 void D3D12Mesh::CopyIndices(void* destination)
 {
     memcpy(destination, pIndices, indicesSize);
+}
+
+const D3D12_RESOURCE_DESC D3D12Mesh::GetVertexResourceDesc()
+{
+    D3D12_RESOURCE_DESC resourceDesc;
+    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resourceDesc.Alignment = 0;
+    resourceDesc.Width = verticesSize;
+    resourceDesc.Height = 1;
+    resourceDesc.DepthOrArraySize = 1;
+    resourceDesc.MipLevels = 1;
+    resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+    resourceDesc.SampleDesc.Count = 1;
+    resourceDesc.SampleDesc.Quality = 0;
+    resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+    return resourceDesc;
+}
+
+const D3D12_RESOURCE_DESC D3D12Mesh::GetIndexResourceDesc()
+{
+    D3D12_RESOURCE_DESC resourceDesc;
+    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resourceDesc.Alignment = 0;
+    resourceDesc.Width = indicesSize;
+    resourceDesc.Height = 1;
+    resourceDesc.DepthOrArraySize = 1;
+    resourceDesc.MipLevels = 1;
+    resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+    resourceDesc.SampleDesc.Count = 1;
+    resourceDesc.SampleDesc.Quality = 0;
+    resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+    return resourceDesc;
 }
 
 void D3D12Mesh::CreateView()

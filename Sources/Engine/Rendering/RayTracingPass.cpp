@@ -123,7 +123,7 @@ void RayTracingPass::BuildShaderTables()
     };
 
     // Get shader identifiers.
-    UINT shaderIdentifierSize;
+    UINT64 shaderIdentifierSize;
     {
         ComPtr<ID3D12StateObjectProperties> stateObjectProperties;
         ThrowIfFailed(pDXRStateObject.As(&stateObjectProperties));
@@ -131,12 +131,14 @@ void RayTracingPass::BuildShaderTables()
         shaderIdentifierSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
     }
 
+    D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(0);
     // Ray gen shader table
     {
         UINT numShaderRecords = 1;
-        UINT shaderRecordSize = shaderIdentifierSize;
-        ShaderTable rayGenShaderTable(numShaderRecords, shaderRecordSize);
-        rayGenShaderTable.CreateBuffer(pDevice->GetDevice().Get());
+        UINT64 shaderRecordSize = Align(shaderIdentifierSize, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT);
+        resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(numShaderRecords * shaderRecordSize);
+        ShaderTable rayGenShaderTable(resourceDesc, shaderRecordSize, numShaderRecords);
+        rayGenShaderTable.CreateBuffer(pDevice->GetDevice().Get(), L"", nullptr);
         rayGenShaderTable.PushBack(ShaderRecord(rayGenShaderIdentifier[0], shaderIdentifierSize));
         pRayGenShaderTable = rayGenShaderTable.GetResource();
     }
@@ -144,9 +146,10 @@ void RayTracingPass::BuildShaderTables()
     // Miss shader table
     {
         UINT numShaderRecords = RayType::Count;
-        UINT shaderRecordSize = shaderIdentifierSize;
-        ShaderTable missShaderTable(numShaderRecords, shaderRecordSize);
-        missShaderTable.CreateBuffer(pDevice->GetDevice().Get());
+        UINT64 shaderRecordSize = Align(shaderIdentifierSize, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT);
+        resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(numShaderRecords * shaderRecordSize);
+        ShaderTable missShaderTable(resourceDesc, shaderRecordSize, numShaderRecords);
+        missShaderTable.CreateBuffer(pDevice->GetDevice().Get(), L"", nullptr);
         for (UINT i = 0; i < RayType::Count; i++)
         {
             missShaderTable.PushBack(ShaderRecord(missShaderIdentifier[i], shaderIdentifierSize));
@@ -157,9 +160,10 @@ void RayTracingPass::BuildShaderTables()
     // Hit group shader table
     {
         UINT numShaderRecords = RayType::Count;
-        UINT shaderRecordSize = shaderIdentifierSize;
-        ShaderTable hitGroupShaderTable(numShaderRecords, shaderRecordSize);
-        hitGroupShaderTable.CreateBuffer(pDevice->GetDevice().Get());
+        UINT64 shaderRecordSize = Align(shaderIdentifierSize, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT);
+        resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(numShaderRecords * shaderRecordSize);
+        ShaderTable hitGroupShaderTable(resourceDesc, shaderRecordSize, numShaderRecords);
+        hitGroupShaderTable.CreateBuffer(pDevice->GetDevice().Get(), L"", nullptr);
         for (UINT i = 0; i < RayType::Count; i++)
         {
             hitGroupShaderTable.PushBack(ShaderRecord(hitGroupShaderIdentifier[i], shaderIdentifierSize));

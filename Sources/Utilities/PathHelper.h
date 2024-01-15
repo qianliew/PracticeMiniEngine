@@ -294,7 +294,7 @@ inline std::wstring EraseSuffix(LPCWSTR assetName)
     return name;
 }
 
-inline UINT Align(UINT size, UINT alignment)
+inline UINT64 Align(UINT size, UINT alignment)
 {
     return (size + (alignment - 1)) & ~(alignment - 1);
 }

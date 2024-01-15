@@ -1,18 +1,30 @@
 #include "stdafx.h"
 #include "D3D12DefaultBuffer.h"
 
+D3D12DefaultBuffer::D3D12DefaultBuffer(const D3D12_RESOURCE_DESC& desc) :
+    D3D12Buffer(desc)
+{
+
+}
+
+D3D12DefaultBuffer::~D3D12DefaultBuffer()
+{
+
+}
+
 void D3D12DefaultBuffer::CreateBuffer(
     ID3D12Device* device,
-    const D3D12_RESOURCE_DESC* desc,
-    D3D12_RESOURCE_STATES state,
     const wchar_t* name,
-    const D3D12_CLEAR_VALUE* clearValue)
+    const D3D12_CLEAR_VALUE* clearValue,
+    const D3D12_RESOURCE_STATES state)
 {
+    resourceState = state;
+
     ThrowIfFailed(device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
-        desc,
-        state,
+        &resourceDesc,
+        resourceState,
         clearValue,
         IID_PPV_ARGS(pResource.GetAddressOf())));
 

@@ -27,11 +27,13 @@ public:
     void SetIndices(UINT16* triangleIndices, UINT size);
     void CopyVertices(void* destination);
     void CopyIndices(void* destination);
+    const D3D12_RESOURCE_DESC GetVertexResourceDesc();
+    const D3D12_RESOURCE_DESC GetIndexResourceDesc();
     void CreateView();
 
-    inline const UINT GetVerticesSize() const { return verticesSize; }
+    inline const UINT64 GetVerticesSize() const { return verticesSize; }
     inline const UINT GetVerticesNum() const { return verticesNum; }
-    inline const UINT GetIndicesSize() const { return indicesSize; }
+    inline const UINT64 GetIndicesSize() const { return indicesSize; }
     inline const UINT GetIndicesNum() const { return indicesNum; }
     inline const void* GetVerticesData() const { return pVertices; }
     inline const void* GetIndicesData() const { return pIndices; }

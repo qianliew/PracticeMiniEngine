@@ -46,12 +46,12 @@ class ShaderTable : public D3D12UploadBuffer
     std::vector<ShaderRecord> shaderRecords;
 
 public:
-    ShaderTable(UINT numShaderRecords, UINT shaderRecordSize);
+    ShaderTable(const D3D12_RESOURCE_DESC& desc, const UINT inShaderRecordSize, UINT numShaderRecords);
 
     virtual void CreateBuffer(
         ID3D12Device* device,
-        UINT64 size = 0,
-        D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COMMON,
-        const wchar_t* name = nullptr) override;
+        const wchar_t* name,
+        const D3D12_CLEAR_VALUE* clearValue,
+        const D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COMMON) override;
     void PushBack(const ShaderRecord& shaderRecord);
 };

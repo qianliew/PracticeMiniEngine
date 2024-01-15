@@ -32,22 +32,22 @@ public:
 
 	void AllocateTempUploadBuffer(
 		D3D12UploadBuffer* pBuffer,
-		UINT64 size,
+		const D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_GENERIC_READ,
 		const wchar_t* name = nullptr);
 	void ReleaseTempUploadBuffer();
 
 	void AllocateUploadBuffer(
 		D3D12UploadBuffer* pBuffer,
-		UINT64 size,
-		D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_GENERIC_READ,
+		const D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_GENERIC_READ,
 		const wchar_t* name = nullptr);
 	void AllocateReadbackBuffer(
 		D3D12ReadbackBuffer* pBuffer,
-		UINT64 size,
+		const D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_GENERIC_READ,
 		const wchar_t* name = nullptr);
 	void AllocateDefaultBuffer(
 		D3D12Resource* pResource,
-		D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COPY_DEST,
+		const D3D12_RESOURCE_DESC& desc,
+		const D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_GENERIC_READ,
 		const wchar_t* name = nullptr,
 		const D3D12_CLEAR_VALUE* clearValue = nullptr);
 

@@ -131,42 +131,40 @@ public:
         pCommandList->Dispatch(ThreadGroupCountX, ThreadGroupCountY, ThreadGroupCountZ);
     }
 
-    inline void CopyBufferRegion(ID3D12Resource* pDstBuffer, ID3D12Resource* pSrcBuffer,
-        UINT64 NumBytes, UINT64 DstOffset = 0, UINT64 SrcOffset = 0)
-    {
-        pCommandList->CopyBufferRegion(pDstBuffer, DstOffset, pSrcBuffer, SrcOffset, NumBytes);
-    }
+    // All copy methods.
 
-    inline void CopyTextureBuffer(ID3D12Resource* pDestinationResource, ID3D12Resource* pIntermediate,
-        UINT64 IntermediateOffset, UINT FirstSubresource, UINT NumSubresources, const D3D12_SUBRESOURCE_DATA* pSrcData)
-    {
-        UpdateSubresources(pCommandList.Get(), pDestinationResource, pIntermediate,
-            IntermediateOffset, FirstSubresource, NumSubresources, pSrcData);
-    }
+    void CopyBufferRegion(
+        D3D12Resource* pDstResource,
+        ID3D12Resource* pSrcResource,
+        UINT64 NumBytes,
+        UINT64 DstOffset = 0,
+        UINT64 SrcOffset = 0);
+    void CopyResource(
+        ID3D12Resource* pDstResource,
+        ID3D12Resource* pSrcResource);
+    void CopyResource(
+        D3D12Resource* pDstResource,
+        ID3D12Resource* pSrcResource);
+    void CopyResource(
+        ID3D12Resource* pDstResource,
+        D3D12Resource* pSrcResource);
+    void CopyResource(
+        const D3D12Resource* pDstResource,
+        const D3D12Resource* pSrcResource);
+    void CopyTextureBuffer(
+        D3D12Resource* pDstResource,
+        ID3D12Resource* pIntermediate,
+        UINT64 IntermediateOffset,
+        UINT FirstSubresource,
+        UINT NumSubresources,
+        const D3D12_SUBRESOURCE_DATA* pSrcData);
+    void CopyTexture(
+        D3D12_TEXTURE_COPY_LOCATION* pDstResource,
+        D3D12_TEXTURE_COPY_LOCATION* pSrcResource);
 
-    inline void CopyResource(ID3D12Resource* pDstResource, ID3D12Resource* pSrcResource)
-    {
-        pCommandList->CopyResource(pDstResource, pSrcResource);
-    }
-
-    inline void CopyTexture(D3D12_TEXTURE_COPY_LOCATION* pDstResource, D3D12_TEXTURE_COPY_LOCATION* pSrcResource)
-    {
-        pCommandList->CopyTextureRegion(pDstResource, 0, 0, 0, pSrcResource, nullptr);
-    }
-
-    inline void AddTransitionResourceBarriers(ID3D12Resource* pResource,
-        D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter)
-    {
-        resourceBarriers[barrierIndex].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-        resourceBarriers[barrierIndex].Transition.pResource = pResource;
-        resourceBarriers[barrierIndex].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-        resourceBarriers[barrierIndex].Transition.StateBefore = stateBefore;
-        resourceBarriers[barrierIndex++].Transition.StateAfter = stateAfter;
-    }
-
-    inline void FlushResourceBarriers()
-    {
-        pCommandList->ResourceBarrier(barrierIndex, &resourceBarriers[0]);
-        barrierIndex = 0;
-    }
+    void AddTransitionResourceBarriers(
+        ID3D12Resource* pResource,
+        D3D12_RESOURCE_STATES stateBefore,
+        D3D12_RESOURCE_STATES stateAfter);
+    void FlushResourceBarriers();
 };
