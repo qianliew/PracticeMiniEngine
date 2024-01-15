@@ -12,8 +12,5 @@ D3D12Buffer::D3D12Buffer(const D3D12_RESOURCE_DESC& desc) :
 
 D3D12Buffer::~D3D12Buffer()
 {
-    if (pResource != nullptr)
-    {
-        pResource->Unmap(0, nullptr);
-    }
+
 }
