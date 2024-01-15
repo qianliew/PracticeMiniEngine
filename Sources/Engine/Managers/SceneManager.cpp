@@ -92,7 +92,7 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
         D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
         L"IndexBuffer");
     pCommandList->CopyBufferRegion(
-        pIndexBuffer->GetResource().Get(),
+        pIndexBuffer,
         pTempIndexBuffer->GetResource().Get(),
         pTempIndexBuffer->GetBufferUsage());
 
@@ -105,7 +105,7 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
         D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
         L"VertexBuffer");
     pCommandList->CopyBufferRegion(
-        pVertexBuffer->GetResource().Get(),
+        pVertexBuffer,
         pTempVertexBuffer->GetResource().Get(),
         pTempVertexBuffer->GetBufferUsage());
 
@@ -118,7 +118,7 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
         D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
         L"OffsetBuffer");
     pCommandList->CopyBufferRegion(
-        pOffsetBuffer->GetResource().Get(),
+        pOffsetBuffer,
         pTempOffsetBuffer->GetResource().Get(),
         pTempOffsetBuffer->GetBufferUsage());
 
@@ -227,16 +227,7 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
         commandBufferDesc,
         D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
         L"CommandBuffer");
-
-    pCommandList->AddTransitionResourceBarriers(pCommandBuffer->GetResource().Get(),
-        pCommandBuffer->GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
-    pCommandList->FlushResourceBarriers();
-    pCommandList->CopyResource(
-        pCommandBuffer->GetResource().Get(),
-        pTempCommandBuffer->GetResource().Get());
-    pCommandList->AddTransitionResourceBarriers(pCommandBuffer->GetResource().Get(),
-        D3D12_RESOURCE_STATE_COPY_DEST, pCommandBuffer->GetResourceState());
-    pCommandList->FlushResourceBarriers();
+    pCommandList->CopyResource(pCommandBuffer.get(), pTempCommandBuffer->GetResource().Get());
 
     // Create the processed command buffer
     D3D12_RESOURCE_DESC argumentBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(
@@ -266,17 +257,11 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
     pDevice->GetBufferManager()->AllocateUploadBuffer(pCountBuffer);
     pCountBuffer->ZeroData(sizeof(UINT));
 
-    pCommandList->AddTransitionResourceBarriers(pArgumentBuffer->GetResource().Get(),
-        pArgumentBuffer->GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
-    pCommandList->FlushResourceBarriers();
     pCommandList->CopyBufferRegion(
-        pArgumentBuffer->GetResource().Get(),
+        pArgumentBuffer.get(),
         pCountBuffer->GetResource().Get(),
         sizeof(UINT),
         argumentBufferSize);
-    pCommandList->AddTransitionResourceBarriers(pArgumentBuffer->GetResource().Get(),
-        D3D12_RESOURCE_STATE_COPY_DEST, pArgumentBuffer->GetResourceState());
-    pCommandList->FlushResourceBarriers();
 }
 
 void SceneManager::UnloadScene()
@@ -417,16 +402,7 @@ void SceneManager::SetFrustumCullingResources(D3D12CommandList* pCommandList)
 
 void SceneManager::ReadbackFrustumCullingData(D3D12CommandList* pCommandList)
 {
-    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
-        pFrustumCullingData->GetResourceState(), D3D12_RESOURCE_STATE_COPY_SOURCE);
-    pCommandList->FlushResourceBarriers();
-    pCommandList->CopyResource(
-        pReadbackBuffer->GetResource().Get(),
-        pFrustumCullingData->GetResource().Get());
-    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
-        D3D12_RESOURCE_STATE_COPY_SOURCE, pFrustumCullingData->GetResourceState());
-    pCommandList->FlushResourceBarriers();
-
+    pCommandList->CopyResource(pReadbackBuffer->GetResource().Get(), pFrustumCullingData);
     pReadbackBuffer->ReadbackData(visData, sizeof(visData));
 }
 
@@ -523,21 +499,16 @@ void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList* pComma
         object->GetMesh()->GetIndexResourceDesc(),
         D3D12_RESOURCE_STATE_INDEX_BUFFER);
     tempIndexBuffer->CopyData(object->GetMesh()->GetIndicesData(), object->GetMesh()->GetIndicesSize());
-
     object->GetMesh()->CreateView();
-    pCommandList->CopyBufferRegion(object->GetMesh()->GetVertexBuffer()->GetResource().Get(),
+
+    pCommandList->CopyBufferRegion(
+        object->GetMesh()->GetVertexBuffer(),
         tempVertexBuffer->GetResource().Get(),
         object->GetMesh()->GetVerticesSize());
-    pCommandList->CopyBufferRegion(object->GetMesh()->GetIndexBuffer()->GetResource().Get(),
+    pCommandList->CopyBufferRegion(
+        object->GetMesh()->GetIndexBuffer(),
         tempIndexBuffer->GetResource().Get(),
         object->GetMesh()->GetIndicesSize());
-
-    // Setup transition barriers.
-    pCommandList->AddTransitionResourceBarriers(object->GetMesh()->GetVertexBuffer()->GetResource().Get(),
-        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
-    pCommandList->AddTransitionResourceBarriers(object->GetMesh()->GetIndexBuffer()->GetResource().Get(),
-        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
-    pCommandList->FlushResourceBarriers();
 }
 
 void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList* pCommandList, Model* object, UINT& offset)
@@ -621,14 +592,8 @@ void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList* pCommandList, D
         pDevice->GetBufferManager()->AllocateTempUploadBuffer(tempBuffer);
 
         // Update texture data from upload buffer to gpu buffer.
-        pCommandList->CopyTextureBuffer(
-            texture->GetTextureBuffer()->GetResource().Get(),
-            tempBuffer->GetResource().Get(), 0, i, 1, &textureData);
+        pCommandList->CopyTextureBuffer(texture->GetTextureBuffer(), tempBuffer->GetResource().Get(), 0, i, 1, &textureData);
     }
-
-    pCommandList->AddTransitionResourceBarriers(texture->GetTextureBuffer()->GetResource().Get(),
-        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    pCommandList->FlushResourceBarriers();
 
     // Create the sampler and its view.
     texture->CreateSampler();
@@ -758,14 +723,5 @@ void SceneManager::ResetVisData(D3D12CommandList* pCommandList)
     }
 
     pUploadBuffer->CopyData(visData, sizeof(visData));
-
-    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
-        pFrustumCullingData->GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
-    pCommandList->FlushResourceBarriers();
-    pCommandList->CopyResource(
-        pFrustumCullingData->GetResource().Get(),
-        pUploadBuffer->GetResource().Get());
-    pCommandList->AddTransitionResourceBarriers(pFrustumCullingData->GetResource().Get(),
-        D3D12_RESOURCE_STATE_COPY_DEST, pFrustumCullingData->GetResourceState());
-    pCommandList->FlushResourceBarriers();
+    pCommandList->CopyResource(pFrustumCullingData, pUploadBuffer->GetResource().Get());
 }
