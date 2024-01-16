@@ -254,163 +254,193 @@ void FBXImporter::LoadContent(FbxNode* pNode, D3D12Mesh* mesh)
     }
 }
 
-void FBXImporter::LoadMesh(FbxNode* pNode, D3D12Mesh* mesh)
+void FBXImporter::LoadMesh(FbxNode* pNode, D3D12Mesh* pMesh)
 {
     FbxMesh* lMesh = (FbxMesh*)pNode->GetNodeAttribute();
-    UINT polygonSize = lMesh->GetPolygonCount();
+    const UINT vertexCount = lMesh->GetPolygonCount() * 3;
 
-    UINT indicesSize = polygonSize * 3 * sizeof(UINT16);
-    UINT16* pIndex = (UINT16*)malloc(indicesSize);
-    UINT16* iIndex = pIndex;
+    const UINT indexSize = vertexCount * sizeof(UINT16);
+    UINT16* pIndex = (UINT16*)malloc(indexSize);
+    const UINT VertexSize = vertexCount * sizeof(Vertex);
+    Vertex* pVertex = (Vertex*)malloc(VertexSize);
 
-    int lControlPointsCount = lMesh->GetControlPointsCount();
-    UINT verticesSize = polygonSize * 3 * sizeof(Vertex);
-    fbxsdk::FbxVector4* lControlPoints = lMesh->GetControlPoints();
-
-    Vertex* pVertex = (Vertex*)malloc(verticesSize);
-    Vertex* iVertex = pVertex;
-
-    UINT index = 0;
-    fbxsdk::FbxVector4 pNormal;
     if (pIndex && pVertex)
     {
-        for (int i = 0; i < polygonSize; i++)
+        LoadVerticesAndIndices(pNode, pIndex, pVertex);
+        SaveVerticesAndIndices(pMesh, vertexCount, pIndex, pVertex);
+
+        free(pIndex);
+        free(pVertex);
+    }
+}
+
+void FBXImporter::SaveVerticesAndIndices(D3D12Mesh* pMesh, const UINT vertexCount, UINT16* pIndex, Vertex* pVertex)
+{
+    vector<Vertex>* vec = new vector<Vertex>();
+    vec->reserve(vertexCount / 2);
+    BOOL found = false;
+    Vertex* iVertex;
+    for (UINT i = 0; i < vertexCount; i++)
+    {
+        iVertex = pVertex + i;
+        for (UINT j = 0; j < vec->size(); j++)
         {
-            for (int j = 0; j < lMesh->GetPolygonSize(i); j++)
+            if (vec->at(j) == *iVertex)
             {
-                *(iIndex++) = i * 3 + j;
-                int cpIndex = lMesh->GetPolygonVertex(i, j);
-                iVertex->positionOS = XMFLOAT3
-                {
-                    static_cast<float>(lControlPoints[cpIndex].mData[0]),
-                    static_cast<float>(lControlPoints[cpIndex].mData[1]),
-                    static_cast<float>(lControlPoints[cpIndex].mData[2]),
-                };
-
-                FbxGeometryElementNormal* leNormal = lMesh->GetElementNormal(0);
-                switch (leNormal->GetReferenceMode())
-                {
-                case FbxGeometryElement::eDirect:
-                    lMesh->GetPolygonVertexNormal(i, j, pNormal);
-                    iVertex->normalOS = XMFLOAT3
-                    {
-                        static_cast<float>(pNormal.mData[0]),
-                        static_cast<float>(pNormal.mData[1]),
-                        static_cast<float>(pNormal.mData[2]),
-                    };
-                    break;
-                case FbxGeometryElement::eIndexToDirect:
-                {
-                    int id = leNormal->GetIndexArray().GetAt(cpIndex);
-                    iVertex->normalOS = XMFLOAT3
-                    {
-                        static_cast<float>(leNormal->GetDirectArray().GetAt(id).mData[0]),
-                        static_cast<float>(leNormal->GetDirectArray().GetAt(id).mData[1]),
-                        static_cast<float>(leNormal->GetDirectArray().GetAt(id).mData[2]),
-                    };
-                }
-                break;
-                default:
-                    break; // other reference modes not shown here!
-                }
-
-                FbxGeometryElementTangent* leTangent = lMesh->GetElementTangent(0);
-                switch (leTangent->GetReferenceMode())
-                {
-                case FbxGeometryElement::eDirect:
-                    iVertex->tangentOS = XMFLOAT4
-                    {
-                        static_cast<float>(leTangent->GetDirectArray().GetAt(index).mData[0]),
-                        static_cast<float>(leTangent->GetDirectArray().GetAt(index).mData[1]),
-                        static_cast<float>(leTangent->GetDirectArray().GetAt(index).mData[2]),
-                        static_cast<float>(leTangent->GetDirectArray().GetAt(index).mData[3]),
-                    };
-                    break;
-                case FbxGeometryElement::eIndexToDirect:
-                {
-                    int id = leTangent->GetIndexArray().GetAt(index);
-                    iVertex->tangentOS = XMFLOAT4
-                    {
-                        static_cast<float>(leTangent->GetDirectArray().GetAt(id).mData[0]),
-                        static_cast<float>(leTangent->GetDirectArray().GetAt(id).mData[1]),
-                        static_cast<float>(leTangent->GetDirectArray().GetAt(id).mData[2]),
-                        static_cast<float>(leTangent->GetDirectArray().GetAt(id).mData[3]),
-                    };
-                }
-                break;
-                default:
-                    break; // other reference modes not shown here!
-                }
-
-                FbxGeometryElementUV* leUV = lMesh->GetElementUV(0);
-                switch (leUV->GetMappingMode())
-                {
-                default:
-                    break;
-                case FbxGeometryElement::eByControlPoint:
-                    switch (leUV->GetReferenceMode())
-                    {
-                    case FbxGeometryElement::eDirect:
-                        iVertex->texCoord = XMFLOAT2
-                        {
-                            static_cast<float>(leUV->GetDirectArray().GetAt(index).mData[0]),
-                            static_cast<float>(leUV->GetDirectArray().GetAt(index).mData[1]),
-                        };
-                        break;
-                    case FbxGeometryElement::eIndexToDirect:
-                    {
-                        int id = leUV->GetIndexArray().GetAt(index);
-                        iVertex->texCoord = XMFLOAT2
-                        {
-                            static_cast<float>(leUV->GetDirectArray().GetAt(id).mData[0]),
-                            static_cast<float>(leUV->GetDirectArray().GetAt(id).mData[1]),
-                        };
-                    }
-                    break;
-                    default:
-                        break; // other reference modes not shown here!
-                    }
-                    break;
-
-                case FbxGeometryElement::eByPolygonVertex:
-                {
-                    int lTextureUVIndex = lMesh->GetTextureUVIndex(i, j);
-                    switch (leUV->GetReferenceMode())
-                    {
-                    case FbxGeometryElement::eDirect:
-                    case FbxGeometryElement::eIndexToDirect:
-                    {
-                        iVertex->texCoord = XMFLOAT2
-                        {
-                            static_cast<float>(leUV->GetDirectArray().GetAt(lTextureUVIndex).mData[0]),
-                            static_cast<float>(leUV->GetDirectArray().GetAt(lTextureUVIndex).mData[1]),
-                        };
-                    }
-                    break;
-                    default:
-                        break; // other reference modes not shown here!
-                    }
-                }
-                break;
-
-                case FbxGeometryElement::eByPolygon: // doesn't make much sense for UVs
-                case FbxGeometryElement::eAllSame:   // doesn't make much sense for UVs
-                case FbxGeometryElement::eNone:       // doesn't make much sense for UVs
-                    break;
-                }
-
-                (iVertex++)->color = XMFLOAT4
-                {
-                    1, 1, 1, 1
-                };
-                index++;
+                *(pIndex + i) = j;
+                found = true;
             }
         }
+        if (!found)
+        {
+            *(pIndex + i) = vec->size();
+            vec->push_back(*iVertex);
+        }
+        found = false;
+    }
 
-        mesh->SetIndices(pIndex, indicesSize);
-        mesh->SetVertices(pVertex, verticesSize);
+    const UINT indexSize = vertexCount * sizeof(UINT16);
+    pMesh->SetIndices(pIndex, indexSize);
+    pMesh->SetVertices(vec->data(), vec->size() * sizeof(Vertex));
+}
 
-        delete pIndex;
-        delete pVertex;
+void FBXImporter::LoadVerticesAndIndices(FbxNode* pNode, UINT16* pIndex, Vertex* pVertex)
+{
+    FbxMesh* lMesh = (FbxMesh*)pNode->GetNodeAttribute();
+    UINT polygonSize = lMesh->GetPolygonCount(), index = 0;
+    fbxsdk::FbxVector4* lControlPoints = lMesh->GetControlPoints();
+    fbxsdk::FbxVector4 pNormal;
+
+    for (int i = 0; i < polygonSize; i++)
+    {
+        for (int j = 0; j < lMesh->GetPolygonSize(i); j++)
+        {
+            *(pIndex++) = i * 3 + j;
+            int cpIndex = lMesh->GetPolygonVertex(i, j);
+            pVertex->positionOS = XMFLOAT3
+            {
+                static_cast<float>(lControlPoints[cpIndex].mData[0]),
+                static_cast<float>(lControlPoints[cpIndex].mData[1]),
+                static_cast<float>(lControlPoints[cpIndex].mData[2]),
+            };
+
+            FbxGeometryElementNormal* leNormal = lMesh->GetElementNormal(0);
+            switch (leNormal->GetReferenceMode())
+            {
+            case FbxGeometryElement::eDirect:
+                lMesh->GetPolygonVertexNormal(i, j, pNormal);
+                pVertex->normalOS = XMFLOAT3
+                {
+                    static_cast<float>(pNormal.mData[0]),
+                    static_cast<float>(pNormal.mData[1]),
+                    static_cast<float>(pNormal.mData[2]),
+                };
+                break;
+            case FbxGeometryElement::eIndexToDirect:
+            {
+                int id = leNormal->GetIndexArray().GetAt(cpIndex);
+                pVertex->normalOS = XMFLOAT3
+                {
+                    static_cast<float>(leNormal->GetDirectArray().GetAt(id).mData[0]),
+                    static_cast<float>(leNormal->GetDirectArray().GetAt(id).mData[1]),
+                    static_cast<float>(leNormal->GetDirectArray().GetAt(id).mData[2]),
+                };
+            }
+            break;
+            default:
+                break; // other reference modes not shown here!
+            }
+
+            FbxGeometryElementTangent* leTangent = lMesh->GetElementTangent(0);
+            switch (leTangent->GetReferenceMode())
+            {
+            case FbxGeometryElement::eDirect:
+                pVertex->tangentOS = XMFLOAT4
+                {
+                    static_cast<float>(leTangent->GetDirectArray().GetAt(index).mData[0]),
+                    static_cast<float>(leTangent->GetDirectArray().GetAt(index).mData[1]),
+                    static_cast<float>(leTangent->GetDirectArray().GetAt(index).mData[2]),
+                    static_cast<float>(leTangent->GetDirectArray().GetAt(index).mData[3]),
+                };
+                break;
+            case FbxGeometryElement::eIndexToDirect:
+            {
+                int id = leTangent->GetIndexArray().GetAt(index);
+                pVertex->tangentOS = XMFLOAT4
+                {
+                    static_cast<float>(leTangent->GetDirectArray().GetAt(id).mData[0]),
+                    static_cast<float>(leTangent->GetDirectArray().GetAt(id).mData[1]),
+                    static_cast<float>(leTangent->GetDirectArray().GetAt(id).mData[2]),
+                    static_cast<float>(leTangent->GetDirectArray().GetAt(id).mData[3]),
+                };
+            }
+            break;
+            default:
+                break; // other reference modes not shown here!
+            }
+
+            FbxGeometryElementUV* leUV = lMesh->GetElementUV(0);
+            switch (leUV->GetMappingMode())
+            {
+            default:
+                break;
+            case FbxGeometryElement::eByControlPoint:
+                switch (leUV->GetReferenceMode())
+                {
+                case FbxGeometryElement::eDirect:
+                    pVertex->texCoord = XMFLOAT2
+                    {
+                        static_cast<float>(leUV->GetDirectArray().GetAt(index).mData[0]),
+                        static_cast<float>(leUV->GetDirectArray().GetAt(index).mData[1]),
+                    };
+                    break;
+                case FbxGeometryElement::eIndexToDirect:
+                {
+                    int id = leUV->GetIndexArray().GetAt(index);
+                    pVertex->texCoord = XMFLOAT2
+                    {
+                        static_cast<float>(leUV->GetDirectArray().GetAt(id).mData[0]),
+                        static_cast<float>(leUV->GetDirectArray().GetAt(id).mData[1]),
+                    };
+                }
+                break;
+                default:
+                    break; // other reference modes not shown here!
+                }
+                break;
+
+            case FbxGeometryElement::eByPolygonVertex:
+            {
+                int lTextureUVIndex = lMesh->GetTextureUVIndex(i, j);
+                switch (leUV->GetReferenceMode())
+                {
+                case FbxGeometryElement::eDirect:
+                case FbxGeometryElement::eIndexToDirect:
+                {
+                    pVertex->texCoord = XMFLOAT2
+                    {
+                        static_cast<float>(leUV->GetDirectArray().GetAt(lTextureUVIndex).mData[0]),
+                        static_cast<float>(leUV->GetDirectArray().GetAt(lTextureUVIndex).mData[1]),
+                    };
+                }
+                break;
+                default:
+                    break; // other reference modes not shown here!
+                }
+            }
+            break;
+
+            case FbxGeometryElement::eByPolygon: // doesn't make much sense for UVs
+            case FbxGeometryElement::eAllSame:   // doesn't make much sense for UVs
+            case FbxGeometryElement::eNone:       // doesn't make much sense for UVs
+                break;
+            }
+
+            (pVertex++)->color = XMFLOAT4
+            {
+                1, 1, 1, 1
+            };
+            index++;
+        }
     }
 }
