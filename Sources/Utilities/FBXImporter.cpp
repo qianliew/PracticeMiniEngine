@@ -299,7 +299,7 @@ void FBXImporter::SaveVerticesAndIndices(D3D12Mesh* pMesh, const UINT vertexCoun
         found = false;
     }
 
-    const UINT indexSize = vertexCount * sizeof(UINT16);
+    const UINT64 indexSize = vertexCount * sizeof(UINT16);
     pMesh->SetIndices(pIndex, indexSize);
     pMesh->SetVertices(vec->data(), vec->size() * sizeof(Vertex));
 }

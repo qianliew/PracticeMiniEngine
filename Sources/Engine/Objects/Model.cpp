@@ -56,14 +56,14 @@ void Model::GenerateBoundingBox()
         delete pBoundingBox;
     }
 
-    const Vertex* pVertex = static_cast<const Vertex*>(pMesh->GetVerticesData());
+    const Vertex* pVertex = static_cast<const Vertex*>(pMesh->GetVertexData());
 
     D3D12_RAYTRACING_AABB aabb = {};
     aabb.MaxX = aabb.MinX = pVertex->positionOS.x;
     aabb.MaxY = aabb.MinY = pVertex->positionOS.y;
     aabb.MaxZ = aabb.MinZ = pVertex->positionOS.z;
 
-    for (UINT i = 0; i < pMesh->GetVerticesNum(); i++)
+    for (UINT i = 0; i < pMesh->GetVertexCount(); i++)
     {
         aabb.MaxX = max(aabb.MaxX, (pVertex + i)->positionOS.x);
         aabb.MaxY = max(aabb.MaxY, (pVertex + i)->positionOS.y);
