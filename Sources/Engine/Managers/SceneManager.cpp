@@ -322,8 +322,8 @@ void SceneManager::DrawObjects(D3D12CommandList* pCommandList)
 
         // Set buffers and draw the instance.
         pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        pCommandList->SetVertexBuffers(0, 1, &model->GetMesh()->GetVertexBuffer()->VertexBufferView);
-        pCommandList->SetIndexBuffer(&model->GetMesh()->GetIndexBuffer()->IndexBufferView);
+        pCommandList->SetVertexBuffers(0, 1, &model->GetMesh()->GetVertexBufferView());
+        pCommandList->SetIndexBuffer(&model->GetMesh()->GetIndexBufferView());
         pCommandList->DrawIndexedInstanced(model->GetMesh()->GetIndexCount());
     }
 
@@ -363,8 +363,8 @@ void SceneManager::DrawSkybox(D3D12CommandList* pCommandList)
 
     pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    pCommandList->SetVertexBuffers(0, 1, &pSkyboxMesh->GetMesh()->GetVertexBuffer()->VertexBufferView);
-    pCommandList->SetIndexBuffer(&pSkyboxMesh->GetMesh()->GetIndexBuffer()->IndexBufferView);
+    pCommandList->SetVertexBuffers(0, 1, &pSkyboxMesh->GetMesh()->GetVertexBufferView());
+    pCommandList->SetIndexBuffer(&pSkyboxMesh->GetMesh()->GetIndexBufferView());
     pCommandList->DrawIndexedInstanced(pSkyboxMesh->GetMesh()->GetIndexCount());
 }
 
@@ -372,8 +372,8 @@ void SceneManager::DrawFullScreenMesh(D3D12CommandList* pCommandList)
 {
     pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    pCommandList->SetVertexBuffers(0, 1, &pFullScreenMesh->GetMesh()->GetVertexBuffer()->VertexBufferView);
-    pCommandList->SetIndexBuffer(&pFullScreenMesh->GetMesh()->GetIndexBuffer()->IndexBufferView);
+    pCommandList->SetVertexBuffers(0, 1, &pFullScreenMesh->GetMesh()->GetVertexBufferView());
+    pCommandList->SetIndexBuffer(&pFullScreenMesh->GetMesh()->GetIndexBufferView());
     pCommandList->DrawIndexedInstanced(pFullScreenMesh->GetMesh()->GetIndexCount());
 }
 

@@ -3,13 +3,14 @@
 class D3D12VertexBuffer : public D3D12Resource
 {
 private:
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 
 public:
     D3D12VertexBuffer();
     ~D3D12VertexBuffer();
 
-    void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
-    void CreateView();
+    virtual void CreateView(const ComPtr<ID3D12Device>& device, const D3D12_CPU_DESCRIPTOR_HANDLE& handle) override;
+    void SetVertexBufferView(const D3D12_VERTEX_BUFFER_VIEW& view);
 
-    D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
+    inline const D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView() const { return vertexBufferView; }
 };

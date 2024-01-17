@@ -42,4 +42,6 @@ public:
 
     inline D3D12VertexBuffer* GetVertexBuffer() const { return pVertexBuffer; }
     inline D3D12IndexBuffer* GetIndexBuffer() const { return pIndexBuffer; }
+    inline const D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView() const { return pVertexBuffer->GetVertexBufferView(); }
+    inline const D3D12_INDEX_BUFFER_VIEW& GetIndexBufferView() const { return pIndexBuffer->GetIndexBufferView(); }
 };

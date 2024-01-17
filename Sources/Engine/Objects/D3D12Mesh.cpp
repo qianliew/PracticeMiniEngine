@@ -116,12 +116,16 @@ const D3D12_RESOURCE_DESC D3D12Mesh::GetIndexResourceDesc()
 void D3D12Mesh::CreateView()
 {
     // Initialize the vertex buffer view.
-    pVertexBuffer->CreateView();
-    pVertexBuffer->VertexBufferView.StrideInBytes = sizeof(Vertex);
-    pVertexBuffer->VertexBufferView.SizeInBytes = vertexSize;
+    D3D12_VERTEX_BUFFER_VIEW vertexView = {};
+    vertexView.StrideInBytes = sizeof(Vertex);
+    vertexView.SizeInBytes = vertexSize;
+    vertexView.BufferLocation = pVertexBuffer->GetResource()->GetGPUVirtualAddress();
+    pVertexBuffer->SetVertexBufferView(vertexView);
 
     // Initialize the index buffer view.
-    pIndexBuffer->CreateView();
-    pIndexBuffer->IndexBufferView.Format = DXGI_FORMAT_R16_UINT;
-    pIndexBuffer->IndexBufferView.SizeInBytes = indexSize;
+    D3D12_INDEX_BUFFER_VIEW indexView = {};
+    indexView.Format = DXGI_FORMAT_R16_UINT;
+    indexView.SizeInBytes = indexSize;
+    indexView.BufferLocation = pIndexBuffer->GetResource()->GetGPUVirtualAddress();
+    pIndexBuffer->SetIndexBufferView(indexView);
 }

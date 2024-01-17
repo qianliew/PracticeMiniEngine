@@ -16,7 +16,7 @@ void D3D12IndexBuffer::CreateView(const ComPtr<ID3D12Device>& device, const D3D1
 
 }
 
-void D3D12IndexBuffer::CreateView()
+void D3D12IndexBuffer::SetIndexBufferView(const D3D12_INDEX_BUFFER_VIEW& view)
 {
-    IndexBufferView.BufferLocation = pBuffer->GetResource()->GetGPUVirtualAddress();
+	indexBufferView = view;
 }
