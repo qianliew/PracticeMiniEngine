@@ -19,6 +19,4 @@ public:
 
 	virtual void Setup(D3D12CommandList*, ComPtr<ID3D12RootSignature>&) = 0;
 	virtual void Execute(D3D12CommandList*) = 0;
-
-	static void CopyBuffer(D3D12CommandList* pCommandList, const D3D12Resource* pDstResource, const D3D12Resource* pSrcResource);
 };

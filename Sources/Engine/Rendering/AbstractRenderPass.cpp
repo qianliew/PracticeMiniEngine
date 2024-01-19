@@ -16,9 +16,3 @@ AbstractRenderPass::~AbstractRenderPass()
 {
 
 }
-
-
-void AbstractRenderPass::CopyBuffer(D3D12CommandList* pCommandList, const D3D12Resource* pDstResource, const D3D12Resource* pSrcResource)
-{
-    pCommandList->CopyResource(pDstResource, pSrcResource);
-}

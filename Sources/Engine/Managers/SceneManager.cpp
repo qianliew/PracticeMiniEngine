@@ -545,7 +545,7 @@ void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList* pCo
         &offset,
         sizeof(UINT),
         pTempOffsetBuffer->GetBufferUsage());
-    offset += object->GetMesh()->GetIndexCount();
+    offset += geometryDesc.Triangles.IndexCount;
 
     // Create the geomerty desc for the binding box of this object.
     geometryDesc = {};

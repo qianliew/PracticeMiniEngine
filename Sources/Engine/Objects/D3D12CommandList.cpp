@@ -95,8 +95,8 @@ void D3D12CommandList::CopyResource(
 }
 
 void D3D12CommandList::CopyResource(
-    const D3D12Resource* pDstResource,
-    const D3D12Resource* pSrcResource)
+    D3D12Resource* pDstResource,
+    D3D12Resource* pSrcResource)
 {
     AddTransitionResourceBarriers(
         pDstResource->GetResource().Get(),

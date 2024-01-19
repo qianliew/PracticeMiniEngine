@@ -132,7 +132,7 @@ void RaygenShader()
     uint currentRayRecursionDepth = 0;
     RayPayload payload = TraceRadianceRay(origin, direction, currentRayRecursionDepth);
     Result[DispatchRaysIndex().xy] *= payload.attenuation;
-    Result[DispatchRaysIndex().xy] += payload.color;
+    Result[DispatchRaysIndex().xy] = payload.color;
 }
 
 [shader("closesthit")]
@@ -143,9 +143,9 @@ void ClosestHitShader(inout RayPayload payload, in BuiltInTriangleIntersectionAt
     uint vertId = 3 * PrimitiveIndex() + Offsets[GeometryIndex()];
 
     float3 hitPosition = HitWorldPosition();
-    float3 normalOS = Vertices[vertId + 0].normalOS * barycentrics.x +
-        Vertices[vertId + 1].normalOS * barycentrics.y +
-        Vertices[vertId + 2].normalOS * barycentrics.z;
+    float3 normalOS = Vertices[Indices[vertId]].normalOS * barycentrics.x +
+        Vertices[Indices[vertId + 1]].normalOS * barycentrics.y +
+        Vertices[Indices[vertId + 2]].normalOS * barycentrics.z;
 
     const float3 lightDirWS = float3(1.0f, 1.0f, -1.0f);
 

@@ -60,6 +60,6 @@ public:
     inline const UINT GetFrameIndex() const { return frameIndex; }
 
     inline ID3D12Resource* GetCurrentBackBuffer() const { return pBackBuffers[frameIndex].Get(); }
-    inline const D3D12Resource* GetCurrentRTVBuffer(UINT rtvHandle) { return pRenderTargetViews[rtvHandle]->GetTextureBuffer(); }
-    inline const D3D12Resource* GetUAVBuffer(UINT uavHandle) { return pUnorderedAccessViews[uavHandle]->GetTextureBuffer(); }
+    inline D3D12Resource* GetCurrentRTVBuffer(UINT rtvHandle) { return pRenderTargetViews[rtvHandle]->GetTextureBuffer(); }
+    inline D3D12Resource* GetUAVBuffer(UINT uavHandle) { return pUnorderedAccessViews[uavHandle]->GetTextureBuffer(); }
 };
