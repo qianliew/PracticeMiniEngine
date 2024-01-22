@@ -98,8 +98,8 @@ void TemporalAAPass::Execute(D3D12CommandList* pCommandList)
     pViewManager->ConvertTextureType(pCommandList, depthHandle, D3D12TextureType::DepthStencil, D3D12TextureType::DepthStencil);
 
     // Copy the current TAA buffer to the history.
-    const D3D12Resource* pTAAHistoryResource = pViewManager->GetCurrentRTVBuffer(taaHistoryHandle);
-    const D3D12Resource* pTAAResource = pViewManager->GetCurrentRTVBuffer(taaHandle);
+    D3D12Resource* pTAAHistoryResource = pViewManager->GetCurrentRTVBuffer(taaHistoryHandle);
+    D3D12Resource* pTAAResource = pViewManager->GetCurrentRTVBuffer(taaHandle);
 
-    CopyBuffer(pCommandList, pTAAHistoryResource, pTAAResource);
+    pCommandList->CopyResource(pTAAHistoryResource, pTAAResource);
 }

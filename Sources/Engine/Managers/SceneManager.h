@@ -69,7 +69,7 @@ private:
 
 	// Helper functions.
 	void LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*, Model* object);
-	void LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*, Model* object, UINT& offset);
+	void LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*, Model* object, UINT& indexOffset, UINT& vertexOffset);
 	void LoadTextureBufferAndSampler(D3D12CommandList*, D3D12Texture* texture);
 	void BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index);
 	void BuildTopLevelAS(D3D12CommandList* pCommandList, UINT index);

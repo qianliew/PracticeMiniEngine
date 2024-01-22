@@ -2,70 +2,79 @@
 #include "D3D12Mesh.h"
 
 D3D12Mesh::D3D12Mesh() :
-    verticesSize(0),
-    verticesNum(0),
-    indicesSize(0),
-    indicesNum(0)
+    pVertex(nullptr),
+    pIndex(nullptr),
+    pVertexBuffer(nullptr),
+    pIndexBuffer(nullptr),
+    position(XMVectorZero()),
+    vertexSize(0),
+    vertexCount(0),
+    indexSize(0),
+    indexCount(0)
 {
 
 }
 
 D3D12Mesh::~D3D12Mesh()
 {
-    delete pVertices;
-    delete pIndices;
+    ResetVertices();
+    ResetIndices();
+}
+
+void D3D12Mesh::ResetVertices()
+{
+    delete pVertex;
     delete pVertexBuffer;
+
+    pVertex = nullptr;
+    pVertexBuffer = nullptr;
+}
+
+void D3D12Mesh::ResetIndices()
+{
+    delete pIndex;
     delete pIndexBuffer;
-    // delete pInstanceDescBuffer;
 
-    pVertices = nullptr;
-    pIndices = nullptr;
+    pIndex = nullptr;
+    pIndexBuffer = nullptr;
 }
 
-void D3D12Mesh::SetVertices(Vertex* triangleVertices, UINT size)
+void D3D12Mesh::SetVertices(Vertex* pInVertex, UINT64 size)
 {
-    UINT strideSize = sizeof(Vertex);
-    verticesSize = size;
-    verticesNum = size / strideSize;
-    pVertices = (Vertex*)malloc(size);
-    if (pVertices != nullptr)
-    {
-        memcpy(pVertices, triangleVertices, verticesSize);
-    }
-
-    if (pVertexBuffer != nullptr)
-    {
-        delete pVertexBuffer;
-    }
+    ResetVertices();
     pVertexBuffer = new D3D12VertexBuffer();
+
+    vertexSize = size;
+    vertexCount = size / sizeof(Vertex);
+    pVertex = (Vertex*)malloc(size);
+    if (pVertex != nullptr)
+    {
+        memcpy(pVertex, pInVertex, vertexSize);
+    }
 }
 
-void D3D12Mesh::SetIndices(UINT16* triangleIndices, UINT size)
+void D3D12Mesh::SetIndices(UINT16* pInIndex, UINT64 size)
 {
-    UINT strideSize = sizeof(UINT16);
-    indicesSize = size;
-    indicesNum = size / sizeof(UINT16);
-    pIndices = (UINT16*)malloc(size);
-    if (pIndices != nullptr)
-    {
-        memcpy(pIndices, triangleIndices, indicesSize);
-    }
-
-    if (pIndexBuffer != nullptr)
-    {
-        delete pIndexBuffer;
-    }
+    ResetIndices();
     pIndexBuffer = new D3D12IndexBuffer();
+
+    indexSize = size;
+    indexCount = size / sizeof(UINT16);
+    pIndex = (UINT16*)malloc(size);
+    if (pIndex != nullptr)
+    {
+        memcpy(pIndex, pInIndex, indexSize);
+    }
 }
 
 void D3D12Mesh::CopyVertices(void* destination)
 {
-    memcpy(destination, pVertices, verticesSize);
+    memcpy(destination, pVertex, vertexSize);
 }
 
 void D3D12Mesh::CopyIndices(void* destination)
 {
-    memcpy(destination, pIndices, indicesSize);
+    memcpy(destination, pIndex, indexSize);
 }
 
 const D3D12_RESOURCE_DESC D3D12Mesh::GetVertexResourceDesc()
@@ -73,7 +82,7 @@ const D3D12_RESOURCE_DESC D3D12Mesh::GetVertexResourceDesc()
     D3D12_RESOURCE_DESC resourceDesc;
     resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
     resourceDesc.Alignment = 0;
-    resourceDesc.Width = verticesSize;
+    resourceDesc.Width = vertexSize;
     resourceDesc.Height = 1;
     resourceDesc.DepthOrArraySize = 1;
     resourceDesc.MipLevels = 1;
@@ -91,7 +100,7 @@ const D3D12_RESOURCE_DESC D3D12Mesh::GetIndexResourceDesc()
     D3D12_RESOURCE_DESC resourceDesc;
     resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
     resourceDesc.Alignment = 0;
-    resourceDesc.Width = indicesSize;
+    resourceDesc.Width = indexSize;
     resourceDesc.Height = 1;
     resourceDesc.DepthOrArraySize = 1;
     resourceDesc.MipLevels = 1;
@@ -107,12 +116,16 @@ const D3D12_RESOURCE_DESC D3D12Mesh::GetIndexResourceDesc()
 void D3D12Mesh::CreateView()
 {
     // Initialize the vertex buffer view.
-    pVertexBuffer->CreateView();
-    pVertexBuffer->VertexBufferView.StrideInBytes = sizeof(Vertex);
-    pVertexBuffer->VertexBufferView.SizeInBytes = verticesSize;
+    D3D12_VERTEX_BUFFER_VIEW vertexView = {};
+    vertexView.StrideInBytes = sizeof(Vertex);
+    vertexView.SizeInBytes = vertexSize;
+    vertexView.BufferLocation = pVertexBuffer->GetResource()->GetGPUVirtualAddress();
+    pVertexBuffer->SetVertexBufferView(vertexView);
 
     // Initialize the index buffer view.
-    pIndexBuffer->CreateView();
-    pIndexBuffer->IndexBufferView.Format = DXGI_FORMAT_R16_UINT;
-    pIndexBuffer->IndexBufferView.SizeInBytes = indicesSize;
+    D3D12_INDEX_BUFFER_VIEW indexView = {};
+    indexView.Format = DXGI_FORMAT_R16_UINT;
+    indexView.SizeInBytes = indexSize;
+    indexView.BufferLocation = pIndexBuffer->GetResource()->GetGPUVirtualAddress();
+    pIndexBuffer->SetIndexBufferView(indexView);
 }

@@ -16,7 +16,7 @@ void D3D12VertexBuffer::CreateView(const ComPtr<ID3D12Device>& device, const D3D
 
 }
 
-void D3D12VertexBuffer::CreateView()
+void D3D12VertexBuffer::SetVertexBufferView(const D3D12_VERTEX_BUFFER_VIEW& view)
 {
-    VertexBufferView.BufferLocation = pBuffer->GetResource()->GetGPUVirtualAddress();
+	vertexBufferView = view;
 }

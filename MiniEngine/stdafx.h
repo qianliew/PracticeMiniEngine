@@ -21,6 +21,7 @@
 #include <iostream>
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "SharedPrimitives.h"
 #include "SharedConstants.h"

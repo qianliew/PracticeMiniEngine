@@ -23,6 +23,25 @@ struct Vertex
     XMFLOAT4 tangentOS;
     XMFLOAT2 texCoord;
     XMFLOAT4 color;
+
+#ifndef HLSL
+    bool operator==(const Vertex& vertex) const
+    {
+        return (
+            positionOS.x == vertex.positionOS.x
+            && positionOS.y == vertex.positionOS.y
+            && positionOS.z == vertex.positionOS.z
+            && normalOS.x == vertex.normalOS.x
+            && normalOS.y == vertex.normalOS.y
+            && normalOS.z == vertex.normalOS.z
+            && tangentOS.x == vertex.tangentOS.x
+            && tangentOS.y == vertex.tangentOS.y
+            && tangentOS.z == vertex.tangentOS.z
+            && tangentOS.w == vertex.tangentOS.w
+            && texCoord.x == vertex.texCoord.x
+            && texCoord.y == vertex.texCoord.y);
+    }
+#endif
 };
 
 struct IndirectCommand

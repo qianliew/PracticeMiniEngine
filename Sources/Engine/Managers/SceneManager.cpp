@@ -65,7 +65,7 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
     }
 
     // Parse FBX from the scene file.
-    UINT numModels = 0, offset = 0;
+    UINT numModels = 0, indexOffset = 0, vertexOffset = 0;
     inFile >> numModels;
 
     for (UINT i = 0; i < numModels; i++)
@@ -78,7 +78,7 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
         model->SetMaterial(pMaterialPool[EraseSuffix(fileName)]);
         AddObject(model);
 
-        LoadObjectVertexBufferAndIndexBufferDXR(pCommandList, model, offset);
+        LoadObjectVertexBufferAndIndexBufferDXR(pCommandList, model, indexOffset, vertexOffset);
         LoadObjectVertexBufferAndIndexBuffer(pCommandList, model);
     }
 
@@ -208,7 +208,7 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
         Model* model = pObjects[i];
         UINT id = pObjects[i]->GetObjectID();
         commands[i].cbv = pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->GetResource()->GetGPUVirtualAddress();
-        commands[i].drawArguments.VertexCountPerInstance = model->GetMesh()->GetIndicesNum();
+        commands[i].drawArguments.VertexCountPerInstance = model->GetMesh()->GetIndexCount();
         commands[i].drawArguments.InstanceCount = 1;
         commands[i].drawArguments.StartVertexLocation = 0;
         commands[i].drawArguments.StartInstanceLocation = 0;
@@ -322,9 +322,9 @@ void SceneManager::DrawObjects(D3D12CommandList* pCommandList)
 
         // Set buffers and draw the instance.
         pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        pCommandList->SetVertexBuffers(0, 1, &model->GetMesh()->GetVertexBuffer()->VertexBufferView);
-        pCommandList->SetIndexBuffer(&model->GetMesh()->GetIndexBuffer()->IndexBufferView);
-        pCommandList->DrawIndexedInstanced(model->GetMesh()->GetIndicesNum());
+        pCommandList->SetVertexBuffers(0, 1, &model->GetMesh()->GetVertexBufferView());
+        pCommandList->SetIndexBuffer(&model->GetMesh()->GetIndexBufferView());
+        pCommandList->DrawIndexedInstanced(model->GetMesh()->GetIndexCount());
     }
 
     ResetVisData(pCommandList);
@@ -363,18 +363,18 @@ void SceneManager::DrawSkybox(D3D12CommandList* pCommandList)
 
     pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    pCommandList->SetVertexBuffers(0, 1, &pSkyboxMesh->GetMesh()->GetVertexBuffer()->VertexBufferView);
-    pCommandList->SetIndexBuffer(&pSkyboxMesh->GetMesh()->GetIndexBuffer()->IndexBufferView);
-    pCommandList->DrawIndexedInstanced(pSkyboxMesh->GetMesh()->GetIndicesNum());
+    pCommandList->SetVertexBuffers(0, 1, &pSkyboxMesh->GetMesh()->GetVertexBufferView());
+    pCommandList->SetIndexBuffer(&pSkyboxMesh->GetMesh()->GetIndexBufferView());
+    pCommandList->DrawIndexedInstanced(pSkyboxMesh->GetMesh()->GetIndexCount());
 }
 
 void SceneManager::DrawFullScreenMesh(D3D12CommandList* pCommandList)
 {
     pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    pCommandList->SetVertexBuffers(0, 1, &pFullScreenMesh->GetMesh()->GetVertexBuffer()->VertexBufferView);
-    pCommandList->SetIndexBuffer(&pFullScreenMesh->GetMesh()->GetIndexBuffer()->IndexBufferView);
-    pCommandList->DrawIndexedInstanced(pFullScreenMesh->GetMesh()->GetIndicesNum());
+    pCommandList->SetVertexBuffers(0, 1, &pFullScreenMesh->GetMesh()->GetVertexBufferView());
+    pCommandList->SetIndexBuffer(&pFullScreenMesh->GetMesh()->GetIndexBufferView());
+    pCommandList->DrawIndexedInstanced(pFullScreenMesh->GetMesh()->GetIndexCount());
 }
 
 void SceneManager::SetFrustumCullingResources(D3D12CommandList* pCommandList)
@@ -482,36 +482,37 @@ void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList* pComma
         pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_PEROBJECT, id));
 
     // Create the vertex buffer and index buffer and their view.
-    D3D12_RESOURCE_DESC resourceBuffer = CD3DX12_RESOURCE_DESC::Buffer(object->GetMesh()->GetVerticesSize());
+    D3D12_RESOURCE_DESC resourceBuffer = CD3DX12_RESOURCE_DESC::Buffer(object->GetMesh()->GetVertexSize());
     D3D12UploadBuffer* tempVertexBuffer = new D3D12UploadBuffer(resourceBuffer);
     pDevice->GetBufferManager()->AllocateTempUploadBuffer(tempVertexBuffer);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         object->GetMesh()->GetVertexBuffer(),
         object->GetMesh()->GetVertexResourceDesc(),
         D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-    tempVertexBuffer->CopyData(object->GetMesh()->GetVerticesData(), object->GetMesh()->GetVerticesSize());
+    tempVertexBuffer->CopyData(object->GetMesh()->GetVertexData(), object->GetMesh()->GetVertexSize());
 
-    resourceBuffer = CD3DX12_RESOURCE_DESC::Buffer(object->GetMesh()->GetIndicesSize());
+    resourceBuffer = CD3DX12_RESOURCE_DESC::Buffer(object->GetMesh()->GetIndexSize());
     D3D12UploadBuffer* tempIndexBuffer = new D3D12UploadBuffer(resourceBuffer);
     pDevice->GetBufferManager()->AllocateTempUploadBuffer(tempIndexBuffer);
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
         object->GetMesh()->GetIndexBuffer(),
         object->GetMesh()->GetIndexResourceDesc(),
         D3D12_RESOURCE_STATE_INDEX_BUFFER);
-    tempIndexBuffer->CopyData(object->GetMesh()->GetIndicesData(), object->GetMesh()->GetIndicesSize());
+    tempIndexBuffer->CopyData(object->GetMesh()->GetIndexData(), object->GetMesh()->GetIndexSize());
     object->GetMesh()->CreateView();
 
     pCommandList->CopyBufferRegion(
         object->GetMesh()->GetVertexBuffer(),
         tempVertexBuffer->GetResource().Get(),
-        object->GetMesh()->GetVerticesSize());
+        object->GetMesh()->GetVertexSize());
     pCommandList->CopyBufferRegion(
         object->GetMesh()->GetIndexBuffer(),
         tempIndexBuffer->GetResource().Get(),
-        object->GetMesh()->GetIndicesSize());
+        object->GetMesh()->GetIndexSize());
 }
 
-void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList* pCommandList, Model* object, UINT& offset)
+void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(
+    D3D12CommandList* pCommandList, Model* object, UINT& indexOffset, UINT& vertexOffset)
 {
     // Create the geometry desc for this object.
     D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = {};
@@ -521,8 +522,8 @@ void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList* pCo
     geometryDesc.Triangles.Transform3x4 = 0;
     geometryDesc.Triangles.IndexFormat = DXGI_FORMAT_R16_UINT;
     geometryDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
-    geometryDesc.Triangles.IndexCount = object->GetMesh()->GetIndicesNum();
-    geometryDesc.Triangles.VertexCount = object->GetMesh()->GetVerticesNum();
+    geometryDesc.Triangles.IndexCount = object->GetMesh()->GetIndexCount();
+    geometryDesc.Triangles.VertexCount = object->GetMesh()->GetVertexCount();
     geometryDesc.Triangles.IndexBuffer =
         pTempIndexBuffer->GetResource()->GetGPUVirtualAddress() + pTempIndexBuffer->GetBufferUsage();
     geometryDesc.Triangles.VertexBuffer.StartAddress =
@@ -532,20 +533,25 @@ void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList* pCo
 
     // Copy vertex and index data to a common buffer.
     pTempVertexBuffer->CopyData(
-        object->GetMesh()->GetVerticesData(),
-        object->GetMesh()->GetVerticesSize(),
+        object->GetMesh()->GetVertexData(),
+        object->GetMesh()->GetVertexSize(),
         pTempVertexBuffer->GetBufferUsage());
 
     pTempIndexBuffer->CopyData(
-        object->GetMesh()->GetIndicesData(),
-        object->GetMesh()->GetIndicesSize(),
+        object->GetMesh()->GetIndexData(),
+        object->GetMesh()->GetIndexSize(),
         pTempIndexBuffer->GetBufferUsage());
 
     pTempOffsetBuffer->CopyData(
-        &offset,
+        &indexOffset,
         sizeof(UINT),
         pTempOffsetBuffer->GetBufferUsage());
-    offset += object->GetMesh()->GetIndicesNum();
+    indexOffset += geometryDesc.Triangles.IndexCount;
+    pTempOffsetBuffer->CopyData(
+        &vertexOffset,
+        sizeof(UINT),
+        pTempOffsetBuffer->GetBufferUsage());
+    vertexOffset += geometryDesc.Triangles.VertexCount;
 
     // Create the geomerty desc for the binding box of this object.
     geometryDesc = {};

@@ -17,7 +17,9 @@ public:
     void LoadContent(FbxNode* pNode, D3D12Mesh* mesh);
 
     // Mesh
-    void LoadMesh(FbxNode* pNode, D3D12Mesh* mesh);
+    void LoadMesh(FbxNode* pNode, D3D12Mesh* pMesh);
+    void LoadVerticesAndIndices(FbxNode* pNode, UINT16* iIndex, Vertex* iVertex);
+    void SaveVerticesAndIndices(D3D12Mesh* pMesh, const UINT vertexCount, UINT16* pIndex, Vertex* pVertex);
 
 private:
     // FBX SDK objects

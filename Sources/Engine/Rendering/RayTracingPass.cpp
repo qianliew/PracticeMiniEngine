@@ -229,7 +229,7 @@ void RayTracingPass::Execute(D3D12CommandList* pCommandList)
     pViewManager->ConvertTextureType(pCommandList, colorHandle, D3D12TextureType::RenderTarget, D3D12TextureType::RenderTarget);
 
     // Copy the output to the color buffer.
-    const D3D12Resource* pColorResource = pViewManager->GetCurrentRTVBuffer(pViewManager->GetCurrentColorHandle());
-    const D3D12Resource* pOutputResource = pViewManager->GetUAVBuffer(pViewManager->GetUAVColorHandle());
-    CopyBuffer(pCommandList, pColorResource, pOutputResource);
+    D3D12Resource* pColorResource = pViewManager->GetCurrentRTVBuffer(pViewManager->GetCurrentColorHandle());
+    D3D12Resource* pOutputResource = pViewManager->GetUAVBuffer(pViewManager->GetUAVColorHandle());
+    pCommandList->CopyResource(pColorResource, pOutputResource);
 }

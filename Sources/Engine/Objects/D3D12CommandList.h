@@ -149,8 +149,8 @@ public:
         ID3D12Resource* pDstResource,
         D3D12Resource* pSrcResource);
     void CopyResource(
-        const D3D12Resource* pDstResource,
-        const D3D12Resource* pSrcResource);
+        D3D12Resource* pDstResource,
+        D3D12Resource* pSrcResource);
     void CopyTextureBuffer(
         D3D12Resource* pDstResource,
         ID3D12Resource* pIntermediate,
