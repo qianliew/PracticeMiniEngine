@@ -65,7 +65,7 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
     }
 
     // Parse FBX from the scene file.
-    UINT numModels = 0, offset = 0;
+    UINT numModels = 0, indexOffset = 0, vertexOffset = 0;
     inFile >> numModels;
 
     for (UINT i = 0; i < numModels; i++)
@@ -78,7 +78,7 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
         model->SetMaterial(pMaterialPool[EraseSuffix(fileName)]);
         AddObject(model);
 
-        LoadObjectVertexBufferAndIndexBufferDXR(pCommandList, model, offset);
+        LoadObjectVertexBufferAndIndexBufferDXR(pCommandList, model, indexOffset, vertexOffset);
         LoadObjectVertexBufferAndIndexBuffer(pCommandList, model);
     }
 
@@ -511,7 +511,8 @@ void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList* pComma
         object->GetMesh()->GetIndexSize());
 }
 
-void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList* pCommandList, Model* object, UINT& offset)
+void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(
+    D3D12CommandList* pCommandList, Model* object, UINT& indexOffset, UINT& vertexOffset)
 {
     // Create the geometry desc for this object.
     D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = {};
@@ -542,10 +543,15 @@ void SceneManager::LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList* pCo
         pTempIndexBuffer->GetBufferUsage());
 
     pTempOffsetBuffer->CopyData(
-        &offset,
+        &indexOffset,
         sizeof(UINT),
         pTempOffsetBuffer->GetBufferUsage());
-    offset += geometryDesc.Triangles.IndexCount;
+    indexOffset += geometryDesc.Triangles.IndexCount;
+    pTempOffsetBuffer->CopyData(
+        &vertexOffset,
+        sizeof(UINT),
+        pTempOffsetBuffer->GetBufferUsage());
+    vertexOffset += geometryDesc.Triangles.VertexCount;
 
     // Create the geomerty desc for the binding box of this object.
     geometryDesc = {};
