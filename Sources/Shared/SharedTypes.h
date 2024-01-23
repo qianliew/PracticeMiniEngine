@@ -47,7 +47,9 @@ struct Vertex
 struct IndirectCommand
 {
     D3D12_GPU_VIRTUAL_ADDRESS cbv;
-    D3D12_DRAW_ARGUMENTS drawArguments;
+    D3D12_VERTEX_BUFFER_VIEW vbv;
+    D3D12_INDEX_BUFFER_VIEW ibv;
+    D3D12_DRAW_INDEXED_ARGUMENTS drawArguments;
 };
 
 struct Ray

@@ -17,11 +17,6 @@ struct TLAS
 	std::shared_ptr<D3D12UnorderedAccessBuffer> pTopLevelAccelerationStructure;
 };
 
-enum class eCommandSignatureIndex
-{
-	CBV = 0,
-};
-
 class SceneManager
 {
 private:
@@ -44,8 +39,7 @@ private:
 	UINT visData[GlobalConstants::kVisDataSize];
 
 	const UINT64 commandBufferSize = GlobalConstants::kVisDataSize * sizeof(IndirectCommand);
-	const UINT64 alignment = D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT;
-	const UINT64 argumentBufferSize = (commandBufferSize + (alignment - 1)) & ~(alignment - 1);
+	const UINT64 argumentBufferSize = Align(commandBufferSize, D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT);
 
 	std::shared_ptr<D3D12ShaderResourceBuffer> pCommandBuffer;
 	D3D12UploadBuffer* pTempCommandBuffer;

@@ -185,10 +185,13 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
         L"FrustumCullingReadbackBuffer");
 
     // Create a command signature for indirect drawing.
-    D3D12_INDIRECT_ARGUMENT_DESC argumentDescs[2] = {};
+    D3D12_INDIRECT_ARGUMENT_DESC argumentDescs[4] = {};
     argumentDescs[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
-    argumentDescs[0].ConstantBufferView.RootParameterIndex = (UINT)eCommandSignatureIndex::CBV;
-    argumentDescs[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
+    argumentDescs[0].ConstantBufferView.RootParameterIndex = (UINT)eRootIndex::ConstantBufferViewPerObject;
+    argumentDescs[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW;
+    argumentDescs[1].VertexBuffer.Slot = 0;
+    argumentDescs[2].Type = D3D12_INDIRECT_ARGUMENT_TYPE_INDEX_BUFFER_VIEW;
+    argumentDescs[3].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
 
     D3D12_COMMAND_SIGNATURE_DESC commandSignatureDesc = {};
     commandSignatureDesc.pArgumentDescs = argumentDescs;
@@ -208,9 +211,12 @@ void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSi
         Model* model = pObjects[i];
         UINT id = pObjects[i]->GetObjectID();
         commands[i].cbv = pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->GetResource()->GetGPUVirtualAddress();
-        commands[i].drawArguments.VertexCountPerInstance = model->GetMesh()->GetIndexCount();
+        commands[i].vbv = model->GetMesh()->GetVertexBufferView();
+        commands[i].ibv = model->GetMesh()->GetIndexBufferView();
+        commands[i].drawArguments.IndexCountPerInstance = model->GetMesh()->GetIndexCount();
         commands[i].drawArguments.InstanceCount = 1;
-        commands[i].drawArguments.StartVertexLocation = 0;
+        commands[i].drawArguments.StartIndexLocation = 0;
+        commands[i].drawArguments.BaseVertexLocation = 0;
         commands[i].drawArguments.StartInstanceLocation = 0;
     }
 
@@ -332,10 +338,28 @@ void SceneManager::DrawObjects(D3D12CommandList* pCommandList)
 
 void SceneManager::DrawObjectsIndirectly(D3D12CommandList* pCommandList)
 {
+    Model* model = pObjects[0];
+    UINT id = pObjects[0]->GetObjectID();
+
+    // Set the material relating views.
+    LitMaterial* litMaterial = dynamic_cast<LitMaterial*>(model->GetMaterial());
+
+    pDevice->GetDescriptorHeapManager()->SetViews(
+        pCommandList->GetCommandList(),
+        SHADER_RESOURCE_VIEW_PEROBJECT,
+        (UINT)eRootIndex::ShaderResourceViewPerObject,
+        litMaterial->GetTexture()->GetTextureID());
+    pDevice->GetDescriptorHeapManager()->SetViews(
+        pCommandList->GetCommandList(),
+        SAMPLER,
+        (UINT)eRootIndex::Sampler,
+        litMaterial->GetTexture()->GetTextureID());
+
+    // Set buffers and draw the instance.
     pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     pCommandList->ExecuteIndirect(
         pCommandSignature.Get(),
-        pObjects.size(),
+        GlobalConstants::kVisDataSize,
         pArgumentBuffer->GetResource().Get(),
         0,
         pArgumentBuffer->GetResource().Get(),
