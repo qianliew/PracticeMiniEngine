@@ -23,6 +23,5 @@ public:
 	~FrustumCullingPass();
 
 	void Setup(D3D12CommandList*, ComPtr<ID3D12RootSignature>&);
-	void Update();
 	void Execute(D3D12CommandList*);
 };

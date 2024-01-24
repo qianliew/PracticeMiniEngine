@@ -32,7 +32,7 @@ void D3D12RootSignature::CreateRootSignature()
     descriptorTableRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, 0);
     descriptorTableRanges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2, 0);
     descriptorTableRanges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 5, 0);
-    descriptorTableRanges[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 8, 0);
+    descriptorTableRanges[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 8, 0);
     descriptorTableRanges[5].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 11, 0);
     descriptorTableRanges[6].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0);
     descriptorTableRanges[7].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 3, 5, 0);

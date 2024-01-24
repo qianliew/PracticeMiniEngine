@@ -69,7 +69,7 @@ void D3D12Texture::LoadTexture2DArray(std::vector<std::wstring>& texturePaths, U
 
     for (UINT i = 0; i < texturePaths.size(); i++)
     {
-        LoadSingleTexture(texturePaths[i], 0);
+        LoadSingleTexture(texturePaths[i], i);
     }
 }
 
@@ -248,9 +248,9 @@ void D3D12Texture::CreateSampler()
 }
 
 // Helper functions
-void D3D12Texture::LoadSingleTexture(std::wstring& texturePath, UINT index)
+void D3D12Texture::LoadSingleTexture(std::wstring& texturePath, UINT sliceIndex)
 {
-    UINT mipWidth = 0, mipHeight = 0, bytesPerRow = 0, indexOffset = index * mipLevel;
+    UINT mipWidth = 0, mipHeight = 0, bytesPerRow = 0, indexOffset = sliceIndex * mipLevel;
     UINT64 size = 0;
     for (int i = 0; i < mipLevel; i++)
     {

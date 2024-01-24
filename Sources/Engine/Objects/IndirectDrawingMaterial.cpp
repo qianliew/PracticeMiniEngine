@@ -15,9 +15,11 @@ IndirectDrawingMaterial::~IndirectDrawingMaterial()
 
 void IndirectDrawingMaterial::AddTextures(const std::wstring inName)
 {
-	names.push_back(inName);
-	mraNames.push_back(GetMRATexturePath(inName));
-	normalNames.push_back(GetNormalTexturePath(inName));
+	std::wstring texturePath = GetAssetPath(inName.c_str());
+
+	names.push_back(texturePath);
+	mraNames.push_back(GetMRATexturePath(texturePath));
+	normalNames.push_back(GetNormalTexturePath(texturePath));
 }
 
 void IndirectDrawingMaterial::LoadTexture()

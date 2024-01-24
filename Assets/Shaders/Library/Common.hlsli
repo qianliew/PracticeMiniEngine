@@ -17,6 +17,7 @@ SamplerState StaticLinearClampSampler : register(s0);
 cbuffer PerObjectConstants : register(b1)
 {
     float4x4 ObjectToWorldMatrix;
+    uint ObjectID;
 };
 
 inline float3 GetWorldSpaceNormal(float3 normalOS)

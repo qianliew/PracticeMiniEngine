@@ -76,6 +76,9 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
         }
         material->LoadTexture();
         LoadTextureBufferAndSampler(pCommandList, material->GetTexture());
+        LoadTextureBufferAndSampler(pCommandList, material->GetMRATexture());
+        LoadTextureBufferAndSampler(pCommandList, material->GetNormalTexture());
+        pIndirectDrawingMaterial = material;
         pMaterialPool[name] = material;
     }
 
@@ -359,11 +362,11 @@ void SceneManager::DrawObjectsIndirectly(D3D12CommandList* pCommandList)
         SHADER_RESOURCE_VIEW_PEROBJECT,
         (UINT)eRootIndex::ShaderResourceViewTextureArray,
         material->GetTexture()->GetTextureID());
-    //pDevice->GetDescriptorHeapManager()->SetViews(
-    //    pCommandList->GetCommandList(),
-    //    SAMPLER,
-    //    (UINT)eRootIndex::Sampler,
-    //    pIndirectDrawingMaterial->GetTexture()->GetTextureID());
+    pDevice->GetDescriptorHeapManager()->SetViews(
+        pCommandList->GetCommandList(),
+        SAMPLER,
+        (UINT)eRootIndex::Sampler,
+        pIndirectDrawingMaterial->GetTexture()->GetTextureID());
 
     // Set buffers and draw the instance.
     pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

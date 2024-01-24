@@ -122,11 +122,6 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
     }
 }
 
-void FrustumCullingPass::Update()
-{
-
-}
-
 void FrustumCullingPass::Execute(D3D12CommandList* pCommandList)
 {
     FLOAT scale = 1.0f;

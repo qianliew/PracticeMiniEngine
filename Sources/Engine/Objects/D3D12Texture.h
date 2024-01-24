@@ -47,7 +47,7 @@ private:
 	IWICBitmapFrameDecode* pFrameDecode = NULL;
 	IWICFormatConverter* pConverter = NULL;
 
-	void LoadSingleTexture(std::wstring& texturePath, UINT index);
+	void LoadSingleTexture(std::wstring& texturePath, UINT sliceIndex);
 	std::wstring GetTexturePath(std::wstring texturePath, UINT mipIndex);
 	std::wstring GetDefaultMipTexturePath(std::wstring texturePath, UINT mipSize);
 

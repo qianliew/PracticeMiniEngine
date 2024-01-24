@@ -26,13 +26,12 @@ struct VSInput
 struct PSInput
 {
     float4 positionCS   : SV_POSITION;
-    float2 texCoord     : TEXCOORD0;
+    float3 texCoord     : TEXCOORD0;
     float3 normalWS     : TEXCOORD1;
     float4 tangentWS    : TEXCOORD2;
     float3 viewDirWS    : TEXCOORD3;
     float4 positionWS   : TEXCOORD4;
     float4 color        : COLOR;
-    uint   instanceID   : SV_InstanceID;
 };
 
 PSInput VSMain(VSInput input)
@@ -42,7 +41,7 @@ PSInput VSMain(VSInput input)
     input.positionOS.w = 1;
     result.positionWS = mul(ObjectToWorldMatrix, input.positionOS);
     result.positionCS = mul(WorldToProjectionMatrix, result.positionWS);
-    result.texCoord = input.texCoord;
+    result.texCoord = float3(input.texCoord.xy, ObjectID);
 
     result.normalWS = normalize(GetWorldSpaceNormal(input.normalOS));
     result.tangentWS = float4(normalize(GetWorldSpaceTangent(input.tangentOS.xyz)), input.tangentOS.w);
@@ -59,10 +58,10 @@ void PSMain(PSInput input,
     out float4 GBuffer2 : SV_TARGET2,
     out float4 GBuffer3 : SV_TARGET3)
 {
-    GBuffer0 = BaseTextures.Sample(StaticLinearClampSampler, input.texCoord, instanceID);
-    GBuffer1 = MRATexture.Sample(StaticLinearClampSampler, input.texCoord, instanceID);
+    GBuffer0 = BaseTextures.Sample(BaseTextureSampler, input.texCoord);
+    GBuffer1 = MRATextures.Sample(MRATextureSampler, input.texCoord);
 
-    float3 normalTS = NormalTexture.Sample(StaticLinearClampSampler, input.texCoord, instanceID).xyz * 2.0f - 1.0f;
+    float3 normalTS = NormalTextures.Sample(NormalTextureSampler, input.texCoord).xyz * 2.0f - 1.0f;
     float sgn = input.tangentWS.w > 0.0f ? 1.0f : -1.0f;
     float3 bitangentWS = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
     float3 normalWS = mul(normalTS, float3x3(input.tangentWS.xyz, bitangentWS.xyz, input.normalWS.xyz));
