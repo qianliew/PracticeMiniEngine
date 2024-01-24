@@ -632,6 +632,11 @@ void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList* pCommandList, D
         texture->TextureSampler->CPUHandle);
 }
 
+void LoadTextureArray(D3D12CommandList* pCommandList)
+{
+
+}
+
 void SceneManager::BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index)
 {
     // Create the input of BLAS.

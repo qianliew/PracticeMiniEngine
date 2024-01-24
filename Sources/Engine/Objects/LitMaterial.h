@@ -3,7 +3,7 @@
 
 class LitMaterial : public AbstractMaterial
 {
-private:
+protected:
 	const std::wstring kMRASuffix = L"_mra";
 	const std::wstring kNormalSuffix = L"_n";
 
@@ -15,8 +15,8 @@ private:
 	std::wstring GetNormalTexturePath(std::wstring texturePath);
 
 public:
-	LitMaterial(std::wstring inName);
-	~LitMaterial();
+	LitMaterial(const std::wstring inName);
+	virtual ~LitMaterial();
 
 	virtual void LoadTexture() override;
 	virtual void ReleaseTextureData() override;

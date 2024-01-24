@@ -172,6 +172,7 @@
     <ClInclude Include="..\Sources\Engine\Objects\D3D12CommandList.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12ConstantBuffer.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12IndexBuffer.h" />
+    <ClInclude Include="..\Sources\Engine\Objects\IndirectDrawingMaterial.h" />
     <ClInclude Include="..\Sources\Engine\Objects\LitMaterial.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12Mesh.h" />
     <ClInclude Include="..\Sources\Engine\Objects\Model.h" />
@@ -221,6 +222,7 @@
     <ClCompile Include="..\Sources\Engine\Objects\D3D12CommandList.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12ConstantBuffer.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12IndexBuffer.cpp" />
+    <ClCompile Include="..\Sources\Engine\Objects\IndirectDrawingMaterial.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\LitMaterial.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Mesh.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\Model.cpp" />

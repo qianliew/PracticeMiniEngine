@@ -53,35 +53,44 @@ D3D12Texture::~D3D12Texture()
     ReleaseTextureBuffer();
 }
 
-void D3D12Texture::LoadTexture(std::wstring& texturePath, UINT inMipLevel,
-    D3D12_SRV_DIMENSION inSRVDimension, UINT inSlice)
+void D3D12Texture::LoadTexture2D(std::wstring& texturePath, UINT inMipLevel)
 {
     mipLevel = inMipLevel;
-    srvDimension = inSRVDimension;
-    slice = inSlice;
+    srvDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    slice = 1;
+    LoadSingleTexture(texturePath, 0);
+}
 
-    if (srvDimension == D3D12_SRV_DIMENSION_TEXTURECUBE)
-    {
-        mipLevel = 1;
-        slice = 6;
+void D3D12Texture::LoadTexture2DArray(std::vector<std::wstring>& texturePaths, UINT inMipLevel)
+{
+    mipLevel = inMipLevel;
+    srvDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+    slice = texturePaths.size();
 
-        std::wstring path = texturePath;
-        LoadSingleTexture(path.insert(texturePath.length(), kCubemapPX), 0);
-        path = texturePath;
-        LoadSingleTexture(path.insert(texturePath.length(), kCubemapNX), 1);
-        path = texturePath;
-        LoadSingleTexture(path.insert(texturePath.length(), kCubemapPY), 2);
-        path = texturePath;
-        LoadSingleTexture(path.insert(texturePath.length(), kCubemapNY), 3);
-        path = texturePath;
-        LoadSingleTexture(path.insert(texturePath.length(), kCubemapPZ), 4);
-        path = texturePath;
-        LoadSingleTexture(path.insert(texturePath.length(), kCubemapNZ), 5);
-    }
-    else
+    for (UINT i = 0; i < texturePaths.size(); i++)
     {
-        LoadSingleTexture(texturePath, 0);
+        LoadSingleTexture(texturePaths[i], 0);
     }
+}
+
+void D3D12Texture::LoadTextureCube(std::wstring& texturePath, UINT inMipLevel)
+{
+    mipLevel = 1;
+    srvDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+    slice = 6;
+
+    std::wstring path = texturePath;
+    LoadSingleTexture(path.insert(texturePath.length(), kCubemapPX), 0);
+    path = texturePath;
+    LoadSingleTexture(path.insert(texturePath.length(), kCubemapNX), 1);
+    path = texturePath;
+    LoadSingleTexture(path.insert(texturePath.length(), kCubemapPY), 2);
+    path = texturePath;
+    LoadSingleTexture(path.insert(texturePath.length(), kCubemapNY), 3);
+    path = texturePath;
+    LoadSingleTexture(path.insert(texturePath.length(), kCubemapPZ), 4);
+    path = texturePath;
+    LoadSingleTexture(path.insert(texturePath.length(), kCubemapNZ), 5);
 }
 
 void D3D12Texture::CreateTextureResource()
@@ -105,6 +114,10 @@ void D3D12Texture::CreateTextureResource()
             viewDesc.TextureCube.MostDetailedMip = 0;
             viewDesc.TextureCube.MipLevels = mipLevel;
             viewDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+        }
+        else if (srvDimension == D3D12_SRV_DIMENSION_TEXTURE2DARRAY)
+        {
+
         }
 
         pTextureBuffer = new D3D12ShaderResourceBuffer(viewDesc);

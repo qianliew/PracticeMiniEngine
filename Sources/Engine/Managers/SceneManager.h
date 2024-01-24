@@ -26,6 +26,7 @@ private:
 	std::vector<Model*> pObjects;
 	std::map<wstring, AbstractMaterial*> pMaterialPool;
 	AbstractMaterial* pSkyboxMaterial;
+	AbstractMaterial* pIndirectDrawingMaterial;
 	Camera* pCamera;
 	Model* pSkyboxMesh;
 	Model* pFullScreenMesh;
@@ -62,9 +63,10 @@ private:
 	D3D12UploadBuffer* pInstanceDescBuffer;
 
 	// Helper functions.
-	void LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*, Model* object);
-	void LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*, Model* object, UINT& indexOffset, UINT& vertexOffset);
-	void LoadTextureBufferAndSampler(D3D12CommandList*, D3D12Texture* texture);
+	void LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList* pCommandList, Model* object);
+	void LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList* pCommandList, Model* object, UINT& indexOffset, UINT& vertexOffset);
+	void LoadTextureBufferAndSampler(D3D12CommandList* pCommandList, D3D12Texture* texture);
+	void LoadTextureArray(D3D12CommandList* pCommandList);
 	void BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index);
 	void BuildTopLevelAS(D3D12CommandList* pCommandList, UINT index);
 
