@@ -66,7 +66,6 @@ private:
 	void LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList* pCommandList, Model* object);
 	void LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList* pCommandList, Model* object, UINT& indexOffset, UINT& vertexOffset);
 	void LoadTextureBufferAndSampler(D3D12CommandList* pCommandList, D3D12Texture* texture);
-	void LoadTextureArray(D3D12CommandList* pCommandList);
 	void BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index);
 	void BuildTopLevelAS(D3D12CommandList* pCommandList, UINT index);
 

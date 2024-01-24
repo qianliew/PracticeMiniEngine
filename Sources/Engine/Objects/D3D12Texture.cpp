@@ -117,7 +117,12 @@ void D3D12Texture::CreateTextureResource()
         }
         else if (srvDimension == D3D12_SRV_DIMENSION_TEXTURE2DARRAY)
         {
-
+            viewDesc.Texture2DArray.MostDetailedMip = 0;
+            viewDesc.Texture2DArray.MipLevels = mipLevel;
+            viewDesc.Texture2DArray.FirstArraySlice = 0;
+            viewDesc.Texture2DArray.ArraySize = slice;
+            viewDesc.Texture2DArray.PlaneSlice = 0;
+            viewDesc.Texture2DArray.ResourceMinLODClamp = 0.0f;
         }
 
         pTextureBuffer = new D3D12ShaderResourceBuffer(viewDesc);

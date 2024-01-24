@@ -9,7 +9,7 @@ protected:
 	std::vector<std::wstring> normalNames;
 
 public:
-	IndirectDrawingMaterial();
+	IndirectDrawingMaterial(const std::wstring inName);
 	virtual ~IndirectDrawingMaterial();
 
 	void AddTextures(const std::wstring inName);

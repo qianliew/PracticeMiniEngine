@@ -2,6 +2,7 @@
 #include "SceneManager.h"
 #include "LitMaterial.h"
 #include "SkyboxMaterial.h"
+#include "IndirectDrawingMaterial.h"
 
 UINT SceneManager::sTextureID = 0;
 
@@ -51,7 +52,7 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
     // Parse textures from the scene file to materials.
     UINT numMaterials = 0;
     inFile >> numMaterials;
-    for (UINT i = 0; i < numMaterials; i++)
+    /*for (UINT i = 0; i < numMaterials; i++)
     {
         WCHAR materialName[32];
         inFile >> materialName;
@@ -62,6 +63,20 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
         LoadTextureBufferAndSampler(pCommandList, material->GetMRATexture());
         LoadTextureBufferAndSampler(pCommandList, material->GetNormalTexture());
         pMaterialPool[EraseSuffix(materialName)] = material;
+    }*/
+
+    {
+        const std::wstring name = L"IndirectDrawingMaterial";
+        IndirectDrawingMaterial* material = new IndirectDrawingMaterial(name);
+        for (UINT i = 0; i < numMaterials; i++)
+        {
+            WCHAR textureName[32];
+            inFile >> textureName;
+            material->AddTextures(textureName);
+        }
+        material->LoadTexture();
+        LoadTextureBufferAndSampler(pCommandList, material->GetTexture());
+        pMaterialPool[name] = material;
     }
 
     // Parse FBX from the scene file.
@@ -338,22 +353,17 @@ void SceneManager::DrawObjects(D3D12CommandList* pCommandList)
 
 void SceneManager::DrawObjectsIndirectly(D3D12CommandList* pCommandList)
 {
-    Model* model = pObjects[0];
-    UINT id = pObjects[0]->GetObjectID();
-
-    // Set the material relating views.
-    LitMaterial* litMaterial = dynamic_cast<LitMaterial*>(model->GetMaterial());
-
+    IndirectDrawingMaterial* material = dynamic_cast<IndirectDrawingMaterial*>(pIndirectDrawingMaterial);
     pDevice->GetDescriptorHeapManager()->SetViews(
         pCommandList->GetCommandList(),
         SHADER_RESOURCE_VIEW_PEROBJECT,
-        (UINT)eRootIndex::ShaderResourceViewPerObject,
-        litMaterial->GetTexture()->GetTextureID());
-    pDevice->GetDescriptorHeapManager()->SetViews(
-        pCommandList->GetCommandList(),
-        SAMPLER,
-        (UINT)eRootIndex::Sampler,
-        litMaterial->GetTexture()->GetTextureID());
+        (UINT)eRootIndex::ShaderResourceViewTextureArray,
+        material->GetTexture()->GetTextureID());
+    //pDevice->GetDescriptorHeapManager()->SetViews(
+    //    pCommandList->GetCommandList(),
+    //    SAMPLER,
+    //    (UINT)eRootIndex::Sampler,
+    //    pIndirectDrawingMaterial->GetTexture()->GetTextureID());
 
     // Set buffers and draw the instance.
     pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -630,11 +640,6 @@ void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList* pCommandList, D
     texture->TextureSampler->CPUHandle = pDevice->GetDescriptorHeapManager()->GetHandle(SAMPLER, id);
     pDevice->GetDevice()->CreateSampler(&texture->TextureSampler->SamplerDesc,
         texture->TextureSampler->CPUHandle);
-}
-
-void LoadTextureArray(D3D12CommandList* pCommandList)
-{
-
 }
 
 void SceneManager::BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index)

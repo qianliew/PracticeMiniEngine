@@ -2,8 +2,8 @@
 #include "IndirectDrawingMaterial.h"
 #include "SceneManager.h"
 
-IndirectDrawingMaterial::IndirectDrawingMaterial() :
-	LitMaterial(nullptr)
+IndirectDrawingMaterial::IndirectDrawingMaterial(const std::wstring inName) :
+	LitMaterial(inName)
 {
 
 }

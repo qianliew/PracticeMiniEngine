@@ -6,6 +6,9 @@
 Texture2D BaseTexture   : register(t5);
 Texture2D MRATexture    : register(t6);
 Texture2D NormalTexture : register(t7);
+Texture2DArray BaseTextures     : register(t8);
+Texture2DArray MRATextures      : register(t9);
+Texture2DArray NormalTextures   : register(t10);
 
 SamplerState BaseTextureSampler     : register(s5);
 SamplerState MRATextureSampler      : register(s6);
@@ -29,6 +32,7 @@ struct PSInput
     float3 viewDirWS    : TEXCOORD3;
     float4 positionWS   : TEXCOORD4;
     float4 color        : COLOR;
+    uint   instanceID   : SV_InstanceID;
 };
 
 PSInput VSMain(VSInput input)
@@ -55,10 +59,10 @@ void PSMain(PSInput input,
     out float4 GBuffer2 : SV_TARGET2,
     out float4 GBuffer3 : SV_TARGET3)
 {
-    GBuffer0 = BaseTexture.Sample(BaseTextureSampler, input.texCoord);
-    GBuffer1 = MRATexture.Sample(MRATextureSampler, input.texCoord);
+    GBuffer0 = BaseTextures.Sample(StaticLinearClampSampler, input.texCoord, instanceID);
+    GBuffer1 = MRATexture.Sample(StaticLinearClampSampler, input.texCoord, instanceID);
 
-    float3 normalTS = NormalTexture.Sample(NormalTextureSampler, input.texCoord).xyz * 2.0f - 1.0f;
+    float3 normalTS = NormalTexture.Sample(StaticLinearClampSampler, input.texCoord, instanceID).xyz * 2.0f - 1.0f;
     float sgn = input.tangentWS.w > 0.0f ? 1.0f : -1.0f;
     float3 bitangentWS = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
     float3 normalWS = mul(normalTS, float3x3(input.tangentWS.xyz, bitangentWS.xyz, input.normalWS.xyz));

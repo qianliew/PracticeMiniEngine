@@ -6,10 +6,10 @@
 
 RWTexture2D<float4> Result : register(u0);
 
-Texture2D GBuffer0 : register(t10);
-Texture2D GBuffer1 : register(t11);
-Texture2D GBuffer2 : register(t12);
-Texture2D GBuffer3 : register(t13);
+Texture2D GBuffer0 : register(t11);
+Texture2D GBuffer1 : register(t12);
+Texture2D GBuffer2 : register(t13);
+Texture2D GBuffer3 : register(t14);
 
 [numthreads(10, 10, 1)]
 void CSMain(uint3 threadID : SV_DispatchThreadID)

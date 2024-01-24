@@ -27,14 +27,15 @@ D3D12RootSignature::~D3D12RootSignature()
 
 void D3D12RootSignature::CreateRootSignature()
 {
-    CD3DX12_DESCRIPTOR_RANGE descriptorTableRanges[7];
+    CD3DX12_DESCRIPTOR_RANGE descriptorTableRanges[8];
     descriptorTableRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
     descriptorTableRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, 0);
     descriptorTableRanges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2, 0);
     descriptorTableRanges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 5, 0);
-    descriptorTableRanges[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 10, 0);
-    descriptorTableRanges[5].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0);
-    descriptorTableRanges[6].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 3, 5, 0);
+    descriptorTableRanges[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 8, 0);
+    descriptorTableRanges[5].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 11, 0);
+    descriptorTableRanges[6].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0);
+    descriptorTableRanges[7].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 3, 5, 0);
 
     CD3DX12_ROOT_PARAMETER rootParameters[(UINT)eRootIndex::Count];
     rootParameters[(UINT)eRootIndex::ConstantBufferViewGlobal].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
@@ -43,9 +44,10 @@ void D3D12RootSignature::CreateRootSignature()
     rootParameters[(UINT)eRootIndex::ShaderResourceViewGlobal1].InitAsDescriptorTable(1, &descriptorTableRanges[1], D3D12_SHADER_VISIBILITY_PIXEL);
     rootParameters[(UINT)eRootIndex::ShaderResourceViewGlobal2].InitAsDescriptorTable(1, &descriptorTableRanges[2], D3D12_SHADER_VISIBILITY_PIXEL);
     rootParameters[(UINT)eRootIndex::ShaderResourceViewPerObject].InitAsDescriptorTable(1, &descriptorTableRanges[3], D3D12_SHADER_VISIBILITY_PIXEL);
-    rootParameters[(UINT)eRootIndex::ShaderResourceViewGBuffer].InitAsDescriptorTable(1, &descriptorTableRanges[4], D3D12_SHADER_VISIBILITY_ALL);
-    rootParameters[(UINT)eRootIndex::UnorderedAccessViewGlobal].InitAsDescriptorTable(1, &descriptorTableRanges[5], D3D12_SHADER_VISIBILITY_ALL);
-    rootParameters[(UINT)eRootIndex::Sampler].InitAsDescriptorTable(1, &descriptorTableRanges[6], D3D12_SHADER_VISIBILITY_PIXEL);
+    rootParameters[(UINT)eRootIndex::ShaderResourceViewTextureArray].InitAsDescriptorTable(1, &descriptorTableRanges[4], D3D12_SHADER_VISIBILITY_PIXEL);
+    rootParameters[(UINT)eRootIndex::ShaderResourceViewGBuffer].InitAsDescriptorTable(1, &descriptorTableRanges[5], D3D12_SHADER_VISIBILITY_ALL);
+    rootParameters[(UINT)eRootIndex::UnorderedAccessViewGlobal].InitAsDescriptorTable(1, &descriptorTableRanges[6], D3D12_SHADER_VISIBILITY_ALL);
+    rootParameters[(UINT)eRootIndex::Sampler].InitAsDescriptorTable(1, &descriptorTableRanges[7], D3D12_SHADER_VISIBILITY_PIXEL);
 
     CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
     rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 1, &staticSamplerDesc,
