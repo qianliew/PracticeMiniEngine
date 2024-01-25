@@ -20,6 +20,8 @@ struct TLAS
 class SceneManager
 {
 private:
+	const std::wstring name = L"IndirectDrawingMaterial";
+
 	shared_ptr<D3D12Device> pDevice;
 	unique_ptr<FBXImporter> pFBXImporter;
 
@@ -63,9 +65,14 @@ private:
 	D3D12UploadBuffer* pInstanceDescBuffer;
 
 	// Helper functions.
+	void ParseScene(D3D12CommandList* pCommandList);
+	void LoadStaticData(D3D12CommandList* pCommandList);
+	void BuildGlobalBuffers(D3D12CommandList* pCommandList);
+	void BuildIndirectDrawingBuffers(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature);
 	void LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList* pCommandList, Model* object);
 	void LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList* pCommandList, Model* object, UINT& indexOffset, UINT& vertexOffset);
 	void LoadTextureBufferAndSampler(D3D12CommandList* pCommandList, D3D12Texture* texture);
+	void BuildVertexAndIndexSRV(D3D12CommandList* pCommandList);
 	void BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index);
 	void BuildTopLevelAS(D3D12CommandList* pCommandList, UINT index);
 
@@ -79,11 +86,11 @@ public:
 	static UINT sTextureID;
 
 	void InitFBXImporter();
-	void ParseScene(D3D12CommandList*);
-	void LoadScene(D3D12CommandList*, ComPtr<ID3D12RootSignature>&);
+	void LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature);
 	void UnloadScene();
 	void CreateCamera(UINT width, UINT height);
 	void AddObject(Model* object);
+	// This is a LEGACY method, it has been updated to DrawObjectsIndirectly.
 	void DrawObjects(D3D12CommandList* pCommandList);
 	void DrawObjectsIndirectly(D3D12CommandList* pCommandList);
 	void DrawSkybox(D3D12CommandList* pCommandList);

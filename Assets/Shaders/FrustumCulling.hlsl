@@ -12,9 +12,6 @@ RaytracingAccelerationStructure Scene : register(t0);
 RWTexture2D<float4> Result : register(u0);
 RWStructuredBuffer<uint> VisData : register(u10);
 
-StructuredBuffer<IndirectCommand> commandBuffer : register(t4);
-AppendStructuredBuffer<IndirectCommand> argumentBuffer : register(u1); 
-
 float TraceFrustumCullingRay(float3 origin, float3 direction)
 {
     FrustumCullingRayPayload payload =
@@ -42,11 +39,6 @@ void FrustumCullingRaygenShader()
 
     float vis = TraceFrustumCullingRay(origin, direction);
     Result[DispatchRaysIndex().xy] = vis;
-
-    //if (DispatchRaysIndex().x < 3 && DispatchRaysIndex().y == 0)
-    //{
-    //    argumentBuffer.Append(commandBuffer[DispatchRaysIndex().x]);
-    //}
 }
 
 [shader("miss")]

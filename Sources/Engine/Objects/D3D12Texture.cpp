@@ -51,6 +51,8 @@ D3D12Texture::~D3D12Texture()
 {
     ReleaseTextureData();
     ReleaseTextureBuffer();
+
+    pFactory->Release();
 }
 
 void D3D12Texture::LoadTexture2D(std::wstring& texturePath, UINT inMipLevel)
@@ -297,8 +299,6 @@ void D3D12Texture::LoadSingleTexture(std::wstring& texturePath, UINT sliceIndex)
 
         if (mipWidth == 0) break;
     }
-
-    pFactory->Release();
 }
 
 std::wstring D3D12Texture::GetTexturePath(std::wstring texturePath, UINT mipIndex)
