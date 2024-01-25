@@ -2,6 +2,7 @@
 #include "SceneManager.h"
 #include "LitMaterial.h"
 #include "SkyboxMaterial.h"
+#include "IndirectDrawingMaterial.h"
 
 UINT SceneManager::sTextureID = 0;
 
@@ -43,225 +44,19 @@ void SceneManager::InitFBXImporter()
     pFBXImporter->InitializeSdkObjects();
 }
 
-void SceneManager::ParseScene(D3D12CommandList* pCommandList)
-{
-    LPCWSTR sceneName = L"scene";
-    std::wifstream inFile(GetAssetPath(sceneName));
-
-    // Parse textures from the scene file to materials.
-    UINT numMaterials = 0;
-    inFile >> numMaterials;
-    for (UINT i = 0; i < numMaterials; i++)
-    {
-        WCHAR materialName[32];
-        inFile >> materialName;
-        LitMaterial* material = new LitMaterial(materialName);
-        material->LoadTexture();
-
-        LoadTextureBufferAndSampler(pCommandList, material->GetTexture());
-        LoadTextureBufferAndSampler(pCommandList, material->GetMRATexture());
-        LoadTextureBufferAndSampler(pCommandList, material->GetNormalTexture());
-        pMaterialPool[EraseSuffix(materialName)] = material;
-    }
-
-    // Parse FBX from the scene file.
-    UINT numModels = 0, indexOffset = 0, vertexOffset = 0;
-    inFile >> numModels;
-
-    for (UINT i = 0; i < numModels; i++)
-    {
-        WCHAR fileName[32];
-        inFile >> fileName;
-
-        Model* model = new Model(objectID++, fileName);
-        model->LoadModel(pFBXImporter);
-        model->SetMaterial(pMaterialPool[EraseSuffix(fileName)]);
-        AddObject(model);
-
-        LoadObjectVertexBufferAndIndexBufferDXR(pCommandList, model, indexOffset, vertexOffset);
-        LoadObjectVertexBufferAndIndexBuffer(pCommandList, model);
-    }
-
-    // Create the SRV of indices and vertices.
-    D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempIndexBuffer->GetBufferSize());
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    pIndexBuffer = new D3D12ShaderResourceBuffer(srvDesc);
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(
-        pIndexBuffer,
-        resourceDesc,
-        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-        L"IndexBuffer");
-    pCommandList->CopyBufferRegion(
-        pIndexBuffer,
-        pTempIndexBuffer->GetResource().Get(),
-        pTempIndexBuffer->GetBufferUsage());
-
-    resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempVertexBuffer->GetBufferSize());
-    srvDesc = {};
-    pVertexBuffer = new D3D12ShaderResourceBuffer(srvDesc);
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(
-        pVertexBuffer,
-        resourceDesc,
-        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-        L"VertexBuffer");
-    pCommandList->CopyBufferRegion(
-        pVertexBuffer,
-        pTempVertexBuffer->GetResource().Get(),
-        pTempVertexBuffer->GetBufferUsage());
-
-    resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempOffsetBuffer->GetBufferSize());
-    srvDesc = {};
-    pOffsetBuffer = new D3D12ShaderResourceBuffer(srvDesc);
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(
-        pOffsetBuffer,
-        resourceDesc,
-        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-        L"OffsetBuffer");
-    pCommandList->CopyBufferRegion(
-        pOffsetBuffer,
-        pTempOffsetBuffer->GetResource().Get(),
-        pTempOffsetBuffer->GetBufferUsage());
-
-    BuildBottomLevelAS(pCommandList, GeometryType::Triangle);
-    BuildBottomLevelAS(pCommandList, GeometryType::AABB);
-    BuildTopLevelAS(pCommandList, GeometryType::Triangle);
-    BuildTopLevelAS(pCommandList, GeometryType::AABB);
-
-    inFile.close();
-}
-
 void SceneManager::LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
 {
     // Parse the scene file.
     ParseScene(pCommandList);
 
-    // Create static data.
-    pFullScreenMesh = new Model(objectID++, L"");
-    pFullScreenMesh->CreatePlane();
-    LoadObjectVertexBufferAndIndexBuffer(pCommandList, pFullScreenMesh);
+    // Load the static data.
+    LoadStaticData(pCommandList);
 
-    // Create assets of the skybox.
-    std::wstring skyboxName = L"Skybox\\sky01";
-    SkyboxMaterial* material = new SkyboxMaterial(skyboxName);
-    material->LoadTexture();
-    LoadTextureBufferAndSampler(pCommandList, material->GetTexture());
-    pSkyboxMaterial = material;
+    // Build global buffers.
+    BuildGlobalBuffers(pCommandList);
 
-    pSkyboxMesh = new Model(objectID++, L"Skybox\\skybox.fbx");
-    pSkyboxMesh->LoadModel(pFBXImporter);
-    LoadObjectVertexBufferAndIndexBuffer(pCommandList, pSkyboxMesh);
-
-    // Create the global constant buffer.
-    pDevice->GetBufferManager()->AllocateGlobalConstantBuffer();
-    pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_GLOBAL, 0));
-
-    // Create a UAV for keeping frustum culling data.
-    D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(
-        GlobalConstants::kMaxNumObject,
-        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-    D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
-    pFrustumCullingData = new D3D12UnorderedAccessBuffer(viewDesc);
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(
-        pFrustumCullingData,
-        resourceDesc,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-        L"FrustumCullingData");
-
-    // Create a upload buffer to upload and reset the vis data.
-    resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-    pUploadBuffer = new D3D12UploadBuffer(resourceDesc);
-    pDevice->GetBufferManager()->AllocateUploadBuffer(
-        pUploadBuffer,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        L"FrustumCullingUploadBuffer");
-    ResetVisData(pCommandList);
-
-    // Create a readback buffer to read data back.
-    pReadbackBuffer = new D3D12ReadbackBuffer(resourceDesc);
-    pDevice->GetBufferManager()->AllocateReadbackBuffer(
-        pReadbackBuffer,
-        D3D12_RESOURCE_STATE_COPY_DEST,
-        L"FrustumCullingReadbackBuffer");
-
-    // Create a command signature for indirect drawing.
-    D3D12_INDIRECT_ARGUMENT_DESC argumentDescs[2] = {};
-    argumentDescs[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
-    argumentDescs[0].ConstantBufferView.RootParameterIndex = (UINT)eCommandSignatureIndex::CBV;
-    argumentDescs[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
-
-    D3D12_COMMAND_SIGNATURE_DESC commandSignatureDesc = {};
-    commandSignatureDesc.pArgumentDescs = argumentDescs;
-    commandSignatureDesc.NumArgumentDescs = _countof(argumentDescs);
-    commandSignatureDesc.ByteStride = sizeof(IndirectCommand);
-
-    ThrowIfFailed(pDevice->GetDevice()->CreateCommandSignature(
-        &commandSignatureDesc,
-        pRootSignature.Get(),
-        IID_PPV_ARGS(&pCommandSignature)));
-
-    // Create the command buffer.
-    std::vector<IndirectCommand> commands;
-    commands.resize(GlobalConstants::kVisDataSize);
-    for (UINT i = 0; i < pObjects.size(); i++)
-    {
-        Model* model = pObjects[i];
-        UINT id = pObjects[i]->GetObjectID();
-        commands[i].cbv = pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->GetResource()->GetGPUVirtualAddress();
-        commands[i].drawArguments.VertexCountPerInstance = model->GetMesh()->GetIndexCount();
-        commands[i].drawArguments.InstanceCount = 1;
-        commands[i].drawArguments.StartVertexLocation = 0;
-        commands[i].drawArguments.StartInstanceLocation = 0;
-    }
-
-    D3D12_RESOURCE_DESC commandBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(commandBufferSize);
-    D3D12_SHADER_RESOURCE_VIEW_DESC commandBufferSRVDesc = {};
-
-    pTempCommandBuffer = new D3D12UploadBuffer(commandBufferDesc);
-    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempCommandBuffer);
-    pTempCommandBuffer->CopyData(&commands.data()[0], commandBufferSize);
-
-    pCommandBuffer = std::make_shared<D3D12ShaderResourceBuffer>(commandBufferSRVDesc);
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(
-        pCommandBuffer.get(),
-        commandBufferDesc,
-        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-        L"CommandBuffer");
-    pCommandList->CopyResource(pCommandBuffer.get(), pTempCommandBuffer->GetResource().Get());
-
-    // Create the processed command buffer
-    D3D12_RESOURCE_DESC argumentBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(
-        argumentBufferSize + sizeof(UINT),
-        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-    D3D12_UNORDERED_ACCESS_VIEW_DESC argumentBufferUAVDesc = {};
-    argumentBufferUAVDesc.Format = DXGI_FORMAT_UNKNOWN;
-    argumentBufferUAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-    argumentBufferUAVDesc.Buffer.FirstElement = 0;
-    argumentBufferUAVDesc.Buffer.NumElements = GlobalConstants::kVisDataSize;
-    argumentBufferUAVDesc.Buffer.StructureByteStride = sizeof(IndirectCommand);
-    argumentBufferUAVDesc.Buffer.CounterOffsetInBytes = argumentBufferSize;
-    argumentBufferUAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-
-    pArgumentBuffer = std::make_shared<D3D12UnorderedAccessBuffer>(argumentBufferUAVDesc);
-    pDevice->GetBufferManager()->AllocateDefaultBuffer(
-        pArgumentBuffer.get(),
-        argumentBufferDesc,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-        L"ArgumentBuffer");
-    pArgumentBuffer->SetCounterResource();
-    pArgumentBuffer->CreateView(pDevice->GetDevice(),
-        pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, 1));
-
-    D3D12_RESOURCE_DESC countBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT));
-    pCountBuffer = new D3D12UploadBuffer(countBufferDesc);
-    pDevice->GetBufferManager()->AllocateUploadBuffer(pCountBuffer);
-    pCountBuffer->ZeroData(sizeof(UINT));
-
-    pCommandList->CopyBufferRegion(
-        pArgumentBuffer.get(),
-        pCountBuffer->GetResource().Get(),
-        sizeof(UINT),
-        argumentBufferSize);
+    // Build buffers for indirect drawing.
+    BuildIndirectDrawingBuffers(pCommandList, pRootSignature);
 }
 
 void SceneManager::UnloadScene()
@@ -332,10 +127,23 @@ void SceneManager::DrawObjects(D3D12CommandList* pCommandList)
 
 void SceneManager::DrawObjectsIndirectly(D3D12CommandList* pCommandList)
 {
+    IndirectDrawingMaterial* material = dynamic_cast<IndirectDrawingMaterial*>(pIndirectDrawingMaterial);
+    pDevice->GetDescriptorHeapManager()->SetViews(
+        pCommandList->GetCommandList(),
+        SHADER_RESOURCE_VIEW_PEROBJECT,
+        (UINT)eRootIndex::ShaderResourceViewTextureArray,
+        material->GetTexture()->GetTextureID());
+    pDevice->GetDescriptorHeapManager()->SetViews(
+        pCommandList->GetCommandList(),
+        SAMPLER,
+        (UINT)eRootIndex::Sampler,
+        pIndirectDrawingMaterial->GetTexture()->GetTextureID());
+
+    // Set buffers and draw the instance.
     pCommandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     pCommandList->ExecuteIndirect(
         pCommandSignature.Get(),
-        pObjects.size(),
+        GlobalConstants::kVisDataSize,
         pArgumentBuffer->GetResource().Get(),
         0,
         pArgumentBuffer->GetResource().Get(),
@@ -388,15 +196,23 @@ void SceneManager::SetFrustumCullingResources(D3D12CommandList* pCommandList)
     pCommandList->SetComputeRootUnorderedAccessView(
         (UINT)eDXRRootIndex::UnorderedAccessViewVisData,
         pFrustumCullingData->GetResource()->GetGPUVirtualAddress());
+}
+
+void SceneManager::SetIndirectDrawingResources(D3D12CommandList* pCommandList)
+{
+    // Bind the vis data.
+    pCommandList->SetComputeRootUnorderedAccessView(
+        (UINT)eRootIndex::UnorderedAccessViewVisData,
+        pFrustumCullingData->GetResource()->GetGPUVirtualAddress());
 
     // Bind the command buffer.
     pCommandList->SetComputeRootShaderResourceView(
-        (UINT)eDXRRootIndex::ShaderResourceViewCommandBuffer,
+        (UINT)eRootIndex::ShaderResourceViewCommandBuffer,
         pCommandBuffer->GetResource()->GetGPUVirtualAddress());
     pDevice->GetDescriptorHeapManager()->SetComputeViews(
         pCommandList->GetCommandList(),
         UNORDERED_ACCESS_VIEW,
-        (UINT)eDXRRootIndex::UnorderedAccessViewArgumentBuffer,
+        (UINT)eRootIndex::UnorderedAccessViewArgumentBuffer,
         1);
 }
 
@@ -473,6 +289,198 @@ void SceneManager::Release()
 }
 
 // Helper functions.
+void SceneManager::ParseScene(D3D12CommandList* pCommandList)
+{
+    const LPCWSTR sceneName = L"scene";
+    std::wifstream inFile(GetAssetPath(sceneName));
+
+    // Parse textures from the scene file to materials.
+    UINT numMaterials = 0;
+    inFile >> numMaterials;
+    IndirectDrawingMaterial* material = new IndirectDrawingMaterial(name);
+    for (UINT i = 0; i < numMaterials; i++)
+    {
+        WCHAR textureName[32];
+        inFile >> textureName;
+        material->AddTextures(textureName);
+    }
+    material->LoadTexture();
+    LoadTextureBufferAndSampler(pCommandList, material->GetTexture());
+    LoadTextureBufferAndSampler(pCommandList, material->GetMRATexture());
+    LoadTextureBufferAndSampler(pCommandList, material->GetNormalTexture());
+    pIndirectDrawingMaterial = material;
+    pMaterialPool[name] = material;
+
+    // Parse FBX from the scene file.
+    UINT numModels = 0, indexOffset = 0, vertexOffset = 0;
+    inFile >> numModels;
+
+    for (UINT i = 0; i < numModels; i++)
+    {
+        WCHAR fileName[32];
+        inFile >> fileName;
+
+        Model* model = new Model(objectID++, fileName);
+        model->LoadModel(pFBXImporter);
+        model->SetMaterial(pMaterialPool[EraseSuffix(fileName)]);
+        AddObject(model);
+
+        LoadObjectVertexBufferAndIndexBufferDXR(pCommandList, model, indexOffset, vertexOffset);
+        LoadObjectVertexBufferAndIndexBuffer(pCommandList, model);
+    }
+
+    BuildVertexAndIndexSRV(pCommandList);
+    BuildBottomLevelAS(pCommandList, GeometryType::Triangle);
+    BuildBottomLevelAS(pCommandList, GeometryType::AABB);
+    BuildTopLevelAS(pCommandList, GeometryType::Triangle);
+    BuildTopLevelAS(pCommandList, GeometryType::AABB);
+
+    inFile.close();
+}
+
+void SceneManager::LoadStaticData(D3D12CommandList* pCommandList)
+{
+    // Create static data.
+    pFullScreenMesh = new Model(objectID++, L"");
+    pFullScreenMesh->CreatePlane();
+    LoadObjectVertexBufferAndIndexBuffer(pCommandList, pFullScreenMesh);
+
+    // Create assets of the skybox.
+    std::wstring skyboxName = L"Skybox\\sky01";
+    SkyboxMaterial* material = new SkyboxMaterial(skyboxName);
+    material->LoadTexture();
+    LoadTextureBufferAndSampler(pCommandList, material->GetTexture());
+    pSkyboxMaterial = material;
+
+    pSkyboxMesh = new Model(objectID++, L"Skybox\\skybox.fbx");
+    pSkyboxMesh->LoadModel(pFBXImporter);
+    LoadObjectVertexBufferAndIndexBuffer(pCommandList, pSkyboxMesh);
+}
+
+void SceneManager::BuildGlobalBuffers(D3D12CommandList* pCommandList)
+{
+    // Create the global constant buffer.
+    pDevice->GetBufferManager()->AllocateGlobalConstantBuffer();
+    pDevice->GetBufferManager()->GetGlobalConstantBuffer()->CreateView(pDevice->GetDevice(),
+        pDevice->GetDescriptorHeapManager()->GetHandle(CONSTANT_BUFFER_VIEW_GLOBAL, 0));
+
+    // Create a UAV for keeping frustum culling data.
+    D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(
+        GlobalConstants::kMaxNumObject,
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
+    pFrustumCullingData = new D3D12UnorderedAccessBuffer(viewDesc);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(
+        pFrustumCullingData,
+        resourceDesc,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        L"FrustumCullingData");
+
+    // Create a upload buffer to upload and reset the vis data.
+    resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    pUploadBuffer = new D3D12UploadBuffer(resourceDesc);
+    pDevice->GetBufferManager()->AllocateUploadBuffer(
+        pUploadBuffer,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        L"FrustumCullingUploadBuffer");
+    ResetVisData(pCommandList);
+
+    // Create a readback buffer to read data back.
+    pReadbackBuffer = new D3D12ReadbackBuffer(resourceDesc);
+    pDevice->GetBufferManager()->AllocateReadbackBuffer(
+        pReadbackBuffer,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        L"FrustumCullingReadbackBuffer");
+}
+
+void SceneManager::BuildIndirectDrawingBuffers(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
+{
+    // Create a command signature for indirect drawing.
+    D3D12_INDIRECT_ARGUMENT_DESC argumentDescs[4] = {};
+    argumentDescs[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
+    argumentDescs[0].ConstantBufferView.RootParameterIndex = (UINT)eRootIndex::ConstantBufferViewPerObject;
+    argumentDescs[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW;
+    argumentDescs[1].VertexBuffer.Slot = 0;
+    argumentDescs[2].Type = D3D12_INDIRECT_ARGUMENT_TYPE_INDEX_BUFFER_VIEW;
+    argumentDescs[3].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
+
+    D3D12_COMMAND_SIGNATURE_DESC commandSignatureDesc = {};
+    commandSignatureDesc.pArgumentDescs = argumentDescs;
+    commandSignatureDesc.NumArgumentDescs = _countof(argumentDescs);
+    commandSignatureDesc.ByteStride = sizeof(IndirectCommand);
+
+    ThrowIfFailed(pDevice->GetDevice()->CreateCommandSignature(
+        &commandSignatureDesc,
+        pRootSignature.Get(),
+        IID_PPV_ARGS(&pCommandSignature)));
+
+    // Create the command buffer.
+    std::vector<IndirectCommand> commands;
+    commands.resize(GlobalConstants::kVisDataSize);
+    for (UINT i = 0; i < pObjects.size(); i++)
+    {
+        Model* model = pObjects[i];
+        UINT id = pObjects[i]->GetObjectID();
+        commands[i].cbv = pDevice->GetBufferManager()->GetPerObjectConstantBufferAtIndex(id)->GetResource()->GetGPUVirtualAddress();
+        commands[i].vbv = model->GetMesh()->GetVertexBufferView();
+        commands[i].ibv = model->GetMesh()->GetIndexBufferView();
+        commands[i].drawArguments.IndexCountPerInstance = model->GetMesh()->GetIndexCount();
+        commands[i].drawArguments.InstanceCount = 1;
+        commands[i].drawArguments.StartIndexLocation = 0;
+        commands[i].drawArguments.BaseVertexLocation = 0;
+        commands[i].drawArguments.StartInstanceLocation = 0;
+    }
+
+    D3D12_RESOURCE_DESC commandBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(commandBufferSize);
+    D3D12_SHADER_RESOURCE_VIEW_DESC commandBufferSRVDesc = {};
+
+    pTempCommandBuffer = new D3D12UploadBuffer(commandBufferDesc);
+    pDevice->GetBufferManager()->AllocateTempUploadBuffer(pTempCommandBuffer);
+    pTempCommandBuffer->CopyData(&commands.data()[0], commandBufferSize);
+
+    pCommandBuffer = std::make_shared<D3D12ShaderResourceBuffer>(commandBufferSRVDesc);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(
+        pCommandBuffer.get(),
+        commandBufferDesc,
+        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+        L"CommandBuffer");
+    pCommandList->CopyResource(pCommandBuffer.get(), pTempCommandBuffer->GetResource().Get());
+
+    // Create the processed command buffer
+    D3D12_RESOURCE_DESC argumentBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(
+        argumentBufferSize + sizeof(UINT),
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    D3D12_UNORDERED_ACCESS_VIEW_DESC argumentBufferUAVDesc = {};
+    argumentBufferUAVDesc.Format = DXGI_FORMAT_UNKNOWN;
+    argumentBufferUAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+    argumentBufferUAVDesc.Buffer.FirstElement = 0;
+    argumentBufferUAVDesc.Buffer.NumElements = GlobalConstants::kVisDataSize;
+    argumentBufferUAVDesc.Buffer.StructureByteStride = sizeof(IndirectCommand);
+    argumentBufferUAVDesc.Buffer.CounterOffsetInBytes = argumentBufferSize;
+    argumentBufferUAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+
+    pArgumentBuffer = std::make_shared<D3D12UnorderedAccessBuffer>(argumentBufferUAVDesc);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(
+        pArgumentBuffer.get(),
+        argumentBufferDesc,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        L"ArgumentBuffer");
+    pArgumentBuffer->SetCounterResource();
+    pArgumentBuffer->CreateView(pDevice->GetDevice(),
+        pDevice->GetDescriptorHeapManager()->GetHandle(UNORDERED_ACCESS_VIEW, 1));
+
+    D3D12_RESOURCE_DESC countBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT));
+    pCountBuffer = new D3D12UploadBuffer(countBufferDesc);
+    pDevice->GetBufferManager()->AllocateUploadBuffer(pCountBuffer);
+    pCountBuffer->ZeroData(sizeof(UINT));
+
+    pCommandList->CopyBufferRegion(
+        pArgumentBuffer.get(),
+        pCountBuffer->GetResource().Get(),
+        sizeof(UINT),
+        argumentBufferSize);
+}
+  
 void SceneManager::LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList* pCommandList, Model* object)
 {
     // Create the perObject constant buffer and its view.
@@ -606,6 +614,49 @@ void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList* pCommandList, D
     texture->TextureSampler->CPUHandle = pDevice->GetDescriptorHeapManager()->GetHandle(SAMPLER, id);
     pDevice->GetDevice()->CreateSampler(&texture->TextureSampler->SamplerDesc,
         texture->TextureSampler->CPUHandle);
+}
+
+void SceneManager::BuildVertexAndIndexSRV(D3D12CommandList* pCommandList)
+{
+    // Create the SRV of indices and vertices.
+    D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempIndexBuffer->GetBufferSize());
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    pIndexBuffer = new D3D12ShaderResourceBuffer(srvDesc);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(
+        pIndexBuffer,
+        resourceDesc,
+        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+        L"IndexBuffer");
+    pCommandList->CopyBufferRegion(
+        pIndexBuffer,
+        pTempIndexBuffer->GetResource().Get(),
+        pTempIndexBuffer->GetBufferUsage());
+
+    resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempVertexBuffer->GetBufferSize());
+    srvDesc = {};
+    pVertexBuffer = new D3D12ShaderResourceBuffer(srvDesc);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(
+        pVertexBuffer,
+        resourceDesc,
+        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+        L"VertexBuffer");
+    pCommandList->CopyBufferRegion(
+        pVertexBuffer,
+        pTempVertexBuffer->GetResource().Get(),
+        pTempVertexBuffer->GetBufferUsage());
+
+    resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(pTempOffsetBuffer->GetBufferSize());
+    srvDesc = {};
+    pOffsetBuffer = new D3D12ShaderResourceBuffer(srvDesc);
+    pDevice->GetBufferManager()->AllocateDefaultBuffer(
+        pOffsetBuffer,
+        resourceDesc,
+        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+        L"OffsetBuffer");
+    pCommandList->CopyBufferRegion(
+        pOffsetBuffer,
+        pTempOffsetBuffer->GetResource().Get(),
+        pTempOffsetBuffer->GetBufferUsage());
 }
 
 void SceneManager::BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index)

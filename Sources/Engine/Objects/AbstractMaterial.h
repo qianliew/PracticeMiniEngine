@@ -8,7 +8,7 @@ protected:
 	D3D12Texture* pTexture;
 
 public:
-	AbstractMaterial(std::wstring inName);
+	AbstractMaterial(const std::wstring inName);
 	virtual ~AbstractMaterial();
 
 	virtual void LoadTexture() = 0;

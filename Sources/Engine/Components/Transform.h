@@ -11,6 +11,7 @@ using std::shared_ptr;
 struct TransformConstant
 {
     XMFLOAT4X4 ObjectToWorldMatrix;
+    UINT ObjectID;
 };
 
 class Transform

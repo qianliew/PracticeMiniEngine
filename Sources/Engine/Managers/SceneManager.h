@@ -17,20 +17,18 @@ struct TLAS
 	std::shared_ptr<D3D12UnorderedAccessBuffer> pTopLevelAccelerationStructure;
 };
 
-enum class eCommandSignatureIndex
-{
-	CBV = 0,
-};
-
 class SceneManager
 {
 private:
+	const std::wstring name = L"IndirectDrawingMaterial";
+
 	shared_ptr<D3D12Device> pDevice;
 	unique_ptr<FBXImporter> pFBXImporter;
 
 	std::vector<Model*> pObjects;
 	std::map<wstring, AbstractMaterial*> pMaterialPool;
 	AbstractMaterial* pSkyboxMaterial;
+	AbstractMaterial* pIndirectDrawingMaterial;
 	Camera* pCamera;
 	Model* pSkyboxMesh;
 	Model* pFullScreenMesh;
@@ -44,8 +42,7 @@ private:
 	UINT visData[GlobalConstants::kVisDataSize];
 
 	const UINT64 commandBufferSize = GlobalConstants::kVisDataSize * sizeof(IndirectCommand);
-	const UINT64 alignment = D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT;
-	const UINT64 argumentBufferSize = (commandBufferSize + (alignment - 1)) & ~(alignment - 1);
+	const UINT64 argumentBufferSize = Align(commandBufferSize, D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT);
 
 	std::shared_ptr<D3D12ShaderResourceBuffer> pCommandBuffer;
 	D3D12UploadBuffer* pTempCommandBuffer;
@@ -68,9 +65,14 @@ private:
 	D3D12UploadBuffer* pInstanceDescBuffer;
 
 	// Helper functions.
-	void LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList*, Model* object);
-	void LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList*, Model* object, UINT& indexOffset, UINT& vertexOffset);
-	void LoadTextureBufferAndSampler(D3D12CommandList*, D3D12Texture* texture);
+	void ParseScene(D3D12CommandList* pCommandList);
+	void LoadStaticData(D3D12CommandList* pCommandList);
+	void BuildGlobalBuffers(D3D12CommandList* pCommandList);
+	void BuildIndirectDrawingBuffers(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature);
+	void LoadObjectVertexBufferAndIndexBuffer(D3D12CommandList* pCommandList, Model* object);
+	void LoadObjectVertexBufferAndIndexBufferDXR(D3D12CommandList* pCommandList, Model* object, UINT& indexOffset, UINT& vertexOffset);
+	void LoadTextureBufferAndSampler(D3D12CommandList* pCommandList, D3D12Texture* texture);
+	void BuildVertexAndIndexSRV(D3D12CommandList* pCommandList);
 	void BuildBottomLevelAS(D3D12CommandList* pCommandList, UINT index);
 	void BuildTopLevelAS(D3D12CommandList* pCommandList, UINT index);
 
@@ -84,17 +86,18 @@ public:
 	static UINT sTextureID;
 
 	void InitFBXImporter();
-	void ParseScene(D3D12CommandList*);
-	void LoadScene(D3D12CommandList*, ComPtr<ID3D12RootSignature>&);
+	void LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature);
 	void UnloadScene();
 	void CreateCamera(UINT width, UINT height);
 	void AddObject(Model* object);
-	void DrawObjects(D3D12CommandList*);
-	void DrawObjectsIndirectly(D3D12CommandList*);
-	void DrawSkybox(D3D12CommandList*);
-	void DrawFullScreenMesh(D3D12CommandList*);
-	void SetFrustumCullingResources(D3D12CommandList*);
-	void ReadbackFrustumCullingData(D3D12CommandList*);
+	// This is a LEGACY method, it has been updated to DrawObjectsIndirectly.
+	void DrawObjects(D3D12CommandList* pCommandList);
+	void DrawObjectsIndirectly(D3D12CommandList* pCommandList);
+	void DrawSkybox(D3D12CommandList* pCommandList);
+	void DrawFullScreenMesh(D3D12CommandList* pCommandList);
+	void SetFrustumCullingResources(D3D12CommandList* pCommandList);
+	void SetIndirectDrawingResources(D3D12CommandList* pCommandList);
+	void ReadbackFrustumCullingData(D3D12CommandList* pCommandList);
 	void SetDXRResources(D3D12CommandList*);
 
 	void UpdateScene();

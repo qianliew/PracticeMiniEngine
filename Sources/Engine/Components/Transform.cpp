@@ -7,7 +7,7 @@ Transform::Transform(UINT index) :
 	upDirction(DefaultUpDirction),
     id(index)
 {
-
+    transformConstant.ObjectID = index;
 }
 
 Transform::~Transform()

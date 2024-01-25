@@ -3,6 +3,7 @@
 #include "Window.h"
 #include "ViewManager.h"
 #include "FrustumCullingPass.h"
+#include "IndirectDrawingPass.h"
 #include "DrawObjecstPass.h"
 #include "GBufferPass.h"
 #include "DeferredLightingPass.h"
@@ -25,6 +26,7 @@ private:
     D3D12CommandList* pCommandList;
 
     shared_ptr<FrustumCullingPass> pFrustumCullingPass;
+    shared_ptr<IndirectDrawingPass> pIndirectDrawingPass;
     shared_ptr<DrawObjectsPass> pDrawObjectPass;
     shared_ptr<GBufferPass> pGBufferPass;
     shared_ptr<DeferredLightingPass> pDeferredLightingPass;

@@ -196,6 +196,12 @@
     <ClInclude Include="..\Sources\Engine\Components\D3D12ReadbackBuffer.h">
       <Filter>Engine\Components\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Objects\IndirectDrawingMaterial.h">
+      <Filter>Engine\Objects\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sources\Engine\Rendering\IndirectDrawingPass.h">
+      <Filter>Engine\Rendering\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Sources\Engine\Objects\D3D12IndexBuffer.cpp">
@@ -318,6 +324,12 @@
     <ClCompile Include="..\Sources\Engine\Components\D3D12ReadbackBuffer.cpp">
       <Filter>Engine\Components\Sources</Filter>
     </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Objects\IndirectDrawingMaterial.cpp">
+      <Filter>Engine\Objects\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sources\Engine\Rendering\IndirectDrawingPass.cpp">
+      <Filter>Engine\Rendering\Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\Assets\Shaders\Lit.hlsl">
@@ -336,6 +348,9 @@
       <Filter>Assets\Shaders</Filter>
     </CustomBuild>
     <CustomBuild Include="..\Assets\Shaders\DeferredLighting.hlsl">
+      <Filter>Assets\Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\Assets\Shaders\IndirectDrawing.hlsl">
       <Filter>Assets\Shaders</Filter>
     </CustomBuild>
   </ItemGroup>

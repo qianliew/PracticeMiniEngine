@@ -172,6 +172,7 @@
     <ClInclude Include="..\Sources\Engine\Objects\D3D12CommandList.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12ConstantBuffer.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12IndexBuffer.h" />
+    <ClInclude Include="..\Sources\Engine\Objects\IndirectDrawingMaterial.h" />
     <ClInclude Include="..\Sources\Engine\Objects\LitMaterial.h" />
     <ClInclude Include="..\Sources\Engine\Objects\D3D12Mesh.h" />
     <ClInclude Include="..\Sources\Engine\Objects\Model.h" />
@@ -186,6 +187,7 @@
     <ClInclude Include="..\Sources\Engine\Rendering\DrawSkyboxPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\FrustumCullingPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\GBufferPass.h" />
+    <ClInclude Include="..\Sources\Engine\Rendering\IndirectDrawingPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\RayTracingPass.h" />
     <ClInclude Include="..\Sources\Engine\Rendering\TemporalAAPass.h" />
     <ClInclude Include="..\Sources\Engine\Window.h" />
@@ -221,6 +223,7 @@
     <ClCompile Include="..\Sources\Engine\Objects\D3D12CommandList.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12ConstantBuffer.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12IndexBuffer.cpp" />
+    <ClCompile Include="..\Sources\Engine\Objects\IndirectDrawingMaterial.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\LitMaterial.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\D3D12Mesh.cpp" />
     <ClCompile Include="..\Sources\Engine\Objects\Model.cpp" />
@@ -235,6 +238,7 @@
     <ClCompile Include="..\Sources\Engine\Rendering\DrawSkyboxPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\FrustumCullingPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\GBufferPass.cpp" />
+    <ClCompile Include="..\Sources\Engine\Rendering\IndirectDrawingPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\RayTracingPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Rendering\TemporalAAPass.cpp" />
     <ClCompile Include="..\Sources\Engine\Window.cpp" />
@@ -304,6 +308,18 @@
       <VariableName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">g_p%(Filename)</VariableName>
       <HeaderFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)CompiledShaders\%(Filename).hlsl.h</HeaderFileOutput>
     </FxCompile>
+    <CustomBuild Include="..\Assets\Shaders\IndirectDrawing.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <FileType>Document</FileType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CSMain</EntryPointName>
+    </CustomBuild>
     <FxCompile Include="..\Assets\Shaders\Raytracing.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </EntryPointName>
