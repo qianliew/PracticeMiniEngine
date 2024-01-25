@@ -84,12 +84,13 @@ public:
 	void UnloadScene();
 	void CreateCamera(UINT width, UINT height);
 	void AddObject(Model* object);
-	void DrawObjects(D3D12CommandList*);
-	void DrawObjectsIndirectly(D3D12CommandList*);
-	void DrawSkybox(D3D12CommandList*);
-	void DrawFullScreenMesh(D3D12CommandList*);
-	void SetFrustumCullingResources(D3D12CommandList*);
-	void ReadbackFrustumCullingData(D3D12CommandList*);
+	void DrawObjects(D3D12CommandList* pCommandList);
+	void DrawObjectsIndirectly(D3D12CommandList* pCommandList);
+	void DrawSkybox(D3D12CommandList* pCommandList);
+	void DrawFullScreenMesh(D3D12CommandList* pCommandList);
+	void SetFrustumCullingResources(D3D12CommandList* pCommandList);
+	void SetIndirectDrawingResources(D3D12CommandList* pCommandList);
+	void ReadbackFrustumCullingData(D3D12CommandList* pCommandList);
 	void SetDXRResources(D3D12CommandList*);
 
 	void UpdateScene();

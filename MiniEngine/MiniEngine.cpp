@@ -74,6 +74,9 @@ void MiniEngine::LoadAssets()
     pFrustumCullingPass = make_shared<FrustumCullingPass>(pDevice, pSceneManager, pViewManager);
     pFrustumCullingPass->Setup(pCommandList, pRootSignature->GetDRXRootSignature());
 
+    pIndirectDrawingPass = make_shared<IndirectDrawingPass>(pDevice, pSceneManager, pViewManager);
+    pIndirectDrawingPass->Setup(pCommandList, pRootSignature->GetRootSignature());
+
     pDrawObjectPass = make_shared<DrawObjectsPass>(pDevice, pSceneManager, pViewManager);
     pDrawObjectPass->Setup(pCommandList, pRootSignature->GetRootSignature());
 
@@ -189,6 +192,12 @@ void MiniEngine::PopulateCommandList()
         (UINT)eDXRRootIndex::ConstantBufferViewGlobal,
         pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
     pFrustumCullingPass->Execute(pCommandList);
+
+    pCommandList->SetComputeRootSignature(pRootSignature->GetRootSignature());
+    pCommandList->SetComputeRootConstantBufferView(
+        (UINT)eRootIndex::ConstantBufferViewGlobal,
+        pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
+    pIndirectDrawingPass->Execute(pCommandList);
 
     pCommandList->SetRootSignature(pRootSignature->GetRootSignature());
     pCommandList->SetRootConstantBufferView(

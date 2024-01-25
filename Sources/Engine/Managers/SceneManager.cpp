@@ -425,15 +425,23 @@ void SceneManager::SetFrustumCullingResources(D3D12CommandList* pCommandList)
     pCommandList->SetComputeRootUnorderedAccessView(
         (UINT)eDXRRootIndex::UnorderedAccessViewVisData,
         pFrustumCullingData->GetResource()->GetGPUVirtualAddress());
+}
+
+void SceneManager::SetIndirectDrawingResources(D3D12CommandList* pCommandList)
+{
+    // Bind the vis data.
+    pCommandList->SetComputeRootUnorderedAccessView(
+        (UINT)eRootIndex::UnorderedAccessViewVisData,
+        pFrustumCullingData->GetResource()->GetGPUVirtualAddress());
 
     // Bind the command buffer.
     pCommandList->SetComputeRootShaderResourceView(
-        (UINT)eDXRRootIndex::ShaderResourceViewCommandBuffer,
+        (UINT)eRootIndex::ShaderResourceViewCommandBuffer,
         pCommandBuffer->GetResource()->GetGPUVirtualAddress());
     pDevice->GetDescriptorHeapManager()->SetComputeViews(
         pCommandList->GetCommandList(),
         UNORDERED_ACCESS_VIEW,
-        (UINT)eDXRRootIndex::UnorderedAccessViewArgumentBuffer,
+        (UINT)eRootIndex::UnorderedAccessViewArgumentBuffer,
         1);
 }
 

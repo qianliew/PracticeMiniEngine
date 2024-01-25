@@ -43,10 +43,10 @@ void FrustumCullingRaygenShader()
     float vis = TraceFrustumCullingRay(origin, direction);
     Result[DispatchRaysIndex().xy] = vis;
 
-    if (DispatchRaysIndex().x < 3 && DispatchRaysIndex().y == 0)
-    {
-        argumentBuffer.Append(commandBuffer[DispatchRaysIndex().x]);
-    }
+    //if (DispatchRaysIndex().x < 3 && DispatchRaysIndex().y == 0)
+    //{
+    //    argumentBuffer.Append(commandBuffer[DispatchRaysIndex().x]);
+    //}
 }
 
 [shader("miss")]
