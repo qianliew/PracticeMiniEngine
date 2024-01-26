@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "DeferredLightingPass.h"
+#include "CompiledShaders/DeferredLighting.hlsl.h"
 
 DeferredLightingPass::DeferredLightingPass(
     shared_ptr<D3D12Device>& device,
@@ -12,30 +13,10 @@ DeferredLightingPass::DeferredLightingPass(
 
 void DeferredLightingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
 {
-    ComPtr<ID3DBlob> computeShader;
-
-#if defined(_DEBUG)
-    // Enable better shader debugging with the graphics debugging tools.
-    UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#else
-    UINT compileFlags = 0;
-#endif
-
-    ThrowIfFailed(D3DCompileFromFile(GetShaderPath(
-        L"DeferredLighting.hlsl").c_str(),
-        nullptr,
-        D3D_COMPILE_STANDARD_FILE_INCLUDE,
-        "CSMain",
-        "cs_5_0",
-        compileFlags,
-        0,
-        &computeShader,
-        nullptr));
-
     // Describe and create the compute pipeline state object.
     D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.pRootSignature = pRootSignature.Get();
-    psoDesc.CS = CD3DX12_SHADER_BYTECODE(computeShader.Get());
+    psoDesc.CS = CD3DX12_SHADER_BYTECODE(g_pDeferredLighting, ARRAYSIZE(g_pDeferredLighting));
 
     ThrowIfFailed(pDevice->GetDevice()->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(pPipelineState.GetAddressOf())));
 }

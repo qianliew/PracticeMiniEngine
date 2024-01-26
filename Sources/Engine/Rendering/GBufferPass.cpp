@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "GBufferPass.h"
+#include "CompiledShaders/GBufferVS.hlsl.h"
+#include "CompiledShaders/GBufferPS.hlsl.h"
 
 GBufferPass::GBufferPass(
     shared_ptr<D3D12Device>& device,
@@ -12,19 +14,6 @@ GBufferPass::GBufferPass(
 
 void GBufferPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
 {
-    ComPtr<ID3DBlob> vertexShader;
-    ComPtr<ID3DBlob> pixelShader;
-
-#if defined(_DEBUG)
-    // Enable better shader debugging with the graphics debugging tools.
-    UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#else
-    UINT compileFlags = 0;
-#endif
-
-    ThrowIfFailed(D3DCompileFromFile(GetShaderPath(L"GBuffer.hlsl").c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
-    ThrowIfFailed(D3DCompileFromFile(GetShaderPath(L"GBuffer.hlsl").c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
-
     // Define the vertex input layout.
     D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
     {
@@ -44,8 +33,8 @@ void GBufferPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignatu
     psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
     psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
     psoDesc.pRootSignature = pRootSignature.Get();
-    psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
-    psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
+    psoDesc.VS = CD3DX12_SHADER_BYTECODE(g_pGBufferVS, ARRAYSIZE(g_pGBufferVS));
+    psoDesc.PS = CD3DX12_SHADER_BYTECODE(g_pGBufferPS, ARRAYSIZE(g_pGBufferPS));
     psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
     psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
     psoDesc.RasterizerState.FrontCounterClockwise = TRUE;

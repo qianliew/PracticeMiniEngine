@@ -338,27 +338,36 @@
     <CustomBuild Include="..\Assets\Shaders\Skybox.hlsl">
       <Filter>Assets\Shaders</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\Assets\Shaders\Blit.hlsl">
-      <Filter>Assets\Shaders</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\Assets\Shaders\TemporalAA.hlsl">
-      <Filter>Assets\Shaders</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\Assets\Shaders\GBuffer.hlsl">
-      <Filter>Assets\Shaders</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\Assets\Shaders\DeferredLighting.hlsl">
-      <Filter>Assets\Shaders</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\Assets\Shaders\IndirectDrawing.hlsl">
-      <Filter>Assets\Shaders</Filter>
-    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Assets\Shaders\Raytracing.hlsl">
       <Filter>Assets\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="..\Assets\Shaders\FrustumCulling.hlsl">
+      <Filter>Assets\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Assets\Shaders\BlitPS.hlsl">
+      <Filter>Assets\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Assets\Shaders\BlitVS.hlsl">
+      <Filter>Assets\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Assets\Shaders\GBufferPS.hlsl">
+      <Filter>Assets\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Assets\Shaders\GBufferVS.hlsl">
+      <Filter>Assets\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Assets\Shaders\DeferredLighting.hlsl">
+      <Filter>Assets\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Assets\Shaders\IndirectDrawing.hlsl">
+      <Filter>Assets\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Assets\Shaders\TemporalAAPS.hlsl">
+      <Filter>Assets\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Assets\Shaders\TemporalAAVS.hlsl">
       <Filter>Assets\Shaders</Filter>
     </FxCompile>
   </ItemGroup>
