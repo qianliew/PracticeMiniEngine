@@ -1,10 +1,8 @@
-#ifndef BLIT_HLSL
-#define BLIT_HLSL
+#ifndef BLIT_VS_HLSL
+#define BLIT_VS_HLSL
 
 #include "Library/Common.hlsli"
 #include "Library/Inputs.hlsli"
-
-Texture2D SourceTexture : register(t0);
 
 PSFullScreenInput VSBlit(VSFullScreenInput input)
 {
@@ -14,11 +12,6 @@ PSFullScreenInput VSBlit(VSFullScreenInput input)
     result.texCoord = input.texCoord;
 
     return result;
-}
-
-float4 PSBlit(PSFullScreenInput input) : SV_TARGET
-{
-    return SourceTexture.Sample(StaticLinearClampSampler, input.texCoord);
 }
 
 #endif

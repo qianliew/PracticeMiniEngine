@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "BlitPass.h"
+#include "CompiledShaders/BlitVS.hlsl.h"
+#include "CompiledShaders/BlitPS.hlsl.h"
 
 BlitPass::BlitPass(
     shared_ptr<D3D12Device>& device,
@@ -12,19 +14,6 @@ BlitPass::BlitPass(
 
 void BlitPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature)
 {
-    ComPtr<ID3DBlob> vertexShader;
-    ComPtr<ID3DBlob> pixelShader;
-
-#if defined(_DEBUG)
-    // Enable better shader debugging with the graphics debugging tools.
-    UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#else
-    UINT compileFlags = 0;
-#endif
-
-    ThrowIfFailed(D3DCompileFromFile(GetShaderPath(L"Blit.hlsl").c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "VSBlit", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
-    ThrowIfFailed(D3DCompileFromFile(GetShaderPath(L"Blit.hlsl").c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "PSBlit", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
-
     // Define the vertex input layout.
     D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
     {
@@ -38,8 +27,8 @@ void BlitPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>
     psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
     psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
     psoDesc.pRootSignature = pRootSignature.Get();
-    psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
-    psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
+    psoDesc.VS = CD3DX12_SHADER_BYTECODE((void*)g_pBlitVS, ARRAYSIZE(g_pBlitVS));
+    psoDesc.PS = CD3DX12_SHADER_BYTECODE((void*)g_pBlitPS, ARRAYSIZE(g_pBlitPS));
     psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
     psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
     psoDesc.RasterizerState.FrontCounterClockwise = TRUE;
