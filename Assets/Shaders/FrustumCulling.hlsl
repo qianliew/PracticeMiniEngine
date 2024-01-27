@@ -37,8 +37,7 @@ void FrustumCullingRaygenShader()
     float3 origin, direction;
     GetRay(origin, direction);
 
-    float vis = TraceFrustumCullingRay(origin, direction);
-    Result[DispatchRaysIndex().xy] = vis;
+    Result[DispatchRaysIndex().xy] = TraceFrustumCullingRay(origin, direction);
 }
 
 [shader("miss")]

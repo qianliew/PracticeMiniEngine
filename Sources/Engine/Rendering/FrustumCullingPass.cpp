@@ -124,7 +124,7 @@ void FrustumCullingPass::Setup(D3D12CommandList* pCommandList, ComPtr<ID3D12Root
 
 void FrustumCullingPass::Execute(D3D12CommandList* pCommandList)
 {
-    FLOAT scale = 1.0f;
+    FLOAT scale = 0.5f;
     UINT width = pSceneManager->GetCamera()->GetCameraWidth() * scale;
     UINT height = pSceneManager->GetCamera()->GetCameraHeight() * scale;
 
@@ -158,9 +158,4 @@ void FrustumCullingPass::Execute(D3D12CommandList* pCommandList)
     // Dispatch rays.    
     D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
     DispatchRays(pCommandList->GetDXRCommandList().Get(), pDXRStateObject.Get(), &dispatchDesc);
-
-    // Copy the output to the color buffer.
-    D3D12Resource* pColorResource = pViewManager->GetCurrentRTVBuffer(pViewManager->GetCurrentColorHandle());
-    D3D12Resource* pOutputResource = pViewManager->GetUAVBuffer(pViewManager->GetUAVColorHandle());
-    pCommandList->CopyResource(pColorResource, pOutputResource);
 }

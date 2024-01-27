@@ -215,6 +215,9 @@ void MiniEngine::PopulateCommandList()
     pRayTracingPass->Execute(pCommandList);
 
     pCommandList->SetRootSignature(pRootSignature->GetRootSignature());
+    pCommandList->SetRootConstantBufferView(
+        (UINT)eRootIndex::ConstantBufferViewGlobal,
+        pDevice->GetBufferManager()->GetGlobalConstantBuffer()->GetResource()->GetGPUVirtualAddress());
     pTemporalAAPass->Execute(pCommandList);
     pBlitPass->Execute(pCommandList);
 
