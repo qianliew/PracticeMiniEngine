@@ -74,6 +74,7 @@ public:
 	void LoadTexture2D(std::wstring& texturePath, UINT inMipLevel = 1);
 	void LoadTexture2DArray(std::vector<std::wstring>& texturePaths, UINT inMipLevel = 1);
 	void LoadTextureCube(std::wstring& texturePath, UINT inMipLevel = 1);
+	void LoadTexture3D(std::wstring& texturePath, UINT inSlice, UINT inMipLevel = 1);
 	void CreateTextureResource();
 	void ChangeTextureType(D3D12TextureType newType);
 	void ReleaseTextureData();

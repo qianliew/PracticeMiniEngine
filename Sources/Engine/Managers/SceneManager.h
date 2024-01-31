@@ -32,6 +32,7 @@ private:
 	Camera* pCamera;
 	Model* pSkyboxMesh;
 	Model* pFullScreenMesh;
+	D3D12Texture* pNoiseTexture;
 
 	UINT objectID;
 

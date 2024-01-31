@@ -340,12 +340,12 @@ void SceneManager::ParseScene(D3D12CommandList* pCommandList)
 
 void SceneManager::LoadStaticData(D3D12CommandList* pCommandList)
 {
-    // Create static data.
+    // Load and create static objects.
     pFullScreenMesh = new Model(objectID++, L"");
     pFullScreenMesh->CreatePlane();
     LoadObjectVertexBufferAndIndexBuffer(pCommandList, pFullScreenMesh);
 
-    // Create assets of the skybox.
+    // Load and create assets of the skybox.
     std::wstring skyboxName = L"Skybox\\sky01";
     SkyboxMaterial* material = new SkyboxMaterial(skyboxName);
     material->LoadTexture();
@@ -355,6 +355,14 @@ void SceneManager::LoadStaticData(D3D12CommandList* pCommandList)
     pSkyboxMesh = new Model(objectID++, L"Skybox\\skybox.fbx");
     pSkyboxMesh->LoadModel(pFBXImporter);
     LoadObjectVertexBufferAndIndexBuffer(pCommandList, pSkyboxMesh);
+
+    // Load and create 3D noise texture.
+    std::wstring noiseName = L"Utility\\noise";
+    std::wstring texturePath = GetAssetPath(noiseName.c_str());
+
+    pNoiseTexture = new D3D12Texture(SceneManager::sTextureID++);
+    pNoiseTexture->LoadTexture3D(texturePath, 64);
+    pNoiseTexture->CreateTextureResource();
 }
 
 void SceneManager::BuildGlobalBuffers(D3D12CommandList* pCommandList)
