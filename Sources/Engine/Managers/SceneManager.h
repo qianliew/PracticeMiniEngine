@@ -32,7 +32,6 @@ private:
 	Camera* pCamera;
 	Model* pSkyboxMesh;
 	Model* pFullScreenMesh;
-	D3D12Texture* pNoiseTexture;
 
 	UINT objectID;
 
@@ -85,6 +84,7 @@ public:
 	~SceneManager();
 
 	static UINT sTextureID;
+	D3D12Texture* pNoiseTexture;
 
 	void InitFBXImporter();
 	void LoadScene(D3D12CommandList* pCommandList, ComPtr<ID3D12RootSignature>& pRootSignature);

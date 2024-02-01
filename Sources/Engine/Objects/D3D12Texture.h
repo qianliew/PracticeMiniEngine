@@ -21,6 +21,7 @@ private:
 	};
 	UINT width;
 	UINT height;
+	UINT depth;
 	UINT mipLevel;
 	UINT slice;
 	D3D12_SRV_DIMENSION srvDimension;
@@ -47,7 +48,8 @@ private:
 	IWICBitmapFrameDecode* pFrameDecode = NULL;
 	IWICFormatConverter* pConverter = NULL;
 
-	void LoadSingleTexture(std::wstring& texturePath, UINT sliceIndex);
+	void LoadSingleTexture(std::wstring& texturePath, const UINT sliceIndex);
+	void LoadMultipleTextures(std::wstring& texturePath);
 	std::wstring GetTexturePath(std::wstring texturePath, UINT mipIndex);
 	std::wstring GetDefaultMipTexturePath(std::wstring texturePath, UINT mipSize);
 
@@ -69,12 +71,13 @@ public:
 	inline const UINT GetDSVHandle() const { return dsvHandle; }
 	inline const UINT GetUAVHandle() const { return uavHandle; }
 	inline const UINT GetSubresourceNum() const { return mipLevel * slice; }
+	inline const UINT GetDepth() const { return depth; }
 	inline const D3D12TextureType GetType() const { return type; }
 
 	void LoadTexture2D(std::wstring& texturePath, UINT inMipLevel = 1);
 	void LoadTexture2DArray(std::vector<std::wstring>& texturePaths, UINT inMipLevel = 1);
 	void LoadTextureCube(std::wstring& texturePath, UINT inMipLevel = 1);
-	void LoadTexture3D(std::wstring& texturePath, UINT inSlice, UINT inMipLevel = 1);
+	void LoadTexture3D(std::wstring& texturePath, UINT inDepth, UINT inMipLevel = 1);
 	void CreateTextureResource();
 	void ChangeTextureType(D3D12TextureType newType);
 	void ReleaseTextureData();

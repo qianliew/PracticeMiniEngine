@@ -4,7 +4,7 @@
 #include "Library/Common.hlsli"
 #include "Library/Inputs.hlsli"
 
-Texture2D SourceTexture : register(t0);
+Texture3D SourceTexture : register(t0);
 
 PSFullScreenInput VSBlit(VSFullScreenInput input)
 {
@@ -18,7 +18,7 @@ PSFullScreenInput VSBlit(VSFullScreenInput input)
 
 float4 PSBlit(PSFullScreenInput input) : SV_TARGET
 {
-    return SourceTexture.Sample(StaticLinearClampSampler, input.texCoord);
+    return SourceTexture.SampleLevel(StaticLinearClampSampler, float3(input.texCoord.xy, 0.0f), 1.0f);
 }
 
 #endif

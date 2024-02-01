@@ -357,12 +357,13 @@ void SceneManager::LoadStaticData(D3D12CommandList* pCommandList)
     LoadObjectVertexBufferAndIndexBuffer(pCommandList, pSkyboxMesh);
 
     // Load and create 3D noise texture.
-    std::wstring noiseName = L"Utility\\noise";
+    std::wstring noiseName = L"Utility\\noise.png";
     std::wstring texturePath = GetAssetPath(noiseName.c_str());
 
     pNoiseTexture = new D3D12Texture(SceneManager::sTextureID++);
-    pNoiseTexture->LoadTexture3D(texturePath, 64);
+    pNoiseTexture->LoadTexture3D(texturePath, 32);
     pNoiseTexture->CreateTextureResource();
+    LoadTextureBufferAndSampler(pCommandList, pNoiseTexture);
 }
 
 void SceneManager::BuildGlobalBuffers(D3D12CommandList* pCommandList)
@@ -590,10 +591,9 @@ void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList* pCommandList, D
     UINT id = texture->GetTextureID();
 
     // Create the texture buffer.
+    const D3D12_RESOURCE_DESC desc = texture->GetResourceDesc();
     pDevice->GetBufferManager()->AllocateDefaultBuffer(
-        texture->GetTextureBuffer(),
-        texture->GetResourceDesc(),
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        texture->GetTextureBuffer(), desc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     texture->GetTextureBuffer()->CreateView(pDevice->GetDevice(),
         pDevice->GetDescriptorHeapManager()->GetHandle(SHADER_RESOURCE_VIEW_PEROBJECT, id));
 
@@ -603,18 +603,28 @@ void SceneManager::LoadTextureBufferAndSampler(D3D12CommandList* pCommandList, D
     {
         D3D12_SUBRESOURCE_DATA textureData;
         UINT64 rowSizeInBytes, totalBytes;
-        pDevice->GetDevice()->GetCopyableFootprints(&texture->GetTextureBuffer()->GetResourceDesc(),
+        UINT numRows;
+
+        pDevice->GetDevice()->GetCopyableFootprints(&desc,
             i, 1, 0, nullptr, nullptr, &rowSizeInBytes, &totalBytes);
         textureData.pData = texture->GetTextureDataAt(i);
         textureData.RowPitch = rowSizeInBytes;
         textureData.SlicePitch = totalBytes;
 
-        resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(totalBytes);
+        if (desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D)
+        {
+            resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(textureData.RowPitch * desc.Height * desc.DepthOrArraySize);
+        }
+        else
+        {
+            resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(textureData.SlicePitch);
+        }
         D3D12UploadBuffer* tempBuffer = new D3D12UploadBuffer(resourceDesc);
         pDevice->GetBufferManager()->AllocateTempUploadBuffer(tempBuffer);
 
         // Update texture data from upload buffer to gpu buffer.
-        pCommandList->CopyTextureBuffer(texture->GetTextureBuffer(), tempBuffer->GetResource().Get(), 0, i, 1, &textureData);
+        pCommandList->CopyTextureBuffer(texture->GetTextureBuffer(),
+            tempBuffer->GetResource().Get(), 0, i, 1, &textureData);
     }
 
     // Create the sampler and its view.

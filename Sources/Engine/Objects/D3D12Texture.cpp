@@ -17,6 +17,7 @@ D3D12Texture::D3D12Texture(
     srvID(inSRVID),
     width(inWidth),
     height(inHeght),
+    depth(1),
     type(inType),
     mipLevel(1),
     slice(1),
@@ -95,13 +96,14 @@ void D3D12Texture::LoadTextureCube(std::wstring& texturePath, UINT inMipLevel)
     LoadSingleTexture(path.insert(texturePath.length(), kCubemapNZ), 5);
 }
 
-void D3D12Texture::LoadTexture3D(std::wstring& texturePath, UINT inSlice, UINT inMipLevel)
+void D3D12Texture::LoadTexture3D(std::wstring& texturePath, UINT inDepth, UINT inMipLevel)
 {
     mipLevel = 1;
     srvDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
-    slice = inSlice;
+    depth = inDepth;
+    slice = 1;
 
-    LoadSingleTexture(texturePath, 0);
+    LoadMultipleTextures(texturePath);
 }
 
 void D3D12Texture::CreateTextureResource()
@@ -123,7 +125,7 @@ void D3D12Texture::CreateTextureResource()
         else if (srvDimension == D3D12_SRV_DIMENSION_TEXTURE3D)
         {
             viewDesc.Texture3D.MostDetailedMip = 0;
-            viewDesc.Texture3D.MipLevels = 0;
+            viewDesc.Texture3D.MipLevels = 1;
             viewDesc.Texture3D.ResourceMinLODClamp = 0.0f;
         }
         else if (srvDimension == D3D12_SRV_DIMENSION_TEXTURECUBE)
@@ -180,18 +182,29 @@ const D3D12_RESOURCE_DESC D3D12Texture::GetResourceDesc()
 {
     // Create the texture desc.
     D3D12_RESOURCE_DESC resourceDesc = {};
-    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     resourceDesc.Alignment = 0;
-    resourceDesc.Width = width;
-    resourceDesc.Height = height;
     resourceDesc.SampleDesc.Count = 1;
     resourceDesc.SampleDesc.Quality = 0;
     resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 
+    switch (srvDimension)
+    {
+    case D3D12_SRV_DIMENSION_TEXTURE3D:
+        resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+        resourceDesc.Width = width;
+        resourceDesc.Height = width;
+        break;
+    default:
+        resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+        resourceDesc.Width = width;
+        resourceDesc.Height = height;
+        break;
+    }
+
     switch (type)
     {
     case D3D12TextureType::ShaderResource:
-        resourceDesc.DepthOrArraySize = slice;
+        resourceDesc.DepthOrArraySize = slice * depth;
         resourceDesc.MipLevels = mipLevel;
         resourceDesc.Format = dxgiFormat;
         resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
@@ -265,7 +278,7 @@ void D3D12Texture::CreateSampler()
 }
 
 // Helper functions
-void D3D12Texture::LoadSingleTexture(std::wstring& texturePath, UINT sliceIndex)
+void D3D12Texture::LoadSingleTexture(std::wstring& texturePath, const UINT sliceIndex)
 {
     UINT mipWidth = 0, mipHeight = 0, bytesPerRow = 0, indexOffset = sliceIndex * mipLevel;
     UINT64 size = 0;
@@ -300,7 +313,7 @@ void D3D12Texture::LoadSingleTexture(std::wstring& texturePath, UINT sliceIndex)
         ThrowIfFailed(pConverter->CanConvert(pixelFormat, convertToPixelFormat, &canConvert));
         ThrowIfFailed(pConverter->Initialize(pFrameDecode, convertToPixelFormat, WICBitmapDitherTypeErrorDiffusion, 0, 0, WICBitmapPaletteTypeCustom));
 
-        bytesPerRow = (mipWidth * 32) / 8;
+        bytesPerRow = mipWidth * 32 / 8;
         size = bytesPerRow * mipHeight;
 
         BYTE* bytes = new BYTE();
@@ -314,6 +327,32 @@ void D3D12Texture::LoadSingleTexture(std::wstring& texturePath, UINT sliceIndex)
 
         if (mipWidth == 0) break;
     }
+}
+
+void D3D12Texture::LoadMultipleTextures(std::wstring& texturePath)
+{
+    ThrowIfFailed(pFactory->CreateDecoderFromFilename(GetTexturePath(texturePath, 0).c_str(),
+        NULL, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &pDecoder));
+
+    ThrowIfFailed(pDecoder->GetFrame(0, &pFrameDecode));
+    ThrowIfFailed(pFrameDecode->GetSize(&width, &height));
+
+    WICPixelFormatGUID pixelFormat;
+    ThrowIfFailed(pFrameDecode->GetPixelFormat(&pixelFormat));
+    WICPixelFormatGUID convertToPixelFormat = GUID_WICPixelFormat32bppRGBA;
+    ThrowIfFailed(pFactory->CreateFormatConverter(&pConverter));
+
+    BOOL canConvert = FALSE;
+    ThrowIfFailed(pConverter->CanConvert(pixelFormat, convertToPixelFormat, &canConvert));
+    ThrowIfFailed(pConverter->Initialize(pFrameDecode, convertToPixelFormat, WICBitmapDitherTypeErrorDiffusion, 0, 0, WICBitmapPaletteTypeCustom));
+
+    UINT bytesPerRow = width * 32 / 8;
+    UINT64 size = bytesPerRow * height;
+    BYTE* bytes = new BYTE();
+    bytes = (BYTE*)malloc(size);
+
+    ThrowIfFailed(pConverter->CopyPixels(0, bytesPerRow, size, bytes));
+    pData[0] = bytes;
 }
 
 std::wstring D3D12Texture::GetTexturePath(std::wstring texturePath, UINT mipIndex)

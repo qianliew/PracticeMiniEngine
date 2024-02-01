@@ -60,9 +60,9 @@ void BlitPass::Execute(D3D12CommandList* pCommandList)
     pViewManager->ConvertTextureType(pCommandList, colorHandle, D3D12TextureType::RenderTarget, D3D12TextureType::ShaderResource);
     pDevice->GetDescriptorHeapManager()->SetViews(
         pCommandList->GetCommandList(),
-        SHADER_RESOURCE_VIEW_GLOBAL,
+        SHADER_RESOURCE_VIEW_PEROBJECT,
         (UINT)eRootIndex::ShaderResourceViewGlobal0,
-        pViewManager->GetRTVSRVHandle(colorHandle));
+        pSceneManager->pNoiseTexture->GetTextureID());
 
     // Set camera relating state.
     pCommandList->SetViewports(pSceneManager->GetCamera()->GetViewport());
